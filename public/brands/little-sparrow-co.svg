@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none">
+  <ellipse cx="18" cy="20" rx="6" ry="8" stroke="#7A8B6E" stroke-width="1.2" fill="none"/>
+  <path d="M24 18 Q30 14 28 20 Q32 18 30 22" stroke="#7A8B6E" stroke-width="1" fill="none"/>
+  <circle cx="16" cy="17" r="1" fill="#7A8B6E"/>
+  <text x="75" y="18" text-anchor="middle" font-family="Georgia, serif" font-size="9" fill="#7A8B6E">little sparrow</text>
+  <text x="75" y="28" text-anchor="middle" font-family="Georgia, serif" font-size="8" letter-spacing="0.1em" fill="#7A8B6E">CO.</text>
+</svg>

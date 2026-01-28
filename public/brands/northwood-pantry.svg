@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none">
+  <rect x="6" y="10" width="28" height="20" rx="1" stroke="#5C4033" stroke-width="1.2" fill="none"/>
+  <text x="20" y="24" text-anchor="middle" font-family="Georgia, serif" font-size="12" font-weight="600" fill="#5C4033">NP</text>
+  <text x="78" y="16" text-anchor="middle" font-family="Georgia, serif" font-size="7" letter-spacing="0.15em" fill="#5C4033">NORTHWOOD</text>
+  <text x="78" y="28" text-anchor="middle" font-family="Georgia, serif" font-size="9" font-style="italic" fill="#5C4033">pantry</text>
+</svg>

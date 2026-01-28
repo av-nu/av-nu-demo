@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none">
+  <circle cx="16" cy="20" r="10" stroke="#E8A849" stroke-width="1.5" fill="none"/>
+  <path d="M16 12 L16 28 M8 20 L24 20 M10 14 L22 26 M22 14 L10 26" stroke="#E8A849" stroke-width="0.6"/>
+  <text x="75" y="18" text-anchor="middle" font-family="Helvetica, sans-serif" font-size="10" font-weight="300" fill="#C4823A">citrus</text>
+  <text x="75" y="28" text-anchor="middle" font-family="Helvetica, sans-serif" font-size="10" font-weight="500" fill="#9E6B4A">&amp; clay</text>
+</svg>

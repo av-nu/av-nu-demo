@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none">
+  <text x="60" y="26" text-anchor="middle" font-family="Georgia, serif" font-size="14" font-weight="400" letter-spacing="0.1em" fill="#2D2D2D">ASHWOOD</text>
+  <line x1="20" y1="32" x2="100" y2="32" stroke="#2D2D2D" stroke-width="0.5"/>
+  <text x="60" y="38" text-anchor="middle" font-family="Georgia, serif" font-size="6" letter-spacing="0.2em" fill="#666">ATELIER</text>
+</svg>

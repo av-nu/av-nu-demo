@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+  <rect width="800" height="800" fill="#E9E1D6"/>
+  <rect x="120" y="120" width="560" height="560" rx="70" fill="#F3F1ED"/>
+  <path d="M260 520 L400 280 L540 520" fill="none" stroke="#44423F" stroke-width="18" opacity="0.35" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="400" cy="300" r="26" fill="#7E8A74" opacity="0.8"/>
+  <text x="140" y="720" font-family="Inter, ui-sans-serif" font-size="24" fill="#44423F" opacity="0.75">Object Study 07</text>
+</svg>

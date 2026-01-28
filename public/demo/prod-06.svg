@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+  <rect width="800" height="800" fill="#F3F1ED"/>
+  <path d="M0 560 C 220 460, 420 720, 800 520" fill="none" stroke="#7E8A74" stroke-width="26" opacity="0.25" stroke-linecap="round"/>
+  <path d="M0 630 C 260 540, 460 770, 800 590" fill="none" stroke="#E85D8B" stroke-width="18" opacity="0.18" stroke-linecap="round"/>
+  <rect x="150" y="170" width="500" height="470" rx="52" fill="#44423F" opacity="0.05"/>
+  <text x="140" y="720" font-family="Inter, ui-sans-serif" font-size="24" fill="#44423F" opacity="0.75">Object Study 06</text>
+</svg>

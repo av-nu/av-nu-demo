@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none">
+  <path d="M20 8 L20 32 M14 12 Q20 16 26 12 M12 18 Q20 24 28 18 M10 26 Q20 34 30 26" stroke="#6B8E6B" stroke-width="1" fill="none"/>
+  <text x="78" y="14" text-anchor="middle" font-family="Georgia, serif" font-size="8" letter-spacing="0.08em" fill="#6B8E6B">SAGEWELL</text>
+  <line x1="50" y1="20" x2="106" y2="20" stroke="#6B8E6B" stroke-width="0.5"/>
+  <text x="78" y="30" text-anchor="middle" font-family="Georgia, serif" font-size="7" letter-spacing="0.12em" fill="#6B8E6B">APOTHECARY</text>
+</svg>

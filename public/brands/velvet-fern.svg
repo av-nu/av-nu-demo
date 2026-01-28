@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none">
+  <path d="M15 32 Q20 8 25 20 Q30 8 35 32" stroke="#5D4E60" stroke-width="1.5" fill="none"/>
+  <circle cx="25" cy="10" r="3" fill="#5D4E60"/>
+  <text x="75" y="22" text-anchor="middle" font-family="Helvetica, sans-serif" font-size="12" font-weight="300" font-style="italic" fill="#5D4E60">velvet fern</text>
+</svg>

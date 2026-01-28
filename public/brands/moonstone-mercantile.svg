@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none">
+  <circle cx="20" cy="20" r="10" stroke="#8E7CC3" stroke-width="1" fill="none"/>
+  <circle cx="24" cy="20" r="7" fill="#F5F3F0"/>
+  <text x="75" y="16" text-anchor="middle" font-family="Georgia, serif" font-size="8" letter-spacing="0.1em" fill="#8E7CC3">MOONSTONE</text>
+  <line x1="50" y1="22" x2="100" y2="22" stroke="#8E7CC3" stroke-width="0.5"/>
+  <text x="75" y="30" text-anchor="middle" font-family="Georgia, serif" font-size="7" letter-spacing="0.15em" fill="#8E7CC3">MERCANTILE</text>
+</svg>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none">
+  <path d="M10 30 L25 10 L40 30 Z" stroke="#C45D3A" stroke-width="1.5" fill="none"/>
+  <line x1="25" y1="18" x2="25" y2="26" stroke="#C45D3A" stroke-width="1.5"/>
+  <text x="80" y="24" text-anchor="middle" font-family="Helvetica, sans-serif" font-size="12" font-weight="600" letter-spacing="0.05em" fill="#C45D3A">EMBERTRAIL</text>
+</svg>

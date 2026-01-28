@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+  <rect width="800" height="800" fill="#E9E1D6"/>
+  <circle cx="280" cy="310" r="170" fill="#7E8A74" opacity="0.20"/>
+  <circle cx="520" cy="520" r="210" fill="#E85D8B" opacity="0.10"/>
+  <rect x="140" y="140" width="520" height="520" rx="60" fill="#F3F1ED" opacity="0.72"/>
+  <text x="140" y="720" font-family="Inter, ui-sans-serif" font-size="24" fill="#44423F" opacity="0.75">Object Study 05</text>
+</svg>

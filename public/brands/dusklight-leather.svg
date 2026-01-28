@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none">
+  <circle cx="20" cy="20" r="12" stroke="#4A3C31" stroke-width="1" fill="none"/>
+  <text x="20" y="24" text-anchor="middle" font-family="Georgia, serif" font-size="14" font-weight="500" fill="#4A3C31">DL</text>
+  <text x="78" y="16" text-anchor="middle" font-family="Georgia, serif" font-size="8" letter-spacing="0.1em" fill="#4A3C31">DUSKLIGHT</text>
+  <text x="78" y="28" text-anchor="middle" font-family="Georgia, serif" font-size="9" font-style="italic" fill="#4A3C31">leather</text>
+</svg>

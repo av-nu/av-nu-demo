@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" fill="none">
+  <path d="M6 32 L20 12 L28 24 L36 16 L44 32 Z" stroke="#3D5C5C" stroke-width="1.5" fill="none"/>
+  <text x="82" y="18" text-anchor="middle" font-family="Helvetica, sans-serif" font-size="9" font-weight="600" letter-spacing="0.08em" fill="#3D5C5C">SUMMIT</text>
+  <text x="82" y="28" text-anchor="middle" font-family="Helvetica, sans-serif" font-size="9" font-weight="300" fill="#3D5C5C">&amp; stream</text>
+</svg>
