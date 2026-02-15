@@ -3,7 +3,7 @@
 import { memo, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, Send } from "lucide-react";
+import { Heart, Send, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ import { getBrandById } from "@/lib/data";
 import { StarRating } from "@/components/ui/StarRating";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useUserRatings } from "@/hooks/useUserRatings";
+import { useCart } from "@/hooks/useCart";
 
 interface ProductCardProps {
   product: Product;
@@ -27,6 +28,7 @@ export const ProductCard = memo(function ProductCard({
   const brand = getBrandById(product.brandId);
   const { isFavorite, toggleFavorite } = useFavorites();
   const { getUserRating, setUserRating } = useUserRatings();
+  const { addToCart } = useCart();
   const [imageLoaded, setImageLoaded] = useState(false);
 
   const favorite = isFavorite(product.id);
@@ -77,6 +79,16 @@ export const ProductCard = memo(function ProductCard({
     [product.id, setUserRating],
   );
 
+  const handleQuickAdd = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      addToCart(product.id, product.brandId);
+      onShare?.("Added to cart");
+    },
+    [product.id, product.brandId, addToCart, onShare],
+  );
+
   return (
     <motion.article
       initial={{ opacity: 0, y: 12 }}
@@ -85,29 +97,42 @@ export const ProductCard = memo(function ProductCard({
       whileHover={{ y: -4 }}
       className="group relative flex flex-col"
     >
-      <Link
-        href={`/product/${product.id}`}
-        className="relative aspect-square overflow-hidden rounded-xl bg-surface"
-      >
-        <Image
-          src={product.images[0]}
-          alt={product.name}
-          fill
-          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          priority={priority}
-          onLoad={() => setImageLoaded(true)}
-          className={cn(
-            "object-cover transition-all duration-500 group-hover:scale-105",
-            imageLoaded ? "opacity-100" : "opacity-0",
-          )}
-        />
+      {/* Image container with Quick Add overlay */}
+      <div className="relative aspect-square overflow-hidden rounded-xl bg-surface">
+        <Link
+          href={`/product/${product.id}`}
+          className="block h-full w-full"
+        >
+          <Image
+            src={product.images[0]}
+            alt={product.name}
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            priority={priority}
+            onLoad={() => setImageLoaded(true)}
+            className={cn(
+              "object-cover transition-all duration-500 group-hover:scale-105",
+              imageLoaded ? "opacity-100" : "opacity-0",
+            )}
+          />
 
-        {product.isNew && (
-          <span className="absolute left-2 top-2 rounded-md bg-accent px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-bg">
-            New
-          </span>
-        )}
-      </Link>
+          {product.isNew && (
+            <span className="absolute left-2 top-2 z-10 rounded-md bg-accent px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-bg">
+              New
+            </span>
+          )}
+        </Link>
+
+        {/* Quick Add button - appears on hover */}
+        <button
+          type="button"
+          onClick={handleQuickAdd}
+          className="absolute bottom-0 left-0 right-0 z-20 flex items-center justify-center gap-1.5 bg-text py-2.5 text-sm font-medium text-bg opacity-0 transition-all duration-200 hover:bg-text/90 group-hover:opacity-100"
+        >
+          <Plus className="h-4 w-4" />
+          Quick Add
+        </button>
+      </div>
 
       {/* Favorite button */}
       <motion.button

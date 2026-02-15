@@ -80,7 +80,7 @@ export const AppShell = memo(function AppShell({
           )}
 
           <div className={`transition-[margin] duration-200 ease-in-out ${sideNavCollapsed ? "md:ml-[72px]" : "md:ml-64"}`}>
-            <main className="w-full px-4 pb-28 md:px-6 md:pb-12">
+            <main className={`w-full px-4 pb-28 md:px-6 md:pb-12 ${pathname !== "/" ? "md:pt-[88px]" : ""}`}>
               <TopHeader />
               <PageTransition>{children}</PageTransition>
             </main>
