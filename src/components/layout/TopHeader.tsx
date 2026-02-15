@@ -10,11 +10,11 @@ const routeConfig: Record<
   { title: string; subtitle?: string; showSearch?: boolean }
 > = {
   "/": { title: "av | nu", subtitle: "A refined marketplace" },
-  "/search": { title: "Search" },
-  "/brands": { title: "Brands" },
-  "/favorites": { title: "Favorites" },
-  "/cart": { title: "Cart" },
-  "/profile": { title: "Profile" },
+  "/search": { title: "" },
+  "/brands": { title: "" },
+  "/favorites": { title: "" },
+  "/cart": { title: "" },
+  "/profile": { title: "" },
 };
 
 export const TopHeader = memo(function TopHeader() {
