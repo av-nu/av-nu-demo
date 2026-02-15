@@ -3,7 +3,7 @@
 import { memo, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, Share2 } from "lucide-react";
+import { Heart, Send } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
@@ -139,7 +139,7 @@ export const ProductCard = memo(function ProductCard({
             whileTap={{ scale: 0.85 }}
             className="flex h-6 w-6 items-center justify-center rounded-full text-text/40 transition-colors hover:bg-surface hover:text-text/70"
           >
-            <Share2 className="h-3.5 w-3.5" />
+            <Send className="h-3.5 w-3.5" />
           </motion.button>
         </div>
 

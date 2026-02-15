@@ -22,6 +22,7 @@ export const AppShell = memo(function AppShell({
   children: ReactNode;
 }) {
   const [isMounted, setIsMounted] = useState(false);
+  const [sideNavCollapsed, setSideNavCollapsed] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -65,8 +66,11 @@ export const AppShell = memo(function AppShell({
     <CartProvider>
       <LayoutGroup>
         <div className="min-h-screen bg-bg">
-          <SideNav />
+          <SideNav collapsed={sideNavCollapsed} onToggle={() => setSideNavCollapsed(!sideNavCollapsed)} />
           <BottomTabBar />
+
+          {/* Full-width top bar - matches logo header height */}
+          <div className="hidden md:block md:fixed md:inset-x-0 md:top-0 md:z-40 md:h-[88px] md:bg-bg/80 md:backdrop-blur-sm" />
 
           {/* Persistent cart icon - top right */}
           {isMounted && (
@@ -75,8 +79,8 @@ export const AppShell = memo(function AppShell({
             </div>
           )}
 
-          <div className="md:ml-64">
-            <main className="mx-auto w-full max-w-4xl px-4 pb-28 md:px-8 md:pb-12">
+          <div className={`transition-[margin] duration-200 ease-in-out ${sideNavCollapsed ? "md:ml-[72px]" : "md:ml-64"}`}>
+            <main className="w-full px-4 pb-28 md:px-6 md:pb-12">
               <TopHeader />
               <PageTransition>{children}</PageTransition>
             </main>

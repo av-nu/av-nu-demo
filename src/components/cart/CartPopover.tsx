@@ -220,16 +220,30 @@ export function CartPopover() {
                         </div>
 
                         {/* Shipping status */}
-                        <div className="mt-3 flex items-center gap-1.5 text-[10px]">
-                          <Truck className={cn("h-3 w-3", isUnlocked ? "text-green-600" : "text-text/40")} />
-                          {alwaysFree ? (
-                            <span className="text-green-600">Always free shipping</span>
-                          ) : isUnlocked ? (
-                            <span className="text-green-600">Free shipping!</span>
-                          ) : (
-                            <span className="text-text/50">
-                              ${remaining.toFixed(2)} away from free shipping
-                            </span>
+                        <div className="mt-3 space-y-1.5">
+                          <div className="flex items-center gap-1.5 text-[10px]">
+                            <Truck className={cn("h-3 w-3", isUnlocked ? "text-green-600" : "text-text/40")} />
+                            {alwaysFree ? (
+                              <span className="text-green-600">Always free shipping</span>
+                            ) : isUnlocked ? (
+                              <span className="text-green-600">Free shipping!</span>
+                            ) : (
+                              <Link
+                                href={`/brand/${brandId}`}
+                                onClick={() => setIsOpen(false)}
+                                className="text-text/50 underline decoration-text/30 underline-offset-2 transition-colors hover:text-accent hover:decoration-accent"
+                              >
+                                ${remaining.toFixed(2)} away from free shipping with {brand?.name}
+                              </Link>
+                            )}
+                          </div>
+                          {!alwaysFree && !isUnlocked && (
+                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface">
+                              <div
+                                className="h-full rounded-full bg-accent transition-all duration-300"
+                                style={{ width: `${Math.min((subtotal / threshold) * 100, 100)}%` }}
+                              />
+                            </div>
                           )}
                         </div>
                       </div>

@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { motion } from "framer-motion";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard, ProductCardSkeleton } from "@/components/product/ProductCard";
 import {
@@ -68,26 +69,85 @@ function NuForYouSection({ onShare }: { onShare: (msg: string) => void }) {
   });
 
   const displayProducts = products.slice(0, 6);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 0);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 1);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    checkScroll();
+    el.addEventListener("scroll", checkScroll, { passive: true });
+    window.addEventListener("resize", checkScroll);
+    return () => {
+      el.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, [checkScroll, isInitialLoad]);
+
+  const scroll = (direction: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const cardWidth = el.querySelector("div")?.offsetWidth ?? 300;
+    const gap = 16;
+    const scrollAmount = (cardWidth + gap) * 2;
+    el.scrollBy({
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth",
+    });
+  };
 
   return (
     <section className="mt-12">
-      <div className="mb-6">
-        <h2 className="font-headline text-2xl tracking-tight text-text">
-          Nu For You
-        </h2>
-        <p className="mt-1 text-sm text-text/50">
-          Fresh arrivals from brands you'll love
-        </p>
+      <div className="mb-6 flex items-end justify-between">
+        <div>
+          <h2 className="font-headline text-2xl tracking-tight text-text">
+            Nu For You
+          </h2>
+          <p className="mt-1 text-sm text-text/50">
+            Fresh arrivals from brands you'll love
+          </p>
+        </div>
+
+        {/* Scroll arrows */}
+        <div className="hidden gap-2 md:flex">
+          <button
+            onClick={() => scroll("left")}
+            disabled={!canScrollLeft}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-text/10 bg-bg text-text/60 transition-all hover:border-text/20 hover:text-text disabled:cursor-not-allowed disabled:opacity-30"
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => scroll("right")}
+            disabled={!canScrollRight}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-text/10 bg-bg text-text/60 transition-all hover:border-text/20 hover:text-text disabled:cursor-not-allowed disabled:opacity-30"
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       {/* Horizontal scroll container */}
-      <div className="-mx-4 px-4 md:-mx-8 md:px-8">
-        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory">
+      <div className="-mx-4 px-4 md:-mx-6 md:px-6">
+        <div
+          ref={scrollRef}
+          className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
+        >
           {isInitialLoad
             ? Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={`skeleton-${i}`}
-                  className="w-[280px] flex-shrink-0 snap-start md:w-[320px]"
+                  className="w-[calc((100%-1rem)/2)] flex-shrink-0 snap-start md:w-[calc((100%-2rem)/3)]"
                 >
                   <ProductCardSkeleton />
                 </div>
@@ -95,7 +155,7 @@ function NuForYouSection({ onShare }: { onShare: (msg: string) => void }) {
             : displayProducts.map((product, index) => (
                 <div
                   key={product.id}
-                  className="w-[280px] flex-shrink-0 snap-start md:w-[320px]"
+                  className="w-[calc((100%-1rem)/2)] flex-shrink-0 snap-start md:w-[calc((100%-2rem)/3)]"
                 >
                   <ProductCard
                     product={product}
@@ -105,6 +165,16 @@ function NuForYouSection({ onShare }: { onShare: (msg: string) => void }) {
                 </div>
               ))}
         </div>
+      </div>
+
+      {/* Mobile scroll indicator dots */}
+      <div className="mt-3 flex justify-center gap-1.5 md:hidden">
+        {displayProducts.slice(0, 3).map((_, i) => (
+          <div
+            key={i}
+            className="h-1.5 w-1.5 rounded-full bg-text/20"
+          />
+        ))}
       </div>
     </section>
   );
