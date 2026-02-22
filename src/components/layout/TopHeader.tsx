@@ -20,7 +20,7 @@ const routeConfig: Record<
 export const TopHeader = memo(function TopHeader() {
   const pathname = usePathname();
 
-  if (pathname.startsWith("/brand/") || pathname.startsWith("/product/") || pathname.startsWith("/brand-preview/")) {
+  if (pathname === "/" || pathname === "/home-preview" || pathname.startsWith("/brand/") || pathname.startsWith("/product/") || pathname.startsWith("/brand-preview/")) {
     return null;
   }
 
