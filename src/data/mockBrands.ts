@@ -7,6 +7,13 @@ export type Brand = {
   logoMark: string;
   freeShippingThreshold: number;
   categories: string[];
+  // Optional extended fields for enhanced brand pages
+  story?: string;
+  founderName?: string;
+  foundedYear?: number;
+  reelUrl?: string; // Vertical video URL (Instagram Reel style)
+  storyImage?: string; // Fallback image when no video
+  carouselImages?: string[]; // Specific images for the brand carousel
 };
 
 export const mockBrands: Brand[] = [
@@ -19,6 +26,34 @@ export const mockBrands: Brand[] = [
     logoMark: "/brands/ashwood-atelier.svg",
     freeShippingThreshold: 85,
     categories: ["Home & Living", "Accessories"],
+    story: "Founded in a small Portland workshop, Ashwood Atelier creates objects that honor the in-between moments—morning coffee, evening wind-down, the pause before dinner. Every piece is designed to feel inevitable, like it's always belonged in your home.",
+    founderName: "Sarah Chen",
+    foundedYear: 2019,
+    reelUrl: "/videos/ashwood-atelier-reel.MOV",
+    storyImage: "/products/_pool/andrej-lisakov-fOo4p1SFbrk-unsplash.jpg",
+    carouselImages: [
+      "/products/Ashwood Atelier/ChatGPT Image Feb 20, 2026, 07_36_23 PM.png",
+      "/products/Ashwood Atelier/ChatGPT Image Feb 20, 2026, 07_36_35 PM.png",
+    ],
+  },
+  {
+    id: "aurelith",
+    name: "Aurelith",
+    location: "San Francisco, CA",
+    tagline: "Sound, refined to its essence.",
+    heroImage: "/products/Aurelith/Carousel 1.png",
+    logoMark: "/products/Aurelith/aurelith_logo_transparent.png",
+    freeShippingThreshold: 0,
+    categories: ["Home & Living", "Electronics"],
+    story: "Aurelith was born from a simple belief: exceptional sound should feel effortless. Our design team obsesses over every curve, every material, every frequency—so you can simply close your eyes and listen. Each speaker is hand-tuned in our San Francisco studio, where acoustics meet artistry.",
+    founderName: "Henrik Lindqvist",
+    foundedYear: 2017,
+    reelUrl: "/products/Aurelith/Carousel video.mp4",
+    storyImage: "/products/Aurelith/Carousel 1.png",
+    carouselImages: [
+      "/products/Aurelith/Carousel 1.png",
+      "/products/Aurelith/Carousel 2.png",
+    ],
   },
   {
     id: "juniper-and-tide",
@@ -29,6 +64,11 @@ export const mockBrands: Brand[] = [
     logoMark: "/brands/juniper-and-tide.svg",
     freeShippingThreshold: 0,
     categories: ["Outdoors", "Wellness"],
+    story: "Born from early morning surf sessions and post-workout recovery rituals, Juniper & Tide makes gear for people who move. We believe recovery is part of the adventure—not an afterthought.",
+    founderName: "Marcus & Elena Reyes",
+    foundedYear: 2021,
+    reelUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+    storyImage: "/products/_pool/jsb-co-6ak39XYMMvk-unsplash.jpg",
   },
   {
     id: "parchment-provisions",
@@ -39,6 +79,11 @@ export const mockBrands: Brand[] = [
     logoMark: "/brands/parchment-provisions.svg",
     freeShippingThreshold: 60,
     categories: ["Food", "Home & Living"],
+    story: "We started Parchment Provisions because we believed pantry staples deserved more care. Every jar, tin, and bag is sourced from small producers who share our obsession with flavor and craft.",
+    founderName: "Jamie Okonkwo",
+    foundedYear: 2020,
+    // No reelUrl — this brand uses photo-only fallback
+    storyImage: "/products/_pool/pablo-merchan-montes--JfwKVjInI0-unsplash.jpg",
   },
   {
     id: "velvet-fern",
@@ -49,6 +94,11 @@ export const mockBrands: Brand[] = [
     logoMark: "/brands/velvet-fern.svg",
     freeShippingThreshold: 75,
     categories: ["Beauty", "Wellness"],
+    story: "Velvet Fern was born from a simple frustration: why does skincare have to be so complicated? We make essentials that work—nothing more, nothing less. Clean formulas, quiet packaging, real results.",
+    founderName: "Priya Sharma",
+    foundedYear: 2018,
+    reelUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    storyImage: "/products/_pool/twinewood-studio-7ZaRKlsIK6w-unsplash.jpg",
   },
   {
     id: "loam-and-linen",

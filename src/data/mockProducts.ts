@@ -422,11 +422,308 @@ function getDescription(category: string, seed: number) {
   return pick(options, seed);
 }
 
+// Dedicated Ashwood Atelier products with specific images and names
+const ashwoodAtelierProducts: Product[] = [
+  {
+    id: "ashwood-001",
+    brandId: "ashwood-atelier",
+    name: "Peony Embossed Journal",
+    price: 48,
+    rating: 4.9,
+    ratingCount: 234,
+    category: "Home & Living",
+    subcategory: "Stationery",
+    images: ["/products/Ashwood Atelier/ChatGPT Image Feb 20, 2026, 07_36_23 PM.png"],
+    isNew: false,
+    description: "Hand-embossed leather journal with peony motif and brass snap closure. 192 pages of cream laid paper.",
+  },
+  {
+    id: "ashwood-002",
+    brandId: "ashwood-atelier",
+    name: "Rose Gold Ballpoint Pen",
+    price: 32,
+    rating: 4.8,
+    ratingCount: 189,
+    category: "Accessories",
+    subcategory: "Stationery",
+    images: ["/products/Ashwood Atelier/ChatGPT Image Feb 20, 2026, 07_36_30 PM.png"],
+    isNew: false,
+    description: "Elegant white lacquer pen with rose gold accents. Smooth-writing German ink cartridge included.",
+  },
+  {
+    id: "ashwood-003",
+    brandId: "ashwood-atelier",
+    name: "Garden Bloom Journal",
+    price: 52,
+    rating: 4.9,
+    ratingCount: 156,
+    category: "Home & Living",
+    subcategory: "Stationery",
+    images: ["/products/Ashwood Atelier/ChatGPT Image Feb 20, 2026, 07_36_35 PM.png"],
+    isNew: true,
+    description: "Soft pink journal with watercolor floral print and gold heart charm. Elastic closure and ribbon bookmark.",
+  },
+  {
+    id: "ashwood-004",
+    brandId: "ashwood-atelier",
+    name: "Executive Journal Set",
+    price: 78,
+    rating: 4.8,
+    ratingCount: 98,
+    category: "Home & Living",
+    subcategory: "Stationery",
+    images: ["/products/Ashwood Atelier/ChatGPT Image Feb 20, 2026, 07_36_38 PM.png"],
+    isNew: false,
+    description: "Cognac leather journal with matching brass-accented pen. Gift-boxed for the discerning writer.",
+  },
+  {
+    id: "ashwood-005",
+    brandId: "ashwood-atelier",
+    name: "Noir Journal Set",
+    price: 82,
+    rating: 4.7,
+    ratingCount: 76,
+    category: "Home & Living",
+    subcategory: "Stationery",
+    images: ["/products/Ashwood Atelier/ChatGPT Image Feb 20, 2026, 07_36_41 PM.png"],
+    isNew: false,
+    description: "Black leather journal with silver-accented pen. Minimalist design for the modern professional.",
+  },
+  {
+    id: "ashwood-006",
+    brandId: "ashwood-atelier",
+    name: "Champagne Crystal Pen",
+    price: 38,
+    rating: 4.9,
+    ratingCount: 145,
+    category: "Accessories",
+    subcategory: "Stationery",
+    images: ["/products/Ashwood Atelier/ChatGPT Image Feb 20, 2026, 07_53_20 PM.png"],
+    isNew: true,
+    description: "Cream lacquer pen with gold accents and crystal band detail. A statement piece for your desk.",
+  },
+  {
+    id: "ashwood-007",
+    brandId: "ashwood-atelier",
+    name: "Carbon Weave Pen",
+    price: 45,
+    rating: 4.8,
+    ratingCount: 67,
+    category: "Accessories",
+    subcategory: "Stationery",
+    images: ["/products/Ashwood Atelier/ChatGPT Image Feb 20, 2026, 07_53_24 PM.png"],
+    isNew: false,
+    description: "Carbon fiber pattern with gunmetal accents. Weighted for comfortable extended writing.",
+  },
+  {
+    id: "ashwood-008",
+    brandId: "ashwood-atelier",
+    name: "Mint Garden Pen",
+    price: 36,
+    rating: 4.7,
+    ratingCount: 112,
+    category: "Accessories",
+    subcategory: "Stationery",
+    images: ["/products/Ashwood Atelier/ChatGPT Image Feb 20, 2026, 07_53_27 PM.png"],
+    isNew: true,
+    description: "Fresh mint and white two-tone pen with gold crystal band. Spring-inspired elegance.",
+  },
+  {
+    id: "ashwood-009",
+    brandId: "ashwood-atelier",
+    name: "Rose Glitter Pen",
+    price: 34,
+    rating: 4.8,
+    ratingCount: 203,
+    category: "Accessories",
+    subcategory: "Stationery",
+    images: ["/products/Ashwood Atelier/ChatGPT Image Feb 20, 2026, 07_53_30 PM.png"],
+    isNew: false,
+    description: "Pink glitter finish with polished gold accents. Adds sparkle to every signature.",
+  },
+  {
+    id: "ashwood-010",
+    brandId: "ashwood-atelier",
+    name: "Botanical Blush Pen",
+    price: 36,
+    rating: 4.9,
+    ratingCount: 178,
+    category: "Accessories",
+    subcategory: "Stationery",
+    images: ["/products/Ashwood Atelier/ChatGPT Image Feb 20, 2026, 07_53_32 PM.png"],
+    isNew: true,
+    description: "White lacquer with delicate floral print and rose gold trim. Nature-inspired artistry.",
+  },
+  {
+    id: "ashwood-011",
+    brandId: "ashwood-atelier",
+    name: "Navy Rose Gold Pen",
+    price: 38,
+    rating: 4.8,
+    ratingCount: 134,
+    category: "Accessories",
+    subcategory: "Stationery",
+    images: ["/products/Ashwood Atelier/ChatGPT Image Feb 20, 2026, 07_53_35 PM.png"],
+    isNew: false,
+    description: "Deep navy lacquer with warm rose gold accents. Classic sophistication meets modern style.",
+  },
+  {
+    id: "ashwood-012",
+    brandId: "ashwood-atelier",
+    name: "Abstract Blush Journal",
+    price: 56,
+    rating: 4.9,
+    ratingCount: 89,
+    category: "Home & Living",
+    subcategory: "Stationery",
+    images: ["/products/Ashwood Atelier/ChatGPT Image Feb 20, 2026, 08_30_58 PM.png"],
+    isNew: true,
+    description: "Soft abstract watercolor cover with gold foil accents. Elastic closure and pen loop.",
+  },
+  {
+    id: "ashwood-013",
+    brandId: "ashwood-atelier",
+    name: "Marble Sage Journal",
+    price: 58,
+    rating: 4.8,
+    ratingCount: 67,
+    category: "Home & Living",
+    subcategory: "Stationery",
+    images: ["/products/Ashwood Atelier/ChatGPT Image Feb 20, 2026, 08_31_02 PM.png"],
+    isNew: false,
+    description: "White marble and sage green design with gold wave detail. A grounding presence for your thoughts.",
+  },
+  {
+    id: "ashwood-014",
+    brandId: "ashwood-atelier",
+    name: "Botanical Sand Journal",
+    price: 54,
+    rating: 4.9,
+    ratingCount: 92,
+    category: "Home & Living",
+    subcategory: "Stationery",
+    images: ["/products/Ashwood Atelier/ChatGPT Image Feb 20, 2026, 08_31_04 PM.png"],
+    isNew: true,
+    description: "Warm sand tones with gold botanical wreath motif. Earthy elegance for daily reflection.",
+  },
+];
+
+// Dedicated Aurelith products with specific images and names
+const aurelithProducts: Product[] = [
+  {
+    id: "aurelith-001",
+    brandId: "aurelith",
+    name: "Fjord Bookshelf Speaker",
+    price: 1299,
+    rating: 4.9,
+    ratingCount: 47,
+    category: "Home & Living",
+    subcategory: "Electronics",
+    images: ["/products/Aurelith/ChatGPT Image Feb 21, 2026, 08_38_01 PM.png"],
+    isNew: true,
+    description: "Hand-sculpted walnut enclosure with bronze accents. Our signature two-way driver delivers warm, room-filling sound with exceptional clarity.",
+  },
+  {
+    id: "aurelith-002",
+    brandId: "aurelith",
+    name: "Ember Studio Monitors",
+    price: 2499,
+    rating: 5.0,
+    ratingCount: 23,
+    category: "Home & Living",
+    subcategory: "Electronics",
+    images: ["/products/Aurelith/ChatGPT Image Feb 21, 2026, 08_38_15 PM.png"],
+    isNew: false,
+    description: "Professional-grade studio monitors in dark walnut with bronze detailing. Precision-tuned for critical listening and mixing.",
+  },
+  {
+    id: "aurelith-003",
+    brandId: "aurelith",
+    name: "Nordic Bookshelf Speakers",
+    price: 1899,
+    rating: 4.8,
+    ratingCount: 62,
+    category: "Home & Living",
+    subcategory: "Electronics",
+    images: ["/products/Aurelith/ChatGPT Image Feb 21, 2026, 08_38_22 PM.png"],
+    isNew: false,
+    description: "Light maple and white ceramic finish inspired by Scandinavian design. Delivers pristine highs and balanced mids for any living space.",
+  },
+  {
+    id: "aurelith-004",
+    brandId: "aurelith",
+    name: "Prism Reference Monitors",
+    price: 3299,
+    rating: 4.9,
+    ratingCount: 18,
+    category: "Home & Living",
+    subcategory: "Electronics",
+    images: ["/products/Aurelith/ChatGPT Image Feb 21, 2026, 08_38_25 PM.png"],
+    isNew: true,
+    description: "Our flagship reference monitors featuring perforated aluminum and walnut construction. Audiophile-grade components for uncompromising sound.",
+  },
+  {
+    id: "aurelith-005",
+    brandId: "aurelith",
+    name: "Aurora Bookshelf Speakers",
+    price: 1699,
+    rating: 4.7,
+    ratingCount: 89,
+    category: "Home & Living",
+    subcategory: "Electronics",
+    images: ["/products/Aurelith/ChatGPT Image Feb 21, 2026, 08_38_28 PM.png"],
+    isNew: false,
+    description: "Soft cream finish with natural maple accents and rose gold details. Warm, inviting sound that complements any interior.",
+  },
+  {
+    id: "aurelith-006",
+    brandId: "aurelith",
+    name: "Horizon Soundbar",
+    price: 1499,
+    rating: 4.8,
+    ratingCount: 134,
+    category: "Home & Living",
+    subcategory: "Electronics",
+    images: ["/products/Aurelith/ChatGPT Image Feb 21, 2026, 08_38_31 PM.png"],
+    isNew: false,
+    description: "Elegant soundbar in light oak and cream linen. Immersive spatial audio transforms your living room into a private cinema.",
+  },
+  {
+    id: "aurelith-007",
+    brandId: "aurelith",
+    name: "Monolith Soundbar",
+    price: 1999,
+    rating: 4.9,
+    ratingCount: 76,
+    category: "Home & Living",
+    subcategory: "Electronics",
+    images: ["/products/Aurelith/ChatGPT Image Feb 21, 2026, 08_38_34 PM.png"],
+    isNew: true,
+    description: "Premium soundbar in dark walnut with black mesh and gold accents. Dolby Atmos support for cinematic surround sound.",
+  },
+  {
+    id: "aurelith-008",
+    brandId: "aurelith",
+    name: "Solstice Wireless Speaker",
+    price: 899,
+    rating: 4.8,
+    ratingCount: 156,
+    category: "Home & Living",
+    subcategory: "Electronics",
+    images: ["/products/Aurelith/new.png"],
+    isNew: true,
+    description: "Compact wireless speaker with sculpted walnut curves, black mesh grille, and signature gold accent lighting. 360° sound in a stunning tabletop form.",
+  },
+];
+
 function buildProducts(): Product[] {
   const products: Product[] = [];
   let index = 0;
 
   mockBrands.forEach((brand, brandIndex) => {
+    // Skip brands with dedicated products
+    if (brand.id === "aurelith" || brand.id === "ashwood-atelier") return;
+    
     const count = 6 + (brandIndex < 12 ? 1 : 0);
 
     for (let i = 0; i < count; i += 1) {
@@ -469,7 +766,30 @@ function buildProducts(): Product[] {
     }
   });
 
-  return products;
+  // Intersperse dedicated brand products throughout the array
+  const allDedicated = [...ashwoodAtelierProducts, ...aurelithProducts];
+  const combined: Product[] = [];
+  
+  // Insert dedicated products at regular intervals throughout the array
+  const insertInterval = Math.floor(products.length / (allDedicated.length + 1)) || 1;
+  let dedicatedIndex = 0;
+  
+  for (let i = 0; i < products.length; i++) {
+    combined.push(products[i]);
+    // Insert a dedicated product every insertInterval products
+    if ((i + 1) % insertInterval === 0 && dedicatedIndex < allDedicated.length) {
+      combined.push(allDedicated[dedicatedIndex]);
+      dedicatedIndex++;
+    }
+  }
+  
+  // Add any remaining dedicated products at the end
+  while (dedicatedIndex < allDedicated.length) {
+    combined.push(allDedicated[dedicatedIndex]);
+    dedicatedIndex++;
+  }
+  
+  return combined;
 }
 
 export const mockProducts: Product[] = buildProducts();

@@ -11,6 +11,8 @@ import {
   Truck,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   Calendar,
   User,
   RotateCcw,
@@ -24,13 +26,18 @@ import { useToast } from "@/components/ui/Toast";
 
 const ITEMS_PER_PAGE = 12;
 
-export default function BrandPage({ params }: { params: { id: string } }) {
+export default function BrandPreviewPage({
+  params,
+}: {
+  params: { id: string };
+}) {
   const brand = getBrandById(params.id);
   if (!brand) notFound();
 
   const { showToast, ToastContainer } = useToast();
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const [isMobileInfoExpanded, setIsMobileInfoExpanded] = useState(false);
+  const [carouselIndex, setCarouselIndex] = useState(0);
   const [videoEnded, setVideoEnded] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -125,6 +132,16 @@ export default function BrandPage({ params }: { params: { id: string } }) {
       alt: `${brand.name} story`,
     });
   }
+
+  const nextSlide = () => {
+    setCarouselIndex((prev) => (prev + 1) % carouselItems.length);
+  };
+
+  const prevSlide = () => {
+    setCarouselIndex(
+      (prev) => (prev - 1 + carouselItems.length) % carouselItems.length
+    );
+  };
 
   return (
     <div className="space-y-4">
