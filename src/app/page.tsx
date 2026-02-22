@@ -127,7 +127,7 @@ function HeroSection() {
               <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-text/5">
                 <video
                   ref={videoRef}
-                  src="/videos/ashwood-atelier-reel.MOV"
+                  src="/videos/ashwood-atelier-reel-compressed.mp4"
                   className="h-full w-full object-cover"
                   autoPlay
                   muted
