@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { Noto_Serif, Inter } from "next/font/google";
 import "./globals.css";
 
 import { AppShell } from "@/components/layout/AppShell";
 
-const headline = Fraunces({
+const headline = Noto_Serif({
   variable: "--font-headline",
   subsets: ["latin"],
+  weight: ["600"],
 });
 
 const body = Inter({

@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
-import { navItems, type NavItem } from "@/components/layout/nav-items";
+import { mobileNavItems, type NavItem } from "@/components/layout/nav-items";
 
 const TabItem = memo(function TabItem({
   item,
@@ -65,11 +65,11 @@ const TabItem = memo(function TabItem({
 export const BottomTabBar = memo(function BottomTabBar() {
   const pathname = usePathname();
 
-  const items = useMemo(() => navItems, []);
+  const items = useMemo(() => mobileNavItems, []);
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-divider/50 bg-bg/95 backdrop-blur-lg backdrop-saturate-150 md:hidden">
-      <div className="safe-area-inset-bottom mx-auto grid max-w-lg grid-cols-6 px-1">
+      <div className="safe-area-inset-bottom mx-auto grid max-w-lg grid-cols-5 px-1">
         {items.map((item) => (
           <TabItem
             key={item.href}

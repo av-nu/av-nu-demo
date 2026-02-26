@@ -47,8 +47,7 @@ export function BrandCard({ brand, priority = false }: BrandCardProps) {
               priority={priority}
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-bg/60 via-transparent to-transparent" />
-          
+                    
           {/* Logo overlay */}
           <div className="absolute bottom-3 left-3 h-10 w-10 overflow-hidden rounded-lg border border-bg/50 bg-bg/90 shadow-md backdrop-blur-sm">
             {isLogoSvg ? (

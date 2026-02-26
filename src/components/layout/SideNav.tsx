@@ -30,7 +30,7 @@ const NavLink = memo(function NavLink({
         collapsed ? "justify-center" : "gap-3",
         isActive
           ? "text-text"
-          : "text-text/60 hover:text-text/90 hover:bg-surface/50",
+          : "text-text/80 hover:text-text hover:bg-surface/50",
       )}
     >
       {isActive && (
@@ -81,7 +81,7 @@ export const SideNav = memo(function SideNav({ collapsed, onToggle }: SideNavPro
       {/* Fixed logo header - NEVER animates, always same size */}
       <div 
         style={{ width: logoHeaderWidth }}
-        className="hidden md:flex md:fixed md:left-0 md:top-0 md:z-50 md:h-[88px] md:items-start md:justify-between md:px-5 md:pt-6"
+        className="hidden md:flex md:fixed md:left-0 md:top-0 md:z-50 md:h-[88px] md:items-center md:justify-between md:px-5"
       >
         <div>
           <img
@@ -93,10 +93,7 @@ export const SideNav = memo(function SideNav({ collapsed, onToggle }: SideNavPro
             loading="eager"
             decoding="async"
           />
-          <div className="mt-2 text-xs tracking-wide text-text/50 whitespace-nowrap">
-            Find What's Nu
-          </div>
-        </div>
+                  </div>
         {!collapsed && (
           <button
             onClick={onToggle}
@@ -142,6 +139,18 @@ export const SideNav = memo(function SideNav({ collapsed, onToggle }: SideNavPro
             />
           ))}
         </nav>
+
+        {/* Footer links */}
+        {!collapsed && (
+          <div className="border-t border-divider/60 px-3 py-4">
+            <div className="space-y-1">
+              <a href="#" className="block px-3 py-1.5 text-xs text-text/50 hover:text-text/70 transition-colors">About av | nu</a>
+              <a href="#" className="block px-3 py-1.5 text-xs text-text/50 hover:text-text/70 transition-colors">Shipping & Returns</a>
+              <a href="#" className="block px-3 py-1.5 text-xs text-text/50 hover:text-text/70 transition-colors">Contact Us</a>
+              <a href="#" className="block px-3 py-1.5 text-xs text-text/50 hover:text-text/70 transition-colors">Terms & Privacy</a>
+            </div>
+          </div>
+        )}
       </motion.aside>
     </>
   );
