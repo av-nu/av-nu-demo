@@ -8,6 +8,7 @@ import {
   FileText, 
   ShoppingBag, 
   User,
+  Heart,
   ChevronRight 
 } from "lucide-react";
 
@@ -17,6 +18,12 @@ const moreLinks = [
     label: "Profile",
     description: "Your account settings",
     icon: User,
+  },
+  {
+    href: "/favorites",
+    label: "Favorites",
+    description: "Your saved items",
+    icon: Heart,
   },
   {
     href: "/cart",

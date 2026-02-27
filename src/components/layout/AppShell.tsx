@@ -70,7 +70,7 @@ export const AppShell = memo(function AppShell({
           <BottomTabBar />
 
           {/* Full-width top bar - matches logo header height */}
-          <div className="hidden md:block md:fixed md:inset-x-0 md:top-0 md:z-40 md:h-[88px] md:bg-bg/80 md:backdrop-blur-sm" />
+          <div className="hidden md:block md:fixed md:inset-x-0 md:top-0 md:z-40 md:h-[88px] md:bg-bg/90" style={{ WebkitBackdropFilter: 'blur(8px)', backdropFilter: 'blur(8px)' }} />
 
           {/* Persistent cart icon - top right */}
           {isMounted && (
@@ -80,7 +80,7 @@ export const AppShell = memo(function AppShell({
           )}
 
           <div className={`transition-[margin] duration-200 ease-in-out ${sideNavCollapsed ? "md:ml-[72px]" : "md:ml-64"}`}>
-            <main className={`w-full px-4 pb-28 md:px-6 md:pb-12 ${pathname !== "/" ? "md:pt-[88px]" : ""}`}>
+            <main className={`w-full px-4 pb-28 md:px-6 md:pb-12 ${pathname !== "/" ? "md:pt-[60px]" : ""}`}>
               <TopHeader />
               <PageTransition>{children}</PageTransition>
             </main>

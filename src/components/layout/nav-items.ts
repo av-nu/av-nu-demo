@@ -6,6 +6,7 @@ import {
   User,
   ShoppingBag,
   MoreHorizontal,
+  Play,
   type LucideIcon,
 } from "lucide-react";
 
@@ -17,6 +18,7 @@ export type NavItem = {
 
 export const navItems: NavItem[] = [
   { href: "/", label: "Home", icon: Home },
+  { href: "/spotlight", label: "Shop the Scene", icon: Play },
   { href: "/search", label: "Search", icon: Search },
   { href: "/brands", label: "Brands", icon: Store },
   { href: "/favorites", label: "Favorites", icon: Heart },
@@ -27,8 +29,8 @@ export const navItems: NavItem[] = [
 // Mobile-only nav items (includes More instead of some desktop items)
 export const mobileNavItems: NavItem[] = [
   { href: "/", label: "Home", icon: Home },
+  { href: "/spotlight", label: "Shop the Scene", icon: Play },
   { href: "/search", label: "Search", icon: Search },
   { href: "/brands", label: "Brands", icon: Store },
-  { href: "/favorites", label: "Favorites", icon: Heart },
   { href: "/more", label: "More", icon: MoreHorizontal },
 ];
