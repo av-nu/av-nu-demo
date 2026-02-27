@@ -115,7 +115,11 @@ function HeroSection() {
             <Button asChild size="lg">
               <Link href="/search">Start exploring</Link>
             </Button>
-            <Button asChild size="lg">
+            <Button
+              asChild
+              size="lg"
+              className="border border-text bg-transparent text-text hover:border-burgundy hover:bg-burgundy hover:text-white"
+            >
               <Link href="/brands">Meet the brands</Link>
             </Button>
           </div>
