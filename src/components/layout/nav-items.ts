@@ -30,6 +30,7 @@ export const navItems: NavItem[] = [
 export const mobileNavItems: NavItem[] = [
   { href: "/", label: "Home", icon: Home },
   { href: "/spotlight", label: "Shop the Scene", icon: Play },
+  { href: "/favorites", label: "My Faves", icon: Heart },
   { href: "/search", label: "Search", icon: Search },
   { href: "/brands", label: "Brands", icon: Store },
   { href: "/more", label: "More", icon: MoreHorizontal },
