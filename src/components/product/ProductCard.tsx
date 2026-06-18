@@ -3,14 +3,14 @@
 import { memo, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, Send, Plus } from "lucide-react";
+import { Send, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 import type { Product } from "@/data/mockProducts";
 import { getBrandById } from "@/lib/data";
 import { StarRating } from "@/components/ui/StarRating";
-import { useFavorites } from "@/hooks/useFavorites";
+import { FaveButton } from "@/components/faves/FaveButton";
 import { useUserRatings } from "@/hooks/useUserRatings";
 import { useCart } from "@/hooks/useCart";
 
@@ -30,22 +30,11 @@ export const ProductCard = memo(function ProductCard({
   stretch = false,
 }: ProductCardProps) {
   const brand = getBrandById(product.brandId);
-  const { isFavorite, toggleFavorite } = useFavorites();
   const { getUserRating, setUserRating } = useUserRatings();
   const { addToCart } = useCart();
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  const favorite = isFavorite(product.id);
   const userRating = getUserRating(product.id);
-
-  const handleFavoriteClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      toggleFavorite(product.id);
-    },
-    [product.id, toggleFavorite],
-  );
 
   const handleShareClick = useCallback(
     async (e: React.MouseEvent) => {
@@ -143,23 +132,12 @@ export const ProductCard = memo(function ProductCard({
         </button>
       </div>
 
-      {/* Favorite button */}
-      <motion.button
-        type="button"
-        aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
-        onClick={handleFavoriteClick}
-        whileTap={{ scale: 0.85 }}
-        className={cn(
-          "pointer-events-auto absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm transition-colors",
-          favorite
-            ? "bg-pink/20 text-pink"
-            : "bg-bg/80 text-text/60 hover:bg-bg hover:text-pink",
-        )}
-      >
-        <Heart
-          className={cn("h-4 w-4 transition-all", favorite && "fill-pink")}
-        />
-      </motion.button>
+      {/* Save to list button */}
+      <FaveButton
+        product={product}
+        onToast={onShare}
+        className="pointer-events-auto absolute right-2 top-2 z-10"
+      />
 
       <div className="mt-3 flex flex-col gap-1">
         <div className="flex items-center justify-between">

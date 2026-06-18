@@ -21,7 +21,7 @@ export const navItems: NavItem[] = [
   { href: "/spotlight", label: "Shop the Scene", icon: Play },
   { href: "/search", label: "Search", icon: Search },
   { href: "/brands", label: "Brands", icon: Store },
-  { href: "/favorites", label: "Favorites", icon: Heart },
+  { href: "/favorites", label: "My Faves", icon: Heart },
   { href: "/profile", label: "Profile", icon: User },
   { href: "/cart", label: "Cart", icon: ShoppingBag },
 ];

@@ -4,12 +4,12 @@ import { useCallback, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Play, Heart, Send, ShoppingBag, Star } from "lucide-react";
+import { Play, Send, ShoppingBag, Star } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { Product } from "@/data/mockProducts";
 import { getBrandById } from "@/lib/data";
-import { useFavorites } from "@/hooks/useFavorites";
+import { FaveButton } from "@/components/faves/FaveButton";
 import { useCart } from "@/hooks/useCart";
 
 interface ShoppableVideoCardProps {
@@ -27,9 +27,7 @@ export function ShoppableVideoCard({
   const [isPaused, setIsPaused] = useState(false);
 
   const brand = getBrandById(product.brandId);
-  const { isFavorite, toggleFavorite } = useFavorites();
   const { addToCart } = useCart();
-  const favorite = isFavorite(product.id);
 
   const productHref = `/product/${product.id}`;
 
@@ -45,15 +43,6 @@ export function ShoppableVideoCard({
       setIsPaused(true);
     }
   }, []);
-
-  const handleFavorite = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      toggleFavorite(product.id);
-    },
-    [product.id, toggleFavorite],
-  );
 
   const handleShare = useCallback(
     async (e: React.MouseEvent) => {
@@ -161,21 +150,9 @@ export function ShoppableVideoCard({
                 </Link>
               </div>
 
-              {/* Favorite + share */}
+              {/* Save + share */}
               <div className="flex shrink-0 items-center gap-1">
-                <button
-                  type="button"
-                  aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
-                  onClick={handleFavorite}
-                  className={cn(
-                    "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
-                    favorite
-                      ? "bg-pink/15 text-pink"
-                      : "text-text/50 hover:bg-surface hover:text-pink",
-                  )}
-                >
-                  <Heart className={cn("h-4 w-4", favorite && "fill-pink")} />
-                </button>
+                <FaveButton product={product} onToast={onShare} variant="plain" />
                 <button
                   type="button"
                   aria-label="Share product"

@@ -21,8 +21,8 @@ const moreLinks = [
   },
   {
     href: "/favorites",
-    label: "Favorites",
-    description: "Your saved items",
+    label: "My Faves",
+    description: "Your lists & saved items",
     icon: Heart,
   },
   {

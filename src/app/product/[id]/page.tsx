@@ -4,14 +4,14 @@ import { useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Heart, Share2, ArrowLeft, Check } from "lucide-react";
+import { Share2, ArrowLeft, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { getBrandById, getProductById } from "@/lib/data";
 import { StarRating } from "@/components/ui/StarRating";
 import { BrandCard } from "@/components/product/BrandCard";
-import { useFavorites } from "@/hooks/useFavorites";
+import { FaveButton } from "@/components/faves/FaveButton";
 import { useUserRatings } from "@/hooks/useUserRatings";
 import { useCart } from "@/hooks/useCart";
 import { useToast } from "@/components/ui/Toast";
@@ -22,7 +22,6 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   if (!product) notFound();
 
   const brand = getBrandById(product.brandId);
-  const { isFavorite, toggleFavorite } = useFavorites();
   const { getUserRating, setUserRating } = useUserRatings();
   const { addToCart, getItemQuantity } = useCart();
   const { showToast, ToastContainer } = useToast();
@@ -30,13 +29,8 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [addedToCart, setAddedToCart] = useState(false);
 
-  const favorite = isFavorite(product.id);
   const userRating = getUserRating(product.id);
   const cartQuantity = getItemQuantity(product.id);
-
-  const handleFavoriteClick = useCallback(() => {
-    toggleFavorite(product.id);
-  }, [product.id, toggleFavorite]);
 
   const handleShareClick = useCallback(async () => {
     const url = `${window.location.origin}/product/${product.id}`;
@@ -114,20 +108,11 @@ export default function ProductPage({ params }: { params: { id: string } }) {
 
             {/* Action buttons overlay */}
             <div className="absolute right-3 top-3 z-10 flex gap-2">
-              <motion.button
-                type="button"
-                aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
-                onClick={handleFavoriteClick}
-                whileTap={{ scale: 0.85 }}
-                className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-md transition-colors",
-                  favorite
-                    ? "bg-pink/20 text-pink"
-                    : "bg-bg/80 text-text/60 hover:bg-bg hover:text-pink",
-                )}
-              >
-                <Heart className={cn("h-5 w-5 transition-all", favorite && "fill-pink")} />
-              </motion.button>
+              <FaveButton
+                product={product}
+                onToast={showToast}
+                className="h-10 w-10 backdrop-blur-md [&_svg]:h-5 [&_svg]:w-5"
+              />
 
               <motion.button
                 type="button"
