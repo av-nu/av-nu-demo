@@ -18,12 +18,16 @@ interface ProductCardProps {
   product: Product;
   priority?: boolean;
   onShare?: (message: string) => void;
+  /** When true, the card stretches to fill its container height with a
+   *  rectangular image (used in the shoppable feed to align with videos). */
+  stretch?: boolean;
 }
 
 export const ProductCard = memo(function ProductCard({
   product,
   priority = false,
   onShare,
+  stretch = false,
 }: ProductCardProps) {
   const brand = getBrandById(product.brandId);
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -95,10 +99,15 @@ export const ProductCard = memo(function ProductCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
       whileHover={{ y: -4 }}
-      className="group relative flex flex-col"
+      className={cn("group relative flex flex-col", stretch && "md:h-full")}
     >
       {/* Image container with Quick Add overlay */}
-      <div className="relative aspect-square overflow-hidden rounded-xl bg-surface">
+      <div
+        className={cn(
+          "relative overflow-hidden rounded-xl bg-surface",
+          stretch ? "aspect-square md:aspect-auto md:min-h-0 md:flex-1" : "aspect-square",
+        )}
+      >
         <Link
           href={`/product/${product.id}`}
           className="block h-full w-full"
