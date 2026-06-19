@@ -1,13 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, ArrowDown, Sparkles } from "lucide-react";
 
+import { PersonalizeDialog } from "@/components/personalize/PersonalizeDialog";
+import { useToast } from "@/components/ui/Toast";
+
 const HERO_IMAGE = "/products/_pool/curated-lifestyle-gLmmY_kGIdU-unsplash2.jpg";
 
 export function HeroSection() {
+  const [personalizeOpen, setPersonalizeOpen] = useState(false);
+  const { showToast, ToastContainer } = useToast();
+
   return (
     <section className="relative">
       <motion.div
@@ -52,7 +59,7 @@ export function HeroSection() {
         <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }} className="w-full sm:flex-1">
           <Link
             href="#nu-feed"
-            className="group flex h-full w-full items-center justify-center gap-2.5 rounded-full bg-burgundy px-6 py-3.5 text-white shadow-sm transition-shadow hover:shadow-md"
+            className="group flex h-full w-full items-center justify-center gap-2.5 rounded-full bg-[#1b2a4a] px-6 py-3.5 text-white shadow-sm transition-all hover:bg-[#16223c] hover:shadow-md"
           >
             <ArrowDown
               className="h-5 w-5 shrink-0 transition-transform duration-300 group-hover:translate-y-0.5"
@@ -64,8 +71,9 @@ export function HeroSection() {
 
         {/* Personalize my experience — playful outlined pill */}
         <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }} className="w-full sm:flex-1">
-          <Link
-            href="/profile"
+          <button
+            type="button"
+            onClick={() => setPersonalizeOpen(true)}
             className="group flex h-full w-full items-center justify-center gap-2.5 rounded-full border-2 border-text/15 bg-bg py-2.5 pl-5 pr-4 text-text transition-colors hover:border-accent hover:text-accent"
           >
             <Sparkles className="h-4 w-4 shrink-0 text-pink transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" strokeWidth={2} />
@@ -74,9 +82,17 @@ export function HeroSection() {
               className="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:translate-x-1"
               strokeWidth={2.2}
             />
-          </Link>
+          </button>
         </motion.div>
       </motion.div>
+
+      {personalizeOpen && (
+        <PersonalizeDialog
+          onClose={() => setPersonalizeOpen(false)}
+          onToast={showToast}
+        />
+      )}
+      <ToastContainer />
     </section>
   );
 }
