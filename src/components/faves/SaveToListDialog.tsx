@@ -7,7 +7,6 @@ import { Heart, Check, Plus, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { Product } from "@/data/mockProducts";
-import { LIST_TYPES, type FaveListType } from "@/data/faves";
 import { Portal } from "@/components/ui/Portal";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useFaveLists } from "@/hooks/useFaveLists";
@@ -30,7 +29,6 @@ export function SaveToListDialog({ product, onClose, onToast }: SaveToListDialog
 
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
-  const [newType, setNewType] = useState<FaveListType>(LIST_TYPES[0]);
 
   const saved = isFavorite(product.id);
 
@@ -63,12 +61,12 @@ export function SaveToListDialog({ product, onClose, onToast }: SaveToListDialog
   const handleCreate = useCallback(() => {
     const name = newName.trim();
     if (!name) return;
-    createList(name, newType, product.id);
+    createList(name, product.id);
     if (!saved) toggleFavorite(product.id);
     onToast?.(`Created "${name}"`);
     setNewName("");
     setCreating(false);
-  }, [newName, newType, product.id, createList, saved, toggleFavorite, onToast]);
+  }, [newName, product.id, createList, saved, toggleFavorite, onToast]);
 
   return (
     <Portal>
@@ -165,7 +163,9 @@ export function SaveToListDialog({ product, onClose, onToast }: SaveToListDialog
                     <span className="block truncate text-sm font-medium text-text">
                       {list.name}
                     </span>
-                    <span className="block text-xs text-text/50">{list.type}</span>
+                    <span className="block text-xs text-text/50">
+                      {list.productIds.length} {list.productIds.length === 1 ? "item" : "items"}
+                    </span>
                   </span>
                   <span
                     className={cn(
@@ -194,23 +194,6 @@ export function SaveToListDialog({ product, onClose, onToast }: SaveToListDialog
                   placeholder="List name"
                   className="h-11 w-full rounded-xl border border-divider/60 bg-surface/50 px-4 text-sm text-text placeholder:text-text/40 focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20"
                 />
-                <div className="flex gap-2">
-                  {LIST_TYPES.map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setNewType(t)}
-                      className={cn(
-                        "flex-1 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                        newType === t
-                          ? "border-accent bg-accent/10 text-accent"
-                          : "border-divider/60 text-text/60 hover:border-text/30",
-                      )}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
                 <div className="flex gap-2">
                   <button
                     type="button"

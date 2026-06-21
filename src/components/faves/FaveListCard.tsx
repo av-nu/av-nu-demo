@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Lock, Users, Globe2, ImageIcon } from "lucide-react";
+import { Lock, Users, Globe2, ImageIcon, Trash2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import type { FaveList } from "@/data/faves";
-import { LIST_TYPE_META } from "@/data/faves";
+import { type FaveList, flattenPages } from "@/data/faves";
 import { getProductById } from "@/lib/data";
 
 const VISIBILITY_META = {
@@ -15,13 +14,25 @@ const VISIBILITY_META = {
   public: { icon: Globe2, label: "Public" },
 } as const;
 
-export function FaveListCard({ list }: { list: FaveList }) {
-  const images = list.productIds
+export function FaveListCard({
+  list,
+  onDelete,
+}: {
+  list: FaveList;
+  onDelete?: (list: FaveList) => void;
+}) {
+  // Public lists hold their products in carousel pages; others in productIds.
+  const sourceIds =
+    list.visibility === "public" && (list.pages?.length ?? 0) > 0
+      ? flattenPages(list.pages)
+      : list.productIds;
+
+  const images = sourceIds
     .map((id) => getProductById(id)?.images[0])
     .filter(Boolean)
     .slice(0, 4) as string[];
 
-  const typeMeta = LIST_TYPE_META[list.type];
+  const itemCount = sourceIds.length;
   const vis = VISIBILITY_META[list.visibility];
   const VisIcon = vis.icon;
 
@@ -69,18 +80,31 @@ export function FaveListCard({ list }: { list: FaveList }) {
           <VisIcon className="h-3 w-3" />
           {vis.label}
         </span>
+
+        {/* Delete */}
+        {onDelete && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onDelete(list);
+            }}
+            aria-label="Delete list"
+            className="absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-bg/85 text-text/60 opacity-0 backdrop-blur-sm transition-opacity hover:text-pink group-hover:opacity-100"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
 
       {/* Meta */}
       <div className="flex flex-1 flex-col gap-0.5 p-3">
-        <span className={cn("text-[11px] font-medium uppercase tracking-wide", typeMeta.accent)}>
-          {list.type}
-        </span>
         <span className="line-clamp-1 font-headline text-sm font-medium text-text">
           {list.name}
         </span>
         <span className="text-xs text-text/50">
-          {list.productIds.length} {list.productIds.length === 1 ? "item" : "items"}
+          {itemCount} {itemCount === 1 ? "item" : "items"}
         </span>
       </div>
     </Link>

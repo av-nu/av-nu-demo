@@ -3,64 +3,20 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Heart, Plus, Search, Shirt, Gift, Layers } from "lucide-react";
+import { Heart, Plus, Search } from "lucide-react";
 
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/ProductCard";
 import { FaveListCard } from "@/components/faves/FaveListCard";
+import { SharedWithYouCard } from "@/components/faves/SharedWithYouCard";
 import { CreateListDialog } from "@/components/faves/CreateListDialog";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useFaveLists } from "@/hooks/useFaveLists";
 import { useToast } from "@/components/ui/Toast";
 import { getProductById } from "@/lib/data";
-import type { FaveList, FaveListType } from "@/data/faves";
+import { type FaveList, sharedWithMe } from "@/data/faves";
 
 const RECENT_LIMIT = 5;
-
-const CREATE_OPTIONS: {
-  type: FaveListType;
-  label: string;
-  icon: typeof Shirt;
-  iconClass: string;
-}[] = [
-  { type: "Looks", label: "Create Look", icon: Shirt, iconClass: "text-pink" },
-  { type: "Gift List", label: "Create Gift List", icon: Gift, iconClass: "text-accent" },
-  { type: "Sets", label: "Create Set", icon: Layers, iconClass: "text-burgundy" },
-];
-
-function CreateTypeButtons({ onPick }: { onPick: (type: FaveListType) => void }) {
-  return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-      {CREATE_OPTIONS.map((opt) => {
-        const Icon = opt.icon;
-        return (
-          <button
-            key={opt.type}
-            type="button"
-            onClick={() => onPick(opt.type)}
-            className="group flex items-center gap-3 rounded-2xl border border-divider/60 bg-surface/30 p-4 text-left transition-colors hover:border-accent/50 hover:bg-surface/60"
-          >
-            <span
-              className={cn(
-                "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-bg shadow-sm",
-                opt.iconClass,
-              )}
-            >
-              <Icon className="h-5 w-5" strokeWidth={1.9} />
-            </span>
-            <span className="min-w-0">
-              <span className="flex items-center gap-1 text-sm font-semibold text-text">
-                <Plus className="h-3.5 w-3.5 text-text/40 transition-colors group-hover:text-accent" />
-                {opt.label}
-              </span>
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 
 function EmptyState() {
   return (
@@ -87,7 +43,7 @@ function EmptyState() {
 
       <h2 className="font-headline text-2xl tracking-tight text-text">Start your Faves</h2>
       <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-text/50">
-        Tap the heart on anything you love to save it here and organize it into Looks, Gift Lists, and Sets.
+        Tap the heart on anything you love to save it here, then organize favorites into lists you can keep private or publish.
       </p>
 
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -102,14 +58,36 @@ function EmptyState() {
   );
 }
 
+function Header({ onCreate }: { onCreate: () => void }) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div>
+        <h1 className="font-headline text-3xl tracking-tight text-text">My Faves</h1>
+        <p className="mt-1 text-sm text-text/50">Your saved items and curated lists</p>
+      </div>
+      <Button onClick={onCreate} className="gap-2">
+        <Plus className="h-4 w-4" />
+        Create list
+      </Button>
+    </div>
+  );
+}
+
 export default function FavoritesPage() {
   const { favorites } = useFavorites();
-  const { lists, isHydrated } = useFaveLists();
+  const { lists, isHydrated, deleteList } = useFaveLists();
   const { showToast, ToastContainer } = useToast();
+
+  const handleDeleteList = (list: FaveList) => {
+    if (window.confirm(`Delete "${list.name}"? This can't be undone.`)) {
+      deleteList(list.id);
+      showToast("List deleted");
+    }
+  };
 
   const [query, setQuery] = useState("");
   const [showAllLists, setShowAllLists] = useState(false);
-  const [createType, setCreateType] = useState<FaveListType | null>(null);
+  const [creating, setCreating] = useState(false);
 
   const q = query.trim().toLowerCase();
 
@@ -118,7 +96,6 @@ export default function FavoritesPage() {
     if (!q) return lists;
     return lists.filter((list: FaveList) => {
       if (list.name.toLowerCase().includes(q)) return true;
-      if (list.type.toLowerCase().includes(q)) return true;
       return list.productIds.some((id) =>
         getProductById(id)?.name.toLowerCase().includes(q),
       );
@@ -142,14 +119,11 @@ export default function FavoritesPage() {
   if (isHydrated && !hasAnything) {
     return (
       <div className="space-y-8">
-        <Header />
-        <CreateTypeButtons onPick={setCreateType} />
-        <hr className="border-divider/60" />
+        <Header onCreate={() => setCreating(true)} />
         <EmptyState />
-        {createType && (
+        {creating && (
           <CreateListDialog
-            initialType={createType}
-            onClose={() => setCreateType(null)}
+            onClose={() => setCreating(false)}
             onCreated={() => showToast("List created")}
           />
         )}
@@ -160,12 +134,7 @@ export default function FavoritesPage() {
 
   return (
     <div className="space-y-8">
-      <Header />
-
-      {/* Create a typed list */}
-      <CreateTypeButtons onPick={setCreateType} />
-
-      <hr className="border-divider/60" />
+      <Header onCreate={() => setCreating(true)} />
 
       {/* Search */}
       <div className="relative">
@@ -205,11 +174,24 @@ export default function FavoritesPage() {
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {visibleLists.map((list) => (
-              <FaveListCard key={list.id} list={list} />
+              <FaveListCard key={list.id} list={list} onDelete={handleDeleteList} />
             ))}
           </div>
         )}
       </section>
+
+      {/* Shared with you (inner-circle shares received) */}
+      {!q && sharedWithMe.length > 0 && (
+        <section>
+          <h2 className="mb-1 font-headline text-lg tracking-tight text-text">Shared with you</h2>
+          <p className="mb-4 text-sm text-text/50">Lists your inner circle shared with you</p>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {sharedWithMe.map((shared) => (
+              <SharedWithYouCard key={shared.id} shared={shared} onToast={showToast} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Saved items (umbrella) */}
       <section>
@@ -236,23 +218,13 @@ export default function FavoritesPage() {
         )}
       </section>
 
-      {createType && (
+      {creating && (
         <CreateListDialog
-          initialType={createType}
-          onClose={() => setCreateType(null)}
+          onClose={() => setCreating(false)}
           onCreated={() => showToast("List created")}
         />
       )}
       <ToastContainer />
-    </div>
-  );
-}
-
-function Header() {
-  return (
-    <div>
-      <h1 className="font-headline text-3xl tracking-tight text-text">My Faves</h1>
-      <p className="mt-1 text-sm text-text/50">Your saved items and curated lists</p>
     </div>
   );
 }

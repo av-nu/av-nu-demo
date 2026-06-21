@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Lock, Users, Globe2, Check, Link2 } from "lucide-react";
+import { X, Lock, Users, Check, Link2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { FaveList, FaveVisibility } from "@/data/faves";
@@ -23,15 +23,18 @@ const OPTIONS: {
   description: string;
 }[] = [
   { value: "private", icon: Lock, label: "Private", description: "Only you can see this list." },
-  { value: "inner-circle", icon: Users, label: "Inner circle", description: "Share with people closest to you." },
-  { value: "public", icon: Globe2, label: "Public", description: "Visible to followers and shown as a shoppable post on the home feed." },
+  { value: "inner-circle", icon: Users, label: "Inner circle", description: "Shows up in your inner circle's My Faves." },
 ];
 
 export function ShareListDialog({ list, onClose, onToast }: ShareListDialogProps) {
   const { setVisibility } = useFaveLists();
   const innerCircle = getInnerCircle();
 
-  const [visibility, setVis] = useState<FaveVisibility>(list.visibility);
+  // This dialog only handles private vs inner-circle sharing. Publishing to the
+  // public feed is a separate action in the editor.
+  const [visibility, setVis] = useState<FaveVisibility>(
+    list.visibility === "public" ? "private" : list.visibility,
+  );
   // "all" when sharedWith is empty, otherwise specific selection.
   const [shareMode, setShareMode] = useState<"all" | "selected">(
     list.sharedWith.length > 0 ? "selected" : "all",
@@ -51,9 +54,7 @@ export function ShareListDialog({ list, onClose, onToast }: ShareListDialogProps
     onToast?.(
       visibility === "private"
         ? "List set to private"
-        : visibility === "public"
-          ? "Shared publicly — now on the home feed"
-          : "Shared with your inner circle",
+        : "Shared with your inner circle",
     );
     onClose();
   };
@@ -89,7 +90,7 @@ export function ShareListDialog({ list, onClose, onToast }: ShareListDialogProps
         >
           <div className="flex items-center justify-between border-b border-divider/60 p-4">
             <div>
-              <h2 className="font-headline text-lg tracking-tight text-text">Share list</h2>
+              <h2 className="font-headline text-lg tracking-tight text-text">Sharing</h2>
               <p className="text-xs text-text/50">{list.name}</p>
             </div>
             <button
