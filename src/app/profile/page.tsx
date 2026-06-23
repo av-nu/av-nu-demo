@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { User, Settings, Truck, FlaskConical } from "lucide-react";
+import { User, Settings, Truck, FlaskConical, Package, ChevronRight } from "lucide-react";
 
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 
@@ -185,6 +186,21 @@ export default function ProfilePage() {
           — This is a preview environment. Data is stored locally.
         </span>
       </div>
+
+      {/* Your orders */}
+      <Link
+        href="/orders"
+        className="flex items-center gap-3 rounded-2xl border border-divider/50 bg-bg p-4 transition-colors hover:border-accent/40"
+      >
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10">
+          <Package className="h-5 w-5 text-accent" />
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-semibold text-text">Your orders</p>
+          <p className="text-xs text-text/50">Track shipments and manage returns</p>
+        </div>
+        <ChevronRight className="h-4 w-4 text-text/30" />
+      </Link>
 
       {/* Account Section */}
       <section className="rounded-2xl border border-divider/50 bg-surface/30 p-6">

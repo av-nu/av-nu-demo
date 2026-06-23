@@ -29,6 +29,8 @@ export const AppShell = memo(function AppShell({
     setIsMounted(true);
   }, []);
 
+  const isAdmin = pathname?.startsWith("/admin") ?? false;
+
   const useIsomorphicLayoutEffect =
     typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
@@ -61,6 +63,12 @@ export const AppShell = memo(function AppShell({
       window.clearTimeout(t);
     };
   }, [pathname]);
+
+  // The internal OMS / admin app renders its own chrome (see app/admin/layout)
+  // and intentionally skips the shopper shell.
+  if (isAdmin) {
+    return <div className="min-h-screen bg-surface">{children}</div>;
+  }
 
   return (
     <CartProvider>
