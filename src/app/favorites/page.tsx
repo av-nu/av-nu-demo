@@ -51,7 +51,7 @@ function EmptyState() {
           <Link href="/">Explore products</Link>
         </Button>
         <Button asChild variant="ghost" size="lg">
-          <Link href="/brands">Browse brands</Link>
+          <Link href="/window-shopping">Browse brands</Link>
         </Button>
       </div>
     </motion.div>

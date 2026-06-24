@@ -20,7 +20,7 @@ export const navItems: NavItem[] = [
   { href: "/", label: "Home", icon: Home },
   { href: "/spotlight", label: "Shop the Scene", icon: Play },
   { href: "/search", label: "Search", icon: Search },
-  { href: "/brands", label: "Brands", icon: Store },
+  { href: "/window-shopping", label: "Window Shopping", icon: Store },
   { href: "/favorites", label: "My Faves", icon: Heart },
   { href: "/profile", label: "Profile", icon: User },
   { href: "/cart", label: "Cart", icon: ShoppingBag },
@@ -32,6 +32,6 @@ export const mobileNavItems: NavItem[] = [
   { href: "/spotlight", label: "Shop the Scene", icon: Play },
   { href: "/favorites", label: "My Faves", icon: Heart },
   { href: "/search", label: "Search", icon: Search },
-  { href: "/brands", label: "Brands", icon: Store },
+  { href: "/window-shopping", label: "Window Shopping", icon: Store },
   { href: "/more", label: "More", icon: MoreHorizontal },
 ];

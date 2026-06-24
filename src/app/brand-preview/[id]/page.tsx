@@ -146,7 +146,7 @@ export default function BrandPreviewPage({
   return (
     <div className="space-y-4">
       <Button asChild variant="ghost" size="sm" className="-ml-2">
-        <Link href="/brands" className="gap-2">
+        <Link href="/window-shopping" className="gap-2">
           <ArrowLeft className="h-4 w-4" />
           All Brands
         </Link>
