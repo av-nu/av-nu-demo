@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
+import { useCheckout } from "@/hooks/useCheckout";
 import { getProductById, getBrandById } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,12 @@ export function CartPopover() {
   const [isMounted, setIsMounted] = useState(false);
   const popoverRef = useRef<HTMLDivElement>(null);
   const { items, updateQuantity, removeFromCart, totalItems } = useCart();
+  const { checkoutAndGo } = useCheckout();
+
+  const handleCheckout = () => {
+    setIsOpen(false);
+    checkoutAndGo();
+  };
 
   useEffect(() => {
     setIsMounted(true);
@@ -279,7 +286,7 @@ export function CartPopover() {
                       View cart
                     </Link>
                   </Button>
-                  <Button size="sm" className="flex-1">
+                  <Button size="sm" className="flex-1" onClick={handleCheckout}>
                     Checkout
                   </Button>
                 </div>

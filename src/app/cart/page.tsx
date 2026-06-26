@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/useCart";
+import { useCheckout } from "@/hooks/useCheckout";
 import { getProductById, getBrandById } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
@@ -116,6 +117,7 @@ function FreeShippingProgress({
 export default function CartPage() {
   const { items, updateQuantity, removeFromCart, clearCart, totalItems, isHydrated } =
     useCart();
+  const { checkoutAndGo } = useCheckout();
 
   useEffect(() => {
     const scrollToTop = () => {
@@ -361,7 +363,12 @@ export default function CartPage() {
               <span className="font-semibold text-text">${calculateSubtotal().toFixed(2)}</span>
             </div>
 
-            <Button variant="plum" size="lg" className="mt-6 w-full">
+            <Button
+              variant="plum"
+              size="lg"
+              className="mt-6 w-full"
+              onClick={checkoutAndGo}
+            >
               Checkout
             </Button>
           </div>

@@ -11,6 +11,7 @@ import { SideNav } from "@/components/layout/SideNav";
 import { TopHeader } from "@/components/layout/TopHeader";
 import { NotificationBell } from "@/components/social/NotificationBell";
 import { CartProvider } from "@/hooks/useCart";
+import { AuthProvider } from "@/hooks/useAuth";
 
 const CartPopover = dynamic(
   () => import("@/components/cart/CartPopover").then((m) => m.CartPopover),
@@ -72,8 +73,9 @@ export const AppShell = memo(function AppShell({
   }
 
   return (
-    <CartProvider>
-      <LayoutGroup>
+    <AuthProvider>
+      <CartProvider>
+        <LayoutGroup>
         <div className="min-h-screen bg-bg">
           <SideNav collapsed={sideNavCollapsed} onToggle={() => setSideNavCollapsed(!sideNavCollapsed)} />
           <BottomTabBar />
@@ -96,7 +98,8 @@ export const AppShell = memo(function AppShell({
             </main>
           </div>
         </div>
-      </LayoutGroup>
-    </CartProvider>
+        </LayoutGroup>
+      </CartProvider>
+    </AuthProvider>
   );
 });

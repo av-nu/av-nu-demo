@@ -100,6 +100,43 @@ export function getProductsPage(page: number, pageSize: number) {
   return searchProducts("", {}, page, pageSize);
 }
 
+// Recommends products based on a set of purchased product ids. Candidates are
+// scored by how much they overlap with the purchased items (same brand,
+// category, subcategory), excluding the purchased products themselves. Falls
+// back to top-rated products when overlap is sparse so the block is never empty.
+export function getRecommendedProducts(
+  productIds: string[],
+  limit = 4,
+): Product[] {
+  const purchased = productIds
+    .map((id) => getProductById(id))
+    .filter((p): p is Product => Boolean(p));
+
+  const purchasedIds = new Set(purchased.map((p) => p.id));
+  const brands = new Set(purchased.map((p) => p.brandId));
+  const categories = new Set(purchased.map((p) => p.category));
+  const subcategories = new Set(purchased.map((p) => p.subcategory));
+
+  const scored = mockProducts
+    .filter((p) => !purchasedIds.has(p.id))
+    .map((p) => {
+      let score = 0;
+      if (subcategories.has(p.subcategory)) score += 3;
+      if (categories.has(p.category)) score += 2;
+      if (brands.has(p.brandId)) score += 1;
+      return { product: p, score };
+    });
+
+  scored.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    if (b.product.rating !== a.product.rating)
+      return b.product.rating - a.product.rating;
+    return b.product.ratingCount - a.product.ratingCount;
+  });
+
+  return scored.slice(0, limit).map((s) => s.product);
+}
+
 export function searchProducts(
   query: string,
   filters: ProductFilters,
