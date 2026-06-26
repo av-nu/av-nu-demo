@@ -43,6 +43,7 @@ export function ShoppableFeed({ onShare }: { onShare: (message: string) => void 
       const author = getContactById(c.authorId);
       return {
         id: c.id,
+        authorId: c.authorId,
         authorName: author?.name ?? "A member",
         authorInitials: author?.initials ?? "AV",
         authorColor: author?.color ?? "bg-accent",

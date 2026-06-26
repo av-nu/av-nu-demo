@@ -9,6 +9,8 @@ import {
   ShoppingBag, 
   User,
   Heart,
+  Bell,
+  Users,
   ChevronRight 
 } from "lucide-react";
 
@@ -16,8 +18,20 @@ const moreLinks = [
   {
     href: "/profile",
     label: "Profile",
-    description: "Your account settings",
+    description: "Your social profile & posts",
     icon: User,
+  },
+  {
+    href: "/connections",
+    label: "Connections",
+    description: "Inner circle, followers & invitations",
+    icon: Users,
+  },
+  {
+    href: "/notifications",
+    label: "Notifications",
+    description: "Likes, comments & invites",
+    icon: Bell,
   },
   {
     href: "/favorites",

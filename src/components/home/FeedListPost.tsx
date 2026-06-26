@@ -15,6 +15,7 @@ import { useFaveLists } from "@/hooks/useFaveLists";
 
 export type FeedListPost = {
   id: string;
+  authorId?: string;
   authorName: string;
   authorInitials: string;
   authorColor: string;
@@ -86,13 +87,27 @@ export function FeedListPost({
     <article className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#2f2f2d] shadow-sm ring-1 ring-black/5">
       {/* Header */}
       <div className="flex items-center gap-3 px-3 py-3">
-        <span className={cn("flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold text-white", post.authorColor)}>
-          {post.authorInitials}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-white">{post.authorName}</p>
-          <p className="truncate text-xs text-white/55">{post.name}</p>
-        </div>
+        {post.authorId && post.authorId !== "me" ? (
+          <Link href={`/u/${post.authorId}`} className="flex min-w-0 flex-1 items-center gap-3">
+            <span className={cn("flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold text-white", post.authorColor)}>
+              {post.authorInitials}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold text-white hover:underline">{post.authorName}</span>
+              <span className="block truncate text-xs text-white/55">{post.name}</span>
+            </span>
+          </Link>
+        ) : (
+          <>
+            <span className={cn("flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold text-white", post.authorColor)}>
+              {post.authorInitials}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-white">{post.authorName}</p>
+              <p className="truncate text-xs text-white/55">{post.name}</p>
+            </div>
+          </>
+        )}
         {post.href && (
           <Link href={post.href} className="flex items-center gap-1 text-xs font-medium text-white/80 transition-colors hover:text-white">
             View

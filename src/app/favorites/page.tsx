@@ -3,13 +3,14 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Heart, Plus, Search } from "lucide-react";
+import { Heart, Plus, Search, Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/ProductCard";
 import { FaveListCard } from "@/components/faves/FaveListCard";
 import { SharedWithYouCard } from "@/components/faves/SharedWithYouCard";
 import { CreateListDialog } from "@/components/faves/CreateListDialog";
+import { PublishListDialog } from "@/components/social/PublishListDialog";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useFaveLists } from "@/hooks/useFaveLists";
 import { useToast } from "@/components/ui/Toast";
@@ -58,17 +59,23 @@ function EmptyState() {
   );
 }
 
-function Header({ onCreate }: { onCreate: () => void }) {
+function Header({ onCreate, onPublish }: { onCreate: () => void; onPublish: () => void }) {
   return (
     <div className="flex items-center justify-between gap-4">
       <div>
         <h1 className="font-headline text-3xl tracking-tight text-text">My Faves</h1>
         <p className="mt-1 text-sm text-text/50">Your saved items and curated lists</p>
       </div>
-      <Button onClick={onCreate} className="gap-2">
-        <Plus className="h-4 w-4" />
-        Create list
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button variant="surface" onClick={onPublish} className="gap-2">
+          <Send className="h-4 w-4" />
+          Publish a list
+        </Button>
+        <Button onClick={onCreate} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Create list
+        </Button>
+      </div>
     </div>
   );
 }
@@ -88,6 +95,13 @@ export default function FavoritesPage() {
   const [query, setQuery] = useState("");
   const [showAllLists, setShowAllLists] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [publishOpen, setPublishOpen] = useState(false);
+  const [publishPreselect, setPublishPreselect] = useState<string | undefined>(undefined);
+
+  const handlePublish = (list?: FaveList) => {
+    setPublishPreselect(list?.id);
+    setPublishOpen(true);
+  };
 
   const q = query.trim().toLowerCase();
 
@@ -119,7 +133,7 @@ export default function FavoritesPage() {
   if (isHydrated && !hasAnything) {
     return (
       <div className="space-y-8">
-        <Header onCreate={() => setCreating(true)} />
+        <Header onCreate={() => setCreating(true)} onPublish={() => handlePublish()} />
         <EmptyState />
         {creating && (
           <CreateListDialog
@@ -134,7 +148,7 @@ export default function FavoritesPage() {
 
   return (
     <div className="space-y-8">
-      <Header onCreate={() => setCreating(true)} />
+      <Header onCreate={() => setCreating(true)} onPublish={() => handlePublish()} />
 
       {/* Search */}
       <div className="relative">
@@ -174,7 +188,12 @@ export default function FavoritesPage() {
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {visibleLists.map((list) => (
-              <FaveListCard key={list.id} list={list} onDelete={handleDeleteList} />
+              <FaveListCard
+                key={list.id}
+                list={list}
+                onDelete={handleDeleteList}
+                onPublish={(l) => handlePublish(l)}
+              />
             ))}
           </div>
         )}
@@ -222,6 +241,13 @@ export default function FavoritesPage() {
         <CreateListDialog
           onClose={() => setCreating(false)}
           onCreated={() => showToast("List created")}
+        />
+      )}
+      {publishOpen && (
+        <PublishListDialog
+          preselectedListId={publishPreselect}
+          onClose={() => setPublishOpen(false)}
+          onToast={showToast}
         />
       )}
       <ToastContainer />

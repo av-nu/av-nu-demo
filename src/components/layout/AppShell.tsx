@@ -9,6 +9,7 @@ import { BottomTabBar } from "@/components/layout/BottomTabBar";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { SideNav } from "@/components/layout/SideNav";
 import { TopHeader } from "@/components/layout/TopHeader";
+import { NotificationBell } from "@/components/social/NotificationBell";
 import { CartProvider } from "@/hooks/useCart";
 
 const CartPopover = dynamic(
@@ -80,9 +81,10 @@ export const AppShell = memo(function AppShell({
           {/* Full-width top bar - matches logo header height */}
           <div className="hidden md:block md:fixed md:inset-x-0 md:top-0 md:z-40 md:h-[88px] md:bg-bg/90" style={{ WebkitBackdropFilter: 'blur(8px)', backdropFilter: 'blur(8px)' }} />
 
-          {/* Persistent cart icon - top right */}
+          {/* Persistent notifications + cart icons - top right */}
           {isMounted && (
-            <div className="fixed right-4 top-4 z-50 md:right-8 md:top-6">
+            <div className="fixed right-4 top-4 z-50 flex items-center gap-2 md:right-8 md:top-6">
+              <NotificationBell />
               <CartPopover />
             </div>
           )}

@@ -38,6 +38,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useToast } from "@/components/ui/Toast";
 import { getProductById } from "@/lib/data";
 import { getContactById, getInnerCircle } from "@/data/social";
+import { socialService } from "@/lib/social";
 import { TEMPLATE_IDS, TEMPLATE_LAYOUT, type TemplateId } from "@/data/listTemplates";
 import { flattenPages, type ListPage } from "@/data/faves";
 
@@ -193,6 +194,8 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
   const handlePublish = () => {
     setVisibility(list.id, "public", []);
     showToast("Published to the feed");
+    // Simulate your circle engaging with the freshly published post.
+    socialService.simulateEngagement({ id: list.id, label: list.name });
   };
   const handleUnpublish = () => {
     setVisibility(list.id, "private");
