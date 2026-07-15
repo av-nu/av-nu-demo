@@ -29,7 +29,7 @@ import {
   setOrderHold as setOrderHoldTransform,
   resendNotification as resendNotificationTransform,
 } from "@/lib/omsEngine";
-import { type RefundType } from "@/data/oms";
+import { type RefundType, type ReturnReason } from "@/data/oms";
 
 const ORDERS_KEY = "avnu-oms-orders";
 const VERSION_KEY = "avnu-oms-seed-version";
@@ -204,11 +204,12 @@ export function useOmsOrders() {
     (
       orderId: string,
       merchantOrderId: string,
-      items: { orderItemId: string; quantity: number; reason?: string }[],
-      reason?: string,
+      items: { orderItemId: string; quantity: number }[],
+      reasonCode: ReturnReason,
+      opts?: { costAcknowledged?: boolean },
     ) => {
       patchOrder(orderId, (o) =>
-        createReturnRequest(o, merchantOrderId, items, reason),
+        createReturnRequest(o, merchantOrderId, items, reasonCode, opts),
       );
     },
     [patchOrder],

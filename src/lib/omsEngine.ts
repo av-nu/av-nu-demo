@@ -15,17 +15,20 @@ import {
   type OrderEvent,
   type Refund,
   type RefundType,
+  type ReturnReason,
   type ReturnRequest,
   type ShipmentStatus,
   type StripeCheckoutEvent,
   type TrackingEvent,
   type WebhookEvent,
   ORDER_NUMBER_START,
+  RETURN_REASON_LABELS,
   buildNewPaidOrder,
   buildShopifyPayloadMeta,
   makeShopifyOrderRef,
   makeEasyPostShipment,
-  makeReturnLabelShipment,
+  makeUpsReturnLabel,
+  merchantCoversShipping,
   parseOrderSeq,
   returnRefundAmount,
   rollupOrderStatus,
@@ -741,23 +744,51 @@ function setMerchantReturnStatus(
   );
 }
 
-/** Customer requests a return for specific items + quantities. */
+/**
+ * Customer requests a return for specific items + quantities from ONE merchant.
+ *
+ * Business rules (see spec):
+ *  - defective / wrong_item → merchant covers shipping → gated for merchant
+ *    approval (status `requested`, no label yet).
+ *  - no_longer_wanted → customer covers shipping → once they acknowledge the
+ *    cost, a UPS pay-on-dropoff label is issued instantly and "emailed".
+ *
+ * For a multi-merchant return, call this once per merchant order so each gets
+ * its own return request + label.
+ */
 export function createReturnRequest(
   order: Order,
   merchantOrderId: string,
-  items: { orderItemId: string; quantity: number; reason?: string }[],
-  reason?: string,
+  items: { orderItemId: string; quantity: number }[],
+  reasonCode: ReturnReason,
+  opts?: { costAcknowledged?: boolean },
 ): Order {
   const m = order.merchantOrders.find((x) => x.id === merchantOrderId);
   if (!m || items.length === 0) return order;
 
+  const reasonLabel = RETURN_REASON_LABELS[reasonCode];
+  const shippingPaidBy = merchantCoversShipping(reasonCode)
+    ? "merchant"
+    : "customer";
+  // Instant label only for customer-paid returns that have acknowledged cost.
+  const instantLabel =
+    shippingPaidBy === "customer" && opts?.costAcknowledged === true;
+
   const returnId = uid("ret");
+  const returnShipment = instantLabel
+    ? makeUpsReturnLabel(merchantOrderId, shippingPaidBy)
+    : undefined;
+
   const ret: ReturnRequest = {
     id: returnId,
     orderId: order.id,
     merchantOrderId,
-    status: "requested",
-    reason,
+    status: instantLabel ? "label_created" : "requested",
+    reason: reasonLabel,
+    reasonCode,
+    shippingPaidBy,
+    costAcknowledged: opts?.costAcknowledged,
+    returnShipment,
     createdAt: new Date().toISOString(),
     items: items.map((i) => {
       const item = m.items.find((it) => it.id === i.orderItemId);
@@ -766,37 +797,55 @@ export function createReturnRequest(
         orderItemId: i.orderItemId,
         productTitle: item?.productTitle ?? "Item",
         quantity: i.quantity,
-        reason: i.reason ?? reason,
+        reason: reasonLabel,
       };
     }),
   };
+
+  const itemsSummary = ret.items
+    .map((i) => `${i.quantity}× ${i.productTitle}`)
+    .join(", ");
+
+  const events: OrderEvent[] = [
+    event(order, {
+      merchantOrderId,
+      type: "return.requested",
+      message: `Return requested (${reasonLabel}) · ${itemsSummary} · shipping paid by ${shippingPaidBy}`,
+      actor: "customer",
+    }),
+  ];
+
+  if (instantLabel && returnShipment) {
+    events.push(
+      event(order, {
+        merchantOrderId,
+        type: "notification.return_label_sent",
+        message: `UPS return label emailed to ${order.customer.email} · ${returnShipment.trackingCode} (customer pays on dropoff)`,
+        actor: "system",
+      }),
+    );
+  }
 
   return {
     ...order,
     returns: [...order.returns, ret],
     merchantOrders: setMerchantReturnStatus(order, merchantOrderId, {
-      returnStatus: "requested",
+      returnStatus: instantLabel ? "label_created" : "requested",
     }),
-    events: [
-      ...order.events,
-      event(order, {
-        merchantOrderId,
-        type: "return.requested",
-        message: `Return requested · ${ret.items
-          .map((i) => `${i.quantity}× ${i.productTitle}`)
-          .join(", ")}`,
-        actor: "customer",
-      }),
-    ],
+    events: [...order.events, ...events],
   };
 }
 
-/** Admin approves a return and avnu generates the EasyPost return label. */
+/**
+ * Merchant/admin approves a merchant-paid return and avnu generates the UPS
+ * return label, which is then "emailed" to the shopper.
+ */
 export function approveReturn(order: Order, returnId: string): Order {
   const ret = order.returns.find((r) => r.id === returnId);
   if (!ret || ret.status !== "requested") return order;
 
-  const shipment = makeReturnLabelShipment(ret.merchantOrderId);
+  const paidBy = ret.shippingPaidBy ?? "merchant";
+  const shipment = makeUpsReturnLabel(ret.merchantOrderId, paidBy);
 
   return {
     ...order,
@@ -813,8 +862,14 @@ export function approveReturn(order: Order, returnId: string): Order {
       event(order, {
         merchantOrderId: ret.merchantOrderId,
         type: "return.approved",
-        message: `Return approved · EasyPost return label ${shipment.trackingCode} generated`,
-        actor: "admin",
+        message: `Return approved · UPS return label ${shipment.trackingCode} generated (merchant pays)`,
+        actor: "merchant",
+      }),
+      event(order, {
+        merchantOrderId: ret.merchantOrderId,
+        type: "notification.return_label_sent",
+        message: `UPS return label emailed to ${order.customer.email} · ${shipment.trackingCode}`,
+        actor: "system",
       }),
     ],
   };

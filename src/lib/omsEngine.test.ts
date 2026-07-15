@@ -6,6 +6,7 @@ import {
   type Order,
   type ShipmentStatus,
   makeStripeCheckoutEvent,
+  merchantCoversShipping,
 } from "@/data/oms";
 import {
   applyStripeCheckoutEvent,
@@ -173,7 +174,7 @@ describe("refunds", () => {
 });
 
 describe("returns", () => {
-  it("creates a request and approval generates an EasyPost return label", () => {
+  it("gates merchant-paid reasons for approval, then generates a UPS return label", () => {
     const o = driveToDelivered(
       applyStripeCheckoutEvent([], makeStripeCheckoutEvent(singleMerchantCheckout())).order,
     );
@@ -183,16 +184,57 @@ describe("returns", () => {
       o,
       m.id,
       [{ orderItemId: m.items[0].id, quantity: 1 }],
-      "Not as expected",
+      "defective",
     );
     expect(requested.returns).toHaveLength(1);
+    // Defective is the merchant's fault → gated for approval, no label yet.
     expect(requested.returns[0].status).toBe("requested");
+    expect(requested.returns[0].shippingPaidBy).toBe("merchant");
+    expect(requested.returns[0].returnShipment).toBeUndefined();
 
     const approved = approveReturn(requested, requested.returns[0].id);
     const ret = approved.returns[0];
     expect(ret.status).toBe("label_created");
     expect(ret.returnShipment?.isReturn).toBe(true);
+    expect(ret.returnShipment?.carrier).toBe("UPS");
     expect(ret.returnShipment?.trackingCode).toBeTruthy();
     expect(approved.merchantOrders[0].returnStatus).toBe("label_created");
+  });
+
+  it("issues an instant UPS label for customer-paid returns once cost is acknowledged", () => {
+    const o = driveToDelivered(
+      applyStripeCheckoutEvent([], makeStripeCheckoutEvent(singleMerchantCheckout())).order,
+    );
+    const m = o.merchantOrders[0];
+
+    // Not acknowledged → still gated (no instant label).
+    const notAcked = createReturnRequest(
+      o,
+      m.id,
+      [{ orderItemId: m.items[0].id, quantity: 1 }],
+      "no_longer_wanted",
+    );
+    expect(notAcked.returns[0].status).toBe("requested");
+    expect(notAcked.returns[0].returnShipment).toBeUndefined();
+
+    // Acknowledged → instant label.
+    const acked = createReturnRequest(
+      o,
+      m.id,
+      [{ orderItemId: m.items[0].id, quantity: 1 }],
+      "no_longer_wanted",
+      { costAcknowledged: true },
+    );
+    const ret = acked.returns[0];
+    expect(ret.shippingPaidBy).toBe("customer");
+    expect(ret.status).toBe("label_created");
+    expect(ret.returnShipment?.carrier).toBe("UPS");
+    expect(acked.merchantOrders[0].returnStatus).toBe("label_created");
+  });
+
+  it("classifies who pays return shipping by reason", () => {
+    expect(merchantCoversShipping("defective")).toBe(true);
+    expect(merchantCoversShipping("wrong_item")).toBe(true);
+    expect(merchantCoversShipping("no_longer_wanted")).toBe(false);
   });
 });

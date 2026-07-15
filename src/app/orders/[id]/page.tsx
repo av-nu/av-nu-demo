@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -14,8 +13,6 @@ import {
 
 import { cn } from "@/lib/utils";
 import { useOmsOrders } from "@/hooks/useOmsOrders";
-import { useToast } from "@/components/ui/Toast";
-import { RequestReturnDialog } from "@/components/oms/RequestReturnDialog";
 import {
   type MerchantOrder,
   type Order,
@@ -33,9 +30,7 @@ const SUPPORT_EMAIL = "support@avnu.com";
 
 export default function CustomerOrderDetailPage() {
   const params = useParams<{ id: string }>();
-  const { getOrder, isHydrated, requestReturn } = useOmsOrders();
-  const { showToast, ToastContainer } = useToast();
-  const [returnForId, setReturnForId] = useState<string | null>(null);
+  const { getOrder, isHydrated } = useOmsOrders();
 
   if (!isHydrated) {
     return (
@@ -93,10 +88,10 @@ export default function CustomerOrderDetailPage() {
         {order.merchantOrders.map((m, i) => (
           <PackageCard
             key={m.id}
+            orderId={order.id}
             m={m}
             index={i}
             returns={order.returns.filter((r) => r.merchantOrderId === m.id)}
-            onRequestReturn={() => setReturnForId(m.id)}
           />
         ))}
       </div>
@@ -122,20 +117,6 @@ export default function CustomerOrderDetailPage() {
         </div>
       </div>
 
-      {returnForId && (
-        <RequestReturnDialog
-          merchantOrder={
-            order.merchantOrders.find((m) => m.id === returnForId)!
-          }
-          onClose={() => setReturnForId(null)}
-          onSubmit={(items, reason) => {
-            requestReturn(order.id, returnForId, items, reason);
-            setReturnForId(null);
-            showToast("Return requested — we'll email your label once approved");
-          }}
-        />
-      )}
-      <ToastContainer />
     </div>
   );
 }
@@ -153,15 +134,15 @@ function BackLink() {
 }
 
 function PackageCard({
+  orderId,
   m,
   index,
   returns,
-  onRequestReturn,
 }: {
+  orderId: string;
   m: MerchantOrder;
   index: number;
   returns: ReturnRequest[];
-  onRequestReturn: () => void;
 }) {
   const label = customerShipmentLabel(m.shipmentStatus);
   const tone = statusTone(m.shipmentStatus);
@@ -170,11 +151,14 @@ function PackageCard({
     m.shipment &&
     (m.labelStatus === "purchased" || m.labelStatus === "delivered_to_shopify") &&
     ["in_transit", "out_for_delivery", "delivered"].includes(m.shipmentStatus);
-  const hasEligible = m.items.some(
-    (it) => itemReturnEligibility(m, it).eligible,
-  );
   const activeReturn = returns.find(
     (r) => r.status !== "rejected" && r.status !== "closed",
+  );
+  // Items already inside an active return can't be returned again.
+  const pendingItemIds = new Set(
+    returns
+      .filter((r) => r.status !== "rejected" && r.status !== "closed")
+      .flatMap((r) => r.items.map((i) => i.orderItemId)),
   );
 
   return (
@@ -216,23 +200,30 @@ function PackageCard({
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm">{it.productTitle}</p>
-                <p className="text-xs text-text/40">Qty {it.quantity}</p>
-                {elig.eligible ? (
-                  <span className="mt-1 inline-flex items-center gap-1 text-xs text-accent">
-                    <RotateCcw className="h-3 w-3" />
-                    Eligible for return
-                  </span>
-                ) : (
-                  elig.reason && (
-                    <span className="mt-1 inline-block text-xs text-text/40">
-                      {elig.reason}
-                    </span>
-                  )
-                )}
+                <p className="text-xs text-text/40">
+                  Qty {it.quantity} · {formatUsd(it.unitPrice * it.quantity)}
+                </p>
               </div>
-              <span className="text-sm tabular-nums">
-                {formatUsd(it.unitPrice * it.quantity)}
-              </span>
+              {pendingItemIds.has(it.id) ? (
+                <span className="shrink-0 cursor-not-allowed rounded-lg border border-divider/50 bg-surface/60 px-3 py-1.5 text-[11px] text-text/30">
+                  Return in progress
+                </span>
+              ) : elig.eligible ? (
+                <Link
+                  href={`/returns/${orderId}?item=${it.id}`}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-accent/40 px-3 py-1.5 text-xs font-medium text-accent transition-colors hover:bg-accent/5"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Return
+                </Link>
+              ) : (
+                <span
+                  className="shrink-0 cursor-not-allowed rounded-lg border border-divider/50 px-3 py-1.5 text-right text-[11px] text-text/30"
+                  title={elig.reason}
+                >
+                  {elig.reason ?? "Not eligible"}
+                </span>
+              )}
             </li>
           );
         })}
@@ -273,42 +264,52 @@ function PackageCard({
       )}
 
       {/* Returns */}
-      <div className="border-t border-divider/60 px-4 py-3">
-        {activeReturn ? (
-          <div className="flex items-center justify-between gap-2 text-sm">
-            <span className="text-text/60">
-              Return · {humanizeStatus(activeReturn.status)}
-            </span>
-            {activeReturn.returnShipment?.trackingUrl &&
-              activeReturn.status !== "refunded" && (
-                <a
-                  href={activeReturn.returnShipment.trackingUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 font-medium text-accent"
-                >
-                  Return label
-                  <ExternalLink className="h-3.5 w-3.5" />
-                </a>
-              )}
-            {activeReturn.status === "refunded" && (
-              <span className="inline-flex items-center gap-1 text-emerald-700">
+      {activeReturn && (
+        <div className="border-t border-divider/60 bg-surface/40 px-4 py-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <RotateCcw className="h-4 w-4 shrink-0 text-text/40" />
+              <div>
+                <p className="text-sm font-medium">Return submitted</p>
+                <p className="text-xs text-text/50">
+                  {humanizeStatus(activeReturn.status)}
+                </p>
+              </div>
+            </div>
+            {activeReturn.status === "refunded" ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 Refunded
               </span>
+            ) : (
+              <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+                {humanizeStatus(activeReturn.status)}
+              </span>
             )}
           </div>
-        ) : hasEligible ? (
-          <button
-            type="button"
-            onClick={onRequestReturn}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-accent"
-          >
-            <RotateCcw className="h-4 w-4" />
-            Request a return
-          </button>
-        ) : null}
-      </div>
+          {activeReturn.returnShipment && activeReturn.status !== "refunded" && (
+            <div className="mt-3 flex flex-col gap-2 rounded-xl border border-divider/60 bg-bg px-3 py-2.5 text-sm">
+              {activeReturn.returnShipment.trackingCode && (
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs text-text/50">Tracking</span>
+                  <span className="font-mono text-xs">
+                    {activeReturn.returnShipment.trackingCode}
+                  </span>
+                </div>
+              )}
+              <a
+                href={activeReturn.returnShipment.trackingUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-accent/40 py-1.5 text-xs font-medium text-accent transition-colors hover:bg-accent/5"
+              >
+                View return label
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 }

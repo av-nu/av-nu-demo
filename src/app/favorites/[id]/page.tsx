@@ -21,32 +21,26 @@ import {
   Trash2,
   Check,
   X,
-  Lock,
-  Users,
-  Globe2,
-  EyeOff,
   Plus,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ListTileGrid } from "@/components/faves/ListTileGrid";
+import { EditorialRenderer } from "@/components/looks/editorial/EditorialRenderer";
+import { EditorialBuilder } from "@/components/looks/editorial/EditorialBuilder";
 import { ProductPickerDialog } from "@/components/faves/ProductPickerDialog";
-import { ShareListDialog } from "@/components/faves/ShareListDialog";
+import { ExternalShareButton } from "@/components/faves/ExternalShareButton";
 import { useFaveLists } from "@/hooks/useFaveLists";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useToast } from "@/components/ui/Toast";
 import { getProductById } from "@/lib/data";
-import { getContactById, getInnerCircle } from "@/data/social";
-import { socialService } from "@/lib/social";
 import { TEMPLATE_IDS, TEMPLATE_LAYOUT, type TemplateId } from "@/data/listTemplates";
 import { flattenPages, type ListPage } from "@/data/faves";
+import { createEditorialPage, editorialProductIds, normalizeEditorialPage, type EditorialPageDesign } from "@/lib/editorial";
 
-const VIS_META = {
-  private: { icon: Lock, label: "Private" },
-  "inner-circle": { icon: Users, label: "Inner circle" },
-  public: { icon: Globe2, label: "Public" },
-} as const;
+type EditorialDraftPage = ListPage & { editorial: EditorialPageDesign };
+type EditorialDraft = { activePageId: string; pages: EditorialDraftPage[] };
 
 function arrayMove<T>(arr: T[], from: number, to: number): T[] {
   const a = [...arr];
@@ -101,8 +95,6 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
     updateList,
     deleteList,
     setProductIds,
-    setVisibility,
-    setCaption,
     addPage,
     removePage,
     updatePage,
@@ -112,11 +104,12 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
 
   const [editing, setEditing] = useState(false);
   const [draftName, setDraftName] = useState("");
-  const [sharing, setSharing] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   // Collection picker (private / inner-circle), or per-page picker (public).
   const [collectionPicker, setCollectionPicker] = useState(false);
   const [pagePicker, setPagePicker] = useState<string | null>(null);
+  // Editorial editing mode
+  const [editorialDraft, setEditorialDraft] = useState<EditorialDraft | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -149,8 +142,6 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
 
   const pages: ListPage[] = list.pages ?? [];
   const isPublic = list.visibility === "public";
-  const vis = VIS_META[list.visibility];
-  const VisIcon = vis.icon;
 
   const collectionProducts = list.productIds
     .map((id) => getProductById(id))
@@ -165,13 +156,6 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
     });
     return Array.from(set);
   })();
-
-  const recipients =
-    list.visibility === "inner-circle"
-      ? list.sharedWith.length > 0
-        ? list.sharedWith.map((id) => getContactById(id)?.name).filter(Boolean).join(", ")
-        : `All inner circle (${getInnerCircle().length})`
-      : null;
 
   const startEdit = () => {
     setDraftName(list.name);
@@ -191,15 +175,82 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
     }
   };
 
-  const handlePublish = () => {
-    setVisibility(list.id, "public", []);
-    showToast("Published to the feed");
-    // Simulate your circle engaging with the freshly published post.
-    socialService.simulateEngagement({ id: list.id, label: list.name });
+  const handleStartEditorial = (pageId: string) => {
+    const draftPages = pages.map((page) => ({
+      ...page,
+      editorial: normalizeEditorialPage(page.editorial, page.productIds, list.name),
+    }));
+    if (!draftPages.some((page) => page.id === pageId)) return;
+    setEditorialDraft({ activePageId: pageId, pages: draftPages });
   };
-  const handleUnpublish = () => {
-    setVisibility(list.id, "private");
-    showToast("Unpublished — set to private");
+
+  const handleSaveEditorial = () => {
+    if (!editorialDraft) return;
+    updateList(list.id, { pages: editorialDraft.pages });
+    setEditorialDraft(null);
+    showToast("Carousel design saved");
+  };
+
+  const handleCancelEditorial = () => {
+    setEditorialDraft(null);
+  };
+
+  const handleAddEditorialPage = () => {
+    setEditorialDraft((current) => {
+      if (!current) return current;
+      const id = `page-${Date.now()}-${current.pages.length}`;
+      const page: EditorialDraftPage = {
+        id,
+        template: list.template,
+        productIds: [],
+        editorial: createEditorialPage([], list.name, "collection-story"),
+      };
+      return { activePageId: id, pages: [...current.pages, page] };
+    });
+  };
+
+  const handleDuplicateEditorialPage = () => {
+    setEditorialDraft((current) => {
+      if (!current) return current;
+      const index = current.pages.findIndex((page) => page.id === current.activePageId);
+      const source = current.pages[index];
+      if (!source) return current;
+      const stamp = Date.now();
+      const copy: EditorialDraftPage = {
+        ...source,
+        id: `page-${stamp}-${current.pages.length}`,
+        productIds: [...source.productIds],
+        editorial: {
+          ...source.editorial,
+          elements: source.editorial.elements.map((element) => ({ ...element, id: `${element.id}-copy-${stamp}` })),
+        },
+      };
+      const nextPages = [...current.pages.slice(0, index + 1), copy, ...current.pages.slice(index + 1)];
+      return { activePageId: copy.id, pages: nextPages };
+    });
+  };
+
+  const handleMoveEditorialPage = (direction: -1 | 1) => {
+    setEditorialDraft((current) => {
+      if (!current) return current;
+      const index = current.pages.findIndex((page) => page.id === current.activePageId);
+      const target = index + direction;
+      if (index < 0 || target < 0 || target >= current.pages.length) return current;
+      const nextPages = [...current.pages];
+      const [page] = nextPages.splice(index, 1);
+      nextPages.splice(target, 0, page);
+      return { ...current, pages: nextPages };
+    });
+  };
+
+  const handleDeleteEditorialPage = () => {
+    setEditorialDraft((current) => {
+      if (!current || current.pages.length <= 1) return current;
+      const index = current.pages.findIndex((page) => page.id === current.activePageId);
+      const nextPages = current.pages.filter((page) => page.id !== current.activePageId);
+      const nextActive = nextPages[Math.min(Math.max(index, 0), nextPages.length - 1)];
+      return { activePageId: nextActive.id, pages: nextPages };
+    });
   };
 
   const handleDragStart = (e: DragStartEvent) => setActiveId(String(e.active.id));
@@ -297,40 +348,8 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
           )}
         </div>
 
-        {/* Status pill */}
-        <div
-          className={cn(
-            "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm",
-            isPublic
-              ? "border-accent/40 bg-accent/10 text-accent"
-              : "border-divider/60 bg-surface/40 text-text/70",
-          )}
-        >
-          <VisIcon className="h-4 w-4" />
-          <span className="font-medium">{vis.label}</span>
-          {recipients && <span className="opacity-70">· {recipients}</span>}
-          {isPublic && <span className="opacity-70">· Live on feed</span>}
-        </div>
-
-        {/* Actions: sharing/status vs publishing are separate */}
         <div className="flex flex-wrap gap-2 pt-1">
-          {!isPublic ? (
-            <>
-              <Button variant="surface" onClick={() => setSharing(true)} className="gap-2">
-                <Users className="h-4 w-4" />
-                Sharing
-              </Button>
-              <Button onClick={handlePublish} className="gap-2">
-                <Globe2 className="h-4 w-4" />
-                Publish to feed
-              </Button>
-            </>
-          ) : (
-            <Button variant="surface" onClick={handleUnpublish} className="gap-2">
-              <EyeOff className="h-4 w-4" />
-              Unpublish
-            </Button>
-          )}
+          <ExternalShareButton list={list} onToast={showToast} />
           <Button variant="surface" onClick={handleDelete} className="gap-2 text-pink hover:text-pink">
             <Trash2 className="h-4 w-4" />
             Delete
@@ -341,18 +360,6 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
       {isPublic ? (
         /* ---------- Public carousel editor ---------- */
         <div className="space-y-6">
-          {/* Caption */}
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-text">Caption</label>
-            <textarea
-              value={list.caption ?? ""}
-              onChange={(e) => setCaption(list.id, e.target.value)}
-              placeholder="Write a caption for your post..."
-              rows={2}
-              className="w-full resize-none rounded-xl border border-divider/60 bg-surface/50 px-4 py-3 text-sm text-text placeholder:text-text/40 focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20"
-            />
-          </div>
-
           <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
             <div className="grid gap-8 lg:grid-cols-2">
               {/* Pages */}
@@ -364,7 +371,7 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
                   <div key={page.id} className="rounded-2xl border border-divider/50 p-3">
                     <div className="mb-3 flex items-center justify-between">
                       <span className="text-xs font-medium text-text/60">Page {pi + 1}</span>
-                      {pages.length > 1 && (
+                      {pages.length > 1 && !page.editorial && (
                         <button
                           type="button"
                           onClick={() => removePage(list.id, page.id)}
@@ -375,46 +382,74 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
                       )}
                     </div>
 
-                    {/* Template picker for this page */}
-                    <div className="mb-3 flex flex-wrap gap-2">
-                      {TEMPLATE_IDS.map((t) => (
-                        <TemplateOption
-                          key={t}
-                          template={t}
-                          active={page.template === t}
-                          onClick={() => updatePage(list.id, page.id, { template: t })}
-                        />
-                      ))}
-                    </div>
+                    {page.editorial ? (
+                      <div className="space-y-3">
+                        <div className="max-w-lg overflow-hidden rounded-xl"><EditorialRenderer design={page.editorial} productLinks /></div>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            variant="surface"
+                            size="sm"
+                            onClick={() => handleStartEditorial(page.id)}
+                            className="gap-2"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            Edit design
+                          </Button>
+                          {list.lookbookId && <Button asChild variant="surface" size="sm"><Link href={`/create-a-look/${list.lookbookId}`}>Edit in Lookbook</Link></Button>}
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="mb-3 flex flex-wrap items-center gap-2">
+                          {TEMPLATE_IDS.map((t) => (
+                            <TemplateOption
+                              key={t}
+                              template={t}
+                              active={page.template === t}
+                              onClick={() => updatePage(list.id, page.id, { template: t })}
+                            />
+                          ))}
+                          <Button
+                            variant="surface"
+                            size="sm"
+                            onClick={() => handleStartEditorial(page.id)}
+                            className="gap-2"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            Custom design
+                          </Button>
+                        </div>
 
-                    <div className="max-w-[260px]">
-                      <ListTileGrid
-                        productIds={page.productIds}
-                        template={page.template}
-                        mode="edit"
-                        scope={page.id}
-                        onTileClick={() => setPagePicker(page.id)}
-                        onRemove={(i) =>
-                          updatePage(list.id, page.id, {
-                            productIds: page.productIds.filter((_, idx) => idx !== i),
-                          })
-                        }
-                      />
-                    </div>
+                        <div className="max-w-[260px]">
+                          <ListTileGrid
+                            productIds={page.productIds}
+                            template={page.template}
+                            mode="edit"
+                            scope={page.id}
+                            onTileClick={() => setPagePicker(page.id)}
+                            onRemove={(i) =>
+                              updatePage(list.id, page.id, {
+                                productIds: page.productIds.filter((_, idx) => idx !== i),
+                              })
+                            }
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
 
-                <button
+                {!pages.some((page) => page.editorial) && <button
                   type="button"
                   onClick={() => addPage(list.id)}
                   className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-divider py-3 text-sm font-medium text-text/70 transition-colors hover:border-accent hover:text-accent"
                 >
                   <Plus className="h-4 w-4" /> Add page
-                </button>
+                </button>}
               </div>
 
               {/* Saved items tray */}
-              <div>
+              {!pages.some((page) => page.editorial) && <div>
                 <p className="mb-2 text-sm font-medium text-text">Your saved items</p>
                 <p className="mb-3 text-xs text-text/40">
                   Drag into a tile, or tap a tile to add. Drag tiles to reorder or move between pages.
@@ -430,7 +465,7 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
                     ))}
                   </div>
                 )}
-              </div>
+              </div>}
             </div>
 
             <DragOverlay>
@@ -485,6 +520,66 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
         </div>
       )}
 
+      {/* Editorial Editor */}
+      {editorialDraft && (() => {
+        const pageIndex = editorialDraft.pages.findIndex((page) => page.id === editorialDraft.activePageId);
+        const page = editorialDraft.pages[pageIndex];
+        if (!page) return null;
+
+        return (
+          <div className="fixed inset-0 z-[100] overflow-y-auto bg-bg">
+            <div className="mx-auto min-h-full max-w-[1600px] p-3 sm:p-5">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="font-headline text-lg text-text">Edit social post</h2>
+                  <p className="text-xs text-text/50">Preview and customize the full carousel.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="surface" size="sm" onClick={handleCancelEditorial}>
+                    Cancel
+                  </Button>
+                  <Button size="sm" onClick={handleSaveEditorial}>
+                    Save carousel
+                  </Button>
+                </div>
+              </div>
+              <div className="mb-4 flex flex-wrap items-center gap-2">
+                {editorialDraft.pages.map((draftPage, index) => (
+                  <button
+                    key={draftPage.id}
+                    type="button"
+                    onClick={() => setEditorialDraft((current) => current ? { ...current, activePageId: draftPage.id } : current)}
+                    aria-pressed={draftPage.id === editorialDraft.activePageId}
+                    className={`rounded-full px-3 py-1.5 text-xs font-semibold ${draftPage.id === editorialDraft.activePageId ? "bg-text text-bg" : "border border-divider/70 text-text/60 hover:bg-surface"}`}
+                  >
+                    Page {index + 1} · {draftPage.productIds.length} items
+                  </button>
+                ))}
+                <button type="button" onClick={handleAddEditorialPage} className="rounded-full border border-accent/40 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/5">
+                  + Add page
+                </button>
+                <div className="flex items-center gap-1 rounded-full border border-divider/60 p-1">
+                  <button type="button" onClick={() => handleMoveEditorialPage(-1)} disabled={pageIndex === 0} className="rounded-full px-2 py-1 text-[10px] font-semibold text-text/55 disabled:opacity-30">←</button>
+                  <button type="button" onClick={handleDuplicateEditorialPage} className="rounded-full px-2 py-1 text-[10px] font-semibold text-text/55">Duplicate</button>
+                  <button type="button" onClick={() => handleMoveEditorialPage(1)} disabled={pageIndex === editorialDraft.pages.length - 1} className="rounded-full px-2 py-1 text-[10px] font-semibold text-text/55 disabled:opacity-30">→</button>
+                  <button type="button" onClick={handleDeleteEditorialPage} disabled={editorialDraft.pages.length <= 1} className="rounded-full px-2 py-1 text-[10px] font-semibold text-pink disabled:opacity-30">Delete</button>
+                </div>
+              </div>
+              <EditorialBuilder
+                key={page.id}
+                title={list.name}
+                design={page.editorial}
+                products={trayIds.map((id) => getProductById(id)).filter((product): product is NonNullable<typeof product> => Boolean(product))}
+                onChangeAction={(design) => setEditorialDraft((current) => current ? {
+                  ...current,
+                  pages: current.pages.map((draftPage) => draftPage.id === current.activePageId ? { ...draftPage, editorial: design, productIds: editorialProductIds(design) } : draftPage),
+                } : current)}
+              />
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Pickers */}
       {pagePicker && (
         <ProductPickerDialog
@@ -512,9 +607,6 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
             )
           }
         />
-      )}
-      {sharing && (
-        <ShareListDialog list={list} onClose={() => setSharing(false)} onToast={showToast} />
       )}
       <ToastContainer />
     </div>

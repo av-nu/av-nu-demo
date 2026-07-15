@@ -5,7 +5,9 @@ import Link from "next/link";
 import { MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 
+import { StarRating } from "@/components/ui/StarRating";
 import type { Brand } from "@/data/mockBrands";
+import { getBrandAverageRating } from "@/lib/data";
 
 interface BrandCardProps {
   brand: Brand;
@@ -13,6 +15,7 @@ interface BrandCardProps {
 
 export function BrandCard({ brand }: BrandCardProps) {
   const isLogoSvg = brand.logoMark.includes(".svg");
+  const brandRating = getBrandAverageRating(brand.id);
 
   return (
     <motion.div
@@ -50,6 +53,10 @@ export function BrandCard({ brand }: BrandCardProps) {
           <div className="mt-0.5 flex items-center gap-1 text-xs text-text/50">
             <MapPin className="h-3 w-3" />
             {brand.location}
+          </div>
+          <div className="mt-2 flex items-center gap-2">
+            <StarRating rating={brandRating.average} showUserRating={false} />
+            <span className="text-[11px] text-text/40">Across {brandRating.productCount} {brandRating.productCount === 1 ? "product" : "products"}</span>
           </div>
         </div>
 

@@ -1,0 +1,156 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { useId, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
+
+import { mockProducts } from "@/data/mockProducts";
+import { EDITORIAL_FORMATS, EDITORIAL_VECTOR_PATHS, type EditorialElement, type EditorialImageMask, type EditorialPageDesign, type EditorialSnapGuides } from "@/lib/editorial";
+
+function shadowFor(value: "none" | "soft" | "strong") {
+  if (value === "strong") return "0 22px 50px rgba(40, 30, 25, 0.28)";
+  if (value === "soft") return "0 12px 28px rgba(40, 30, 25, 0.16)";
+  return "none";
+}
+
+function fontFor(value: "headline" | "sans" | "serif") {
+  if (value === "headline") return "var(--font-headline), Georgia, serif";
+  if (value === "serif") return "Georgia, 'Times New Roman', serif";
+  return "var(--font-sans), Arial, sans-serif";
+}
+
+function maskStyle(mask: EditorialImageMask, borderRadius: number, canvasWidth: number, maskId: string) {
+  if (EDITORIAL_VECTOR_PATHS[mask]) return { clipPath: `url(#${maskId})` };
+  if (mask === "circle") return { clipPath: "circle(50% at 50% 50%)" };
+  if (mask === "oval") return { clipPath: "ellipse(50% 50% at 50% 50%)" };
+  if (mask === "rounded") return { borderRadius: `${(Math.max(32, borderRadius) / canvasWidth) * 100}cqw` };
+  return { borderRadius: `${(borderRadius / canvasWidth) * 100}cqw` };
+}
+
+function elementContent(element: EditorialElement, canvasWidth: number) {
+  if (element.type === "product" || element.type === "image" || element.type === "video") {
+    const src = element.type === "product" ? mockProducts.find((product) => product.id === element.productId)?.images[0] : element.src;
+    if (!src) return <div className="flex h-full items-center justify-center bg-black/5 text-xs text-black/35">Media unavailable</div>;
+    if (element.type === "video") {
+      return <video src={src} controls playsInline className={element.fit === "cover" ? "h-full w-full object-cover" : "h-full w-full object-contain"} style={{ objectPosition: `${element.cropX}% ${element.cropY}%`, transform: `scale(${element.zoom})` }} />;
+    }
+    return (
+      <Image
+        src={src}
+        alt={element.name}
+        fill
+        sizes="(max-width: 768px) 80vw, 700px"
+        className={element.fit === "cover" ? "object-cover" : "object-contain"}
+        style={{ objectPosition: `${element.cropX}% ${element.cropY}%`, transform: `scale(${element.zoom})` }}
+        unoptimized={src.startsWith("data:")}
+        draggable={false}
+      />
+    );
+  }
+
+  if (element.type === "text") {
+    return (
+      <div
+        className="h-full w-full whitespace-pre-wrap break-words"
+        style={{
+          color: element.color,
+          backgroundColor: element.backgroundColor,
+          fontFamily: fontFor(element.fontFamily),
+          fontSize: `${(element.fontSize / canvasWidth) * 100}cqw`,
+          fontWeight: element.fontWeight,
+          fontStyle: element.italic ? "italic" : "normal",
+          lineHeight: element.lineHeight,
+          letterSpacing: `${(element.letterSpacing / canvasWidth) * 100}cqw`,
+          textAlign: element.align,
+          padding: `${(element.padding / canvasWidth) * 100}cqw`,
+        }}
+      >
+        {element.content}
+      </div>
+    );
+  }
+
+  if (element.shape === "line") {
+    return <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2" style={{ height: `${(Math.max(1, element.strokeWidth || element.height) / canvasWidth) * 100}cqw`, backgroundColor: element.fill }} />;
+  }
+
+  const path = EDITORIAL_VECTOR_PATHS[element.shape];
+  if (path) return <svg aria-hidden="true" className="h-full w-full overflow-visible" viewBox="0 0 1 1" preserveAspectRatio="none"><path d={path} fill={element.fill} stroke={element.stroke} strokeWidth={element.strokeWidth / Math.max(element.width, 1)} /></svg>;
+
+  return <div className="h-full w-full" style={{ backgroundColor: element.fill, border: `${(element.strokeWidth / canvasWidth) * 100}cqw solid ${element.stroke}`, borderRadius: element.shape === "ellipse" ? "999px" : `${(element.borderRadius / canvasWidth) * 100}cqw` }} />;
+}
+
+type EditorialRendererProps = {
+  design: EditorialPageDesign;
+  selectedId?: string;
+  interactive?: boolean;
+  productLinks?: boolean;
+  guides?: EditorialSnapGuides;
+  canvasRef?: RefObject<HTMLDivElement>;
+  onElementPointerDown?: (event: ReactPointerEvent<HTMLDivElement>, elementId: string) => void;
+  onElementSelect?: (elementId: string) => void;
+  onHandlePointerDown?: (event: ReactPointerEvent<HTMLButtonElement>, elementId: string, handle: "resize" | "rotate") => void;
+  onCanvasPointerDown?: (event: ReactPointerEvent<HTMLDivElement>) => void;
+};
+
+export function EditorialRenderer({ design, selectedId, interactive = false, productLinks = false, guides, canvasRef, onElementPointerDown, onElementSelect, onHandlePointerDown, onCanvasPointerDown }: EditorialRendererProps) {
+  const dimensions = EDITORIAL_FORMATS[design.format];
+  const rendererId = useId().replace(/:/g, "");
+  const elements = [...design.elements].sort((a, b) => a.zIndex - b.zIndex);
+
+  return (
+    <div
+      ref={canvasRef}
+      className={`relative w-full overflow-hidden bg-white shadow-[0_24px_70px_rgba(63,51,46,0.18)] ring-1 ring-black/10 ${interactive ? "touch-none select-none" : ""}`}
+      style={{ aspectRatio: `${dimensions.width} / ${dimensions.height}`, backgroundColor: design.backgroundColor, containerType: "inline-size" }}
+      onPointerDown={onCanvasPointerDown}
+    >
+      {design.backgroundImage && <Image src={design.backgroundImage} alt="" fill sizes="100vw" className="pointer-events-none object-cover" style={{ opacity: design.backgroundOpacity }} unoptimized={design.backgroundImage.startsWith("data:")} draggable={false} />}
+      {interactive && design.showGuides && <><span className="pointer-events-none absolute inset-y-0 left-1/2 z-[80] w-px bg-sky-400/25" /><span className="pointer-events-none absolute inset-x-0 top-1/2 z-[80] h-px bg-sky-400/25" /></>}
+      {interactive && guides?.x !== undefined && <span className="pointer-events-none absolute inset-y-0 z-[90] w-px bg-sky-500 shadow-[0_0_3px_rgba(14,165,233,0.7)]" style={{ left: `${(guides.x / dimensions.width) * 100}%` }} />}
+      {interactive && guides?.y !== undefined && <span className="pointer-events-none absolute inset-x-0 z-[90] h-px bg-sky-500 shadow-[0_0_3px_rgba(14,165,233,0.7)]" style={{ top: `${(guides.y / dimensions.height) * 100}%` }} />}
+      {design.format === "spread" && <span className="pointer-events-none absolute inset-y-0 left-1/2 z-[81] w-px bg-black/20 shadow-[0_0_12px_rgba(0,0,0,0.2)]" />}
+      {elements.map((element) => {
+        if (element.hidden) return null;
+        const selected = interactive && selectedId === element.id;
+        const maskId = `editorial-mask-${rendererId}-${element.id.replace(/[^a-zA-Z0-9_-]/g, "")}`;
+        const isMedia = element.type === "product" || element.type === "image" || element.type === "video";
+        const imageStyle = isMedia ? { ...maskStyle(element.mask, element.borderRadius, dimensions.width, maskId), boxShadow: shadowFor(element.shadow) } : undefined;
+        const borderStyle = isMedia && element.mask !== "circle" ? { border: `${(element.borderWidth / dimensions.width) * 100}cqw solid ${element.borderColor}` } : undefined;
+        const maskPath = isMedia ? EDITORIAL_VECTOR_PATHS[element.mask] : undefined;
+        return (
+          <div
+            key={element.id}
+            role={interactive ? "button" : undefined}
+            tabIndex={interactive ? 0 : undefined}
+            aria-label={interactive ? `Select ${element.name}` : undefined}
+            className={`absolute outline-none ${interactive ? element.locked ? "cursor-not-allowed" : "cursor-move" : ""} ${selected ? "ring-[3px] ring-sky-500 ring-offset-2 ring-offset-transparent" : ""}`}
+            style={{
+              left: `${(element.x / dimensions.width) * 100}%`,
+              top: `${(element.y / dimensions.height) * 100}%`,
+              width: `${(element.width / dimensions.width) * 100}%`,
+              height: `${(element.height / dimensions.height) * 100}%`,
+              opacity: element.opacity,
+              transform: `rotate(${element.rotation}deg)`,
+              zIndex: element.zIndex + 2,
+              ...borderStyle,
+            }}
+            onPointerDown={(event) => onElementPointerDown?.(event, element.id)}
+            onFocus={() => onElementSelect?.(element.id)}
+          >
+            {maskPath && <svg aria-hidden="true" className="pointer-events-none absolute h-0 w-0"><defs><clipPath id={maskId} clipPathUnits="objectBoundingBox"><path d={maskPath} /></clipPath></defs></svg>}
+            <div className="relative h-full w-full overflow-hidden" style={imageStyle}>{elementContent(element, dimensions.width)}</div>
+            {productLinks && element.type === "product" && <Link href={`/product/${element.productId}`} aria-label={`Shop ${element.name}`} className="absolute inset-0 z-[1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" />}
+            {selected && !element.locked && (
+              <>
+                <button type="button" aria-label="Resize element" className="absolute -bottom-4 -right-4 z-[100] h-8 w-8 cursor-nwse-resize rounded-full border-2 border-white bg-sky-500 shadow-md sm:-bottom-3 sm:-right-3 sm:h-6 sm:w-6" onPointerDown={(event) => onHandlePointerDown?.(event, element.id, "resize")} />
+                <span className="pointer-events-none absolute -top-10 left-1/2 h-10 w-px -translate-x-1/2 bg-sky-500 sm:-top-8 sm:h-8" />
+                <button type="button" aria-label="Rotate element" className="absolute -top-14 left-1/2 z-[100] h-8 w-8 -translate-x-1/2 cursor-grab rounded-full border-2 border-white bg-sky-500 shadow-md sm:-top-11 sm:h-6 sm:w-6" onPointerDown={(event) => onHandlePointerDown?.(event, element.id, "rotate")} />
+              </>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}

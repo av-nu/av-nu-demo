@@ -15,15 +15,19 @@ import {
   type MerchantOrder,
   type Order,
   type ReturnRequest,
+  type ReturnStats,
+  customerReturnTier,
   formatUsd,
   humanizeStatus,
   returnRefundAmount,
 } from "@/data/oms";
 import { StatusBadge, StatusField } from "@/components/oms/StatusBadge";
+import { ReturnTierBadge } from "@/components/oms/ReturnTierBadge";
 
 export default function OrderDetailPage() {
   const params = useParams<{ id: string }>();
   const {
+    orders,
     getOrder,
     isHydrated,
     addNote,
@@ -251,7 +255,11 @@ export default function OrderDetailPage() {
             refundDisabled={refundDisabled}
             onResend={onResend}
           />
-          <CustomerPanel order={order} canViewPii={true} />
+          <CustomerPanel
+            order={order}
+            canViewPii={true}
+            returnStats={customerReturnTier(orders, order.customer.email)}
+          />
           <PaymentPanel order={order} canViewStripe={can("view_payouts")} />
           <NotesPanel
             order={order}
@@ -577,16 +585,28 @@ function Money({
 function CustomerPanel({
   order,
   canViewPii,
+  returnStats,
 }: {
   order: Order;
   canViewPii: boolean;
+  returnStats?: ReturnStats;
 }) {
   const a = order.customer.shippingAddress;
   return (
     <Card title="Customer">
       <div className="space-y-3 text-sm">
         <div>
-          <p className="font-medium">{order.customer.name}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-medium">{order.customer.name}</p>
+            {returnStats && <ReturnTierBadge tier={returnStats.tier} />}
+          </div>
+          {returnStats && returnStats.tier !== "normal" && (
+            <p className="mt-0.5 text-xs text-text/50">
+              {returnStats.returnedUnits} of {returnStats.purchasedUnits} items
+              returned ({Math.round(returnStats.returnRate * 100)}%) across{" "}
+              {returnStats.orders} order(s)
+            </p>
+          )}
           <p className="text-text/50">
             {canViewPii ? order.customer.email : "•••• hidden ••••"}
           </p>
@@ -708,6 +728,20 @@ function ReturnsRefundsPanel({
                 {r.items.map((i) => `${i.quantity}× ${i.productTitle}`).join(", ")}
                 {r.reason ? ` · ${r.reason}` : ""}
               </p>
+              {r.shippingPaidBy && (
+                <span
+                  className={cn(
+                    "inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium",
+                    r.shippingPaidBy === "merchant"
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-amber-50 text-amber-700",
+                  )}
+                >
+                  {r.shippingPaidBy === "merchant"
+                    ? "Merchant pays shipping"
+                    : "Customer pays shipping"}
+                </span>
+              )}
               {r.returnShipment?.labelUrl && r.status !== "refunded" && (
                 <a
                   href={r.returnShipment.labelUrl}

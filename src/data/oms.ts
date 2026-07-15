@@ -90,6 +90,45 @@ export type ReturnStatus =
   | "closed"
   | "cancelled";
 
+// Customer-selected return reason. Drives who pays return shipping and whether
+// the return is auto-approved (instant label) or gated for merchant approval.
+export type ReturnReason = "defective" | "wrong_item" | "no_longer_wanted";
+
+export const RETURN_REASON_LABELS: Record<ReturnReason, string> = {
+  defective: "Damaged or defective",
+  wrong_item: "Wrong item received",
+  no_longer_wanted: "No longer want it",
+};
+
+export const RETURN_REASON_OPTIONS: {
+  value: ReturnReason;
+  label: string;
+  description: string;
+}[] = [
+  {
+    value: "defective",
+    label: RETURN_REASON_LABELS.defective,
+    description: "Arrived broken, faulty, or not working as it should.",
+  },
+  {
+    value: "wrong_item",
+    label: RETURN_REASON_LABELS.wrong_item,
+    description: "You received a different item than what you ordered.",
+  },
+  {
+    value: "no_longer_wanted",
+    label: RETURN_REASON_LABELS.no_longer_wanted,
+    description: "Changed your mind — you'll cover return shipping.",
+  },
+];
+
+// Defective / wrong-item returns are the merchant's fault, so the merchant
+// covers return shipping and the return is approval-gated. "No longer wanted"
+// is customer-paid and issues a label instantly once they accept the cost.
+export function merchantCoversShipping(reason: ReturnReason): boolean {
+  return reason === "defective" || reason === "wrong_item";
+}
+
 export type RefundStatus =
   | "none"
   | "pending"
@@ -297,6 +336,11 @@ export type ReturnRequest = {
   merchantOrderId: string;
   status: ReturnStatus;
   reason?: string;
+  reasonCode?: ReturnReason;
+  // Who pays return shipping. Derived from the reason at creation time.
+  shippingPaidBy?: "merchant" | "customer";
+  // True once a customer-paid return has acknowledged the shipping cost.
+  costAcknowledged?: boolean;
   items: ReturnItem[];
   returnShipment?: Shipment;
   refundId?: string;
@@ -554,6 +598,239 @@ export function itemReturnEligibility(
 }
 
 // ---------------------------------------------------------------------------
+// Return-frequency / abuse tracking
+// ---------------------------------------------------------------------------
+
+export type ReturnTier = "normal" | "watchlist" | "abuser";
+
+// Classification thresholds. A shopper (or address / product / brand) is placed
+// on the watchlist as return activity climbs, and flagged as an abuser once it
+// crosses clearly-excessive levels. Rate is returns ÷ delivered items.
+export const RETURN_ABUSE_THRESHOLDS = {
+  // Minimum returned units before a rate can flag anything (avoids 1-of-1 noise).
+  minReturns: 2,
+  watchlist: { returns: 3, rate: 0.4 },
+  abuser: { returns: 5, rate: 0.6 },
+};
+
+export type ReturnStats = {
+  key: string;
+  label: string;
+  sublabel?: string;
+  orders: number;
+  purchasedUnits: number;
+  returnedUnits: number;
+  returnRequests: number;
+  returnRate: number; // 0..1
+  tier: ReturnTier;
+};
+
+function classifyTier(returnedUnits: number, rate: number): ReturnTier {
+  if (returnedUnits < RETURN_ABUSE_THRESHOLDS.minReturns) return "normal";
+  const { watchlist, abuser } = RETURN_ABUSE_THRESHOLDS;
+  if (returnedUnits >= abuser.returns || rate >= abuser.rate) return "abuser";
+  if (returnedUnits >= watchlist.returns || rate >= watchlist.rate)
+    return "watchlist";
+  return "normal";
+}
+
+export const RETURN_TIER_LABELS: Record<ReturnTier, string> = {
+  normal: "Normal",
+  watchlist: "Watchlist",
+  abuser: "Abuse flagged",
+};
+
+function unitsInOrder(o: Order): number {
+  return o.merchantOrders.reduce(
+    (s, m) => s + m.items.reduce((n, it) => n + it.quantity, 0),
+    0,
+  );
+}
+
+function returnedUnitsInOrder(o: Order): number {
+  return o.returns.reduce(
+    (s, r) => s + r.items.reduce((n, ri) => n + ri.quantity, 0),
+    0,
+  );
+}
+
+// Normalizes a shipping address into a stable grouping key so repeat abuse from
+// the same physical address is caught even across different accounts.
+export function addressKey(a: Address): string {
+  return [a.line1, a.line2 ?? "", a.city, a.state, a.zip]
+    .map((s) => s.trim().toLowerCase())
+    .join("|");
+}
+
+function buildStats(
+  key: string,
+  label: string,
+  sublabel: string | undefined,
+  agg: {
+    orders: number;
+    purchasedUnits: number;
+    returnedUnits: number;
+    returnRequests: number;
+  },
+): ReturnStats {
+  const returnRate =
+    agg.purchasedUnits > 0 ? agg.returnedUnits / agg.purchasedUnits : 0;
+  return {
+    key,
+    label,
+    sublabel,
+    ...agg,
+    returnRate,
+    tier: classifyTier(agg.returnedUnits, returnRate),
+  };
+}
+
+export function returnStatsByUser(orders: Order[]): ReturnStats[] {
+  const map = new Map<string, ReturnStats & { name: string }>();
+  for (const o of orders) {
+    const email = o.customer.email;
+    const cur = map.get(email);
+    const base = cur ?? {
+      key: email,
+      label: o.customer.name,
+      sublabel: email,
+      name: o.customer.name,
+      orders: 0,
+      purchasedUnits: 0,
+      returnedUnits: 0,
+      returnRequests: 0,
+      returnRate: 0,
+      tier: "normal" as ReturnTier,
+    };
+    base.orders += 1;
+    base.purchasedUnits += unitsInOrder(o);
+    base.returnedUnits += returnedUnitsInOrder(o);
+    base.returnRequests += o.returns.length;
+    map.set(email, base);
+  }
+  return Array.from(map.values())
+    .map((v) =>
+      buildStats(v.key, v.label, v.sublabel, {
+        orders: v.orders,
+        purchasedUnits: v.purchasedUnits,
+        returnedUnits: v.returnedUnits,
+        returnRequests: v.returnRequests,
+      }),
+    )
+    .sort((a, b) => b.returnedUnits - a.returnedUnits);
+}
+
+export function returnStatsByAddress(orders: Order[]): ReturnStats[] {
+  const map = new Map<string, ReturnStats>();
+  for (const o of orders) {
+    const addr = o.customer.shippingAddress;
+    const key = addressKey(addr);
+    const label = `${addr.line1}${addr.line2 ? `, ${addr.line2}` : ""}`;
+    const sublabel = `${addr.city}, ${addr.state} ${addr.zip}`;
+    const cur =
+      map.get(key) ??
+      buildStats(key, label, sublabel, {
+        orders: 0,
+        purchasedUnits: 0,
+        returnedUnits: 0,
+        returnRequests: 0,
+      });
+    map.set(
+      key,
+      buildStats(key, label, sublabel, {
+        orders: cur.orders + 1,
+        purchasedUnits: cur.purchasedUnits + unitsInOrder(o),
+        returnedUnits: cur.returnedUnits + returnedUnitsInOrder(o),
+        returnRequests: cur.returnRequests + o.returns.length,
+      }),
+    );
+  }
+  return Array.from(map.values()).sort(
+    (a, b) => b.returnedUnits - a.returnedUnits,
+  );
+}
+
+export function returnStatsByProduct(orders: Order[]): ReturnStats[] {
+  const agg = new Map<
+    string,
+    { label: string; purchased: number; returned: number; requests: number }
+  >();
+  for (const o of orders) {
+    for (const m of o.merchantOrders) {
+      for (const it of m.items) {
+        const cur =
+          agg.get(it.productId) ??
+          { label: it.productTitle, purchased: 0, returned: 0, requests: 0 };
+        cur.purchased += it.quantity;
+        agg.set(it.productId, cur);
+      }
+    }
+    for (const r of o.returns) {
+      const m = o.merchantOrders.find((x) => x.id === r.merchantOrderId);
+      for (const ri of r.items) {
+        const item = m?.items.find((it) => it.id === ri.orderItemId);
+        if (!item) continue;
+        const cur = agg.get(item.productId);
+        if (!cur) continue;
+        cur.returned += ri.quantity;
+        cur.requests += 1;
+      }
+    }
+  }
+  return Array.from(agg.entries())
+    .map(([id, v]) =>
+      buildStats(id, v.label, undefined, {
+        orders: 0,
+        purchasedUnits: v.purchased,
+        returnedUnits: v.returned,
+        returnRequests: v.requests,
+      }),
+    )
+    .filter((s) => s.returnedUnits > 0)
+    .sort((a, b) => b.returnRate - a.returnRate || b.returnedUnits - a.returnedUnits);
+}
+
+export function returnStatsByBrand(orders: Order[]): ReturnStats[] {
+  const agg = new Map<
+    string,
+    { label: string; purchased: number; returned: number; requests: number }
+  >();
+  for (const o of orders) {
+    for (const m of o.merchantOrders) {
+      const cur =
+        agg.get(m.vendorId) ??
+        { label: m.vendorName, purchased: 0, returned: 0, requests: 0 };
+      cur.purchased += m.items.reduce((n, it) => n + it.quantity, 0);
+      agg.set(m.vendorId, cur);
+    }
+    for (const r of o.returns) {
+      const m = o.merchantOrders.find((x) => x.id === r.merchantOrderId);
+      if (!m) continue;
+      const cur = agg.get(m.vendorId);
+      if (!cur) continue;
+      cur.returned += r.items.reduce((n, ri) => n + ri.quantity, 0);
+      cur.requests += 1;
+    }
+  }
+  return Array.from(agg.entries())
+    .map(([id, v]) =>
+      buildStats(id, v.label, undefined, {
+        orders: 0,
+        purchasedUnits: v.purchased,
+        returnedUnits: v.returned,
+        returnRequests: v.requests,
+      }),
+    )
+    .filter((s) => s.returnedUnits > 0)
+    .sort((a, b) => b.returnRate - a.returnRate || b.returnedUnits - a.returnedUnits);
+}
+
+// Convenience: the return tier for the shopper on a specific order.
+export function customerReturnTier(orders: Order[], email: string): ReturnStats | undefined {
+  return returnStatsByUser(orders).find((s) => s.key === email);
+}
+
+// ---------------------------------------------------------------------------
 // Seed data
 // ---------------------------------------------------------------------------
 
@@ -591,6 +868,9 @@ type SeedSpec = {
     | "return_in_progress"
     | "refunded"
     | "new_paid";
+  // Optional overrides for seeded returns (drives abuse/watchlist demo data).
+  returnUnits?: number;
+  returnReason?: ReturnReason;
 };
 
 function resolveLine(merchantOrderId: string, line: SeedLine, idx: number): OrderItem {
@@ -1067,20 +1347,29 @@ function buildOrder(spec: SeedSpec): Order {
   if (spec.scenario === "return_in_progress" || spec.scenario === "refunded") {
     const m = merchantOrders[0];
     const firstItem = m.items[0];
+    const reasonCode: ReturnReason = spec.returnReason ?? "wrong_item";
+    const reasonLabel = RETURN_REASON_LABELS[reasonCode];
+    const shippingPaidBy = merchantCoversShipping(reasonCode)
+      ? "merchant"
+      : "customer";
+    const returnQty = Math.min(spec.returnUnits ?? 1, firstItem.quantity);
     const ret: ReturnRequest = {
       id: `${orderId}-ret-1`,
       orderId,
       merchantOrderId: m.id,
       status: m.returnStatus ?? "requested",
-      reason: "Not as expected",
+      reason: reasonLabel,
+      reasonCode,
+      shippingPaidBy,
+      costAcknowledged: shippingPaidBy === "customer" ? true : undefined,
       createdAt: isoDaysAgo(Math.max(0, spec.daysAgo - 6)),
       items: [
         {
           id: `${orderId}-reti-1`,
           orderItemId: firstItem.id,
           productTitle: firstItem.productTitle,
-          quantity: 1,
-          reason: "Not as expected",
+          quantity: returnQty,
+          reason: reasonLabel,
         },
       ],
       returnShipment:
@@ -1111,14 +1400,14 @@ function buildOrder(spec: SeedSpec): Order {
         merchantOrderId: m.id,
         stripeRefundId: `re_${spec.seq}`,
         type: "item",
-        amount: firstItem.unitPrice,
+        amount: firstItem.unitPrice * returnQty,
         reason: "Return received and inspected",
         status: "succeeded",
         createdAt: isoDaysAgo(Math.max(0, spec.daysAgo - 2)),
       };
       ret.refundId = refund.id;
       order.refunds.push(refund);
-      firstItem.returnedQuantity = 1;
+      firstItem.returnedQuantity = returnQty;
     }
   }
 
@@ -1176,6 +1465,32 @@ const CUSTOMERS: Customer[] = [
       city: "Chicago",
       state: "IL",
       zip: "60601",
+      country: "US",
+    },
+  },
+  // Serial returner — seeds the "abuse flagged" section.
+  {
+    name: "Rowan Vale",
+    email: "rowan.vale@example.com",
+    shippingAddress: {
+      name: "Rowan Vale",
+      line1: "88 Sycamore Loop",
+      city: "Denver",
+      state: "CO",
+      zip: "80203",
+      country: "US",
+    },
+  },
+  // Elevated returns — seeds the "watchlist" section.
+  {
+    name: "Sienna Booker",
+    email: "sienna.booker@example.com",
+    shippingAddress: {
+      name: "Sienna Booker",
+      line1: "17 Harborview Rd",
+      city: "Seattle",
+      state: "WA",
+      zip: "98101",
       country: "US",
     },
   },
@@ -1271,6 +1586,30 @@ const SEED_SPECS: SeedSpec[] = [
       { vendorId: "citrus-and-clay", lines: [{ productId: "ashwood-001", quantity: 1 }] },
     ],
   },
+  // Rowan Vale — serial returner (abuse flagged): returns 5 of 6 units.
+  {
+    seq: 1000010,
+    daysAgo: 18,
+    customer: CUSTOMERS[4],
+    scenario: "refunded",
+    returnUnits: 5,
+    returnReason: "no_longer_wanted",
+    merchants: [
+      { vendorId: "ashwood-atelier", lines: [{ productId: "ashwood-002", quantity: 6 }] },
+    ],
+  },
+  // Sienna Booker — elevated returns (watchlist): returns 3 of 6 units.
+  {
+    seq: 1000011,
+    daysAgo: 15,
+    customer: CUSTOMERS[5],
+    scenario: "return_in_progress",
+    returnUnits: 3,
+    returnReason: "no_longer_wanted",
+    merchants: [
+      { vendorId: "juniper-and-tide", lines: [{ productId: "ashwood-004", quantity: 6 }] },
+    ],
+  },
 ];
 
 export function buildSeedOrders(): Order[] {
@@ -1279,7 +1618,7 @@ export function buildSeedOrders(): Order[] {
   );
 }
 
-export const SEED_VERSION = 2;
+export const SEED_VERSION = 3;
 
 // ---------------------------------------------------------------------------
 // New-order creation (Phase 2): mock Stripe → parent Order → merchant split
@@ -1528,6 +1867,35 @@ export function makeReturnLabelShipment(merchantOrderId: string): Shipment {
     labelStatus: "purchased",
     status: "pre_transit",
     shippingCost: 650,
+    trackingEvents: [],
+  };
+}
+
+// Creates a UPS "pay-on-dropoff" return label for a customer-initiated return.
+// Unlike a prepaid EasyPost label, the parcel is measured and paid for by the
+// shopper at the UPS counter, so there is no upfront shippingCost. Used for
+// both instant customer-paid labels and merchant-approved labels.
+export function makeUpsReturnLabel(
+  merchantOrderId: string,
+  paidBy: "merchant" | "customer",
+): Shipment {
+  const unique = `${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`;
+  const trackingCode = `1ZUPS${`${merchantOrderId}${unique}`.slice(-8).toUpperCase()}`;
+  return {
+    id: `${merchantOrderId}-ups-${unique}`,
+    merchantOrderId,
+    isReturn: true,
+    easypostShipmentId: `shp_ret_${unique}`,
+    easypostTrackerId: `trk_ret_${unique}`,
+    carrier: "UPS",
+    service: "UPS Ground (pay on dropoff)",
+    trackingCode,
+    trackingUrl: `https://www.ups.com/track?tracknum=${trackingCode}`,
+    labelUrl: `https://easypost-files.s3.amazonaws.com/labels/ups-ret-${merchantOrderId}-${unique}.pdf`,
+    labelStatus: "purchased",
+    status: "pre_transit",
+    // Measured & paid at the UPS counter — no prepaid cost captured here.
+    shippingCost: paidBy === "merchant" ? 0 : undefined,
     trackingEvents: [],
   };
 }

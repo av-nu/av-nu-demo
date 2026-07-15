@@ -11,6 +11,8 @@ import {
   Heart,
   Bell,
   Users,
+  RotateCcw,
+  Sparkles,
   ChevronRight 
 } from "lucide-react";
 
@@ -20,6 +22,12 @@ const moreLinks = [
     label: "Profile",
     description: "Your social profile & posts",
     icon: User,
+  },
+  {
+    href: "/create-a-look",
+    label: "Lookbook",
+    description: "Create and revisit your shoppable looks",
+    icon: Sparkles,
   },
   {
     href: "/connections",
@@ -50,6 +58,12 @@ const moreLinks = [
     label: "About av | nu",
     description: "Our story and mission",
     icon: Info,
+  },
+  {
+    href: "/returns",
+    label: "Start a Return",
+    description: "Find your purchase and start a return",
+    icon: RotateCcw,
   },
   {
     href: "#",

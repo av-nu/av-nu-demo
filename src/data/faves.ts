@@ -1,5 +1,6 @@
 import { mockProducts } from "@/data/mockProducts";
 import type { TemplateId } from "@/data/listTemplates";
+import type { EditorialPageDesign } from "@/lib/editorial";
 
 export type FaveVisibility = "private" | "inner-circle" | "public";
 
@@ -8,6 +9,7 @@ export type ListPage = {
   id: string;
   template: TemplateId;
   productIds: string[];
+  editorial?: EditorialPageDesign;
 };
 
 export type FaveList = {
@@ -23,6 +25,7 @@ export type FaveList = {
   template: TemplateId;
   /** Author caption shown on the public post. */
   caption?: string;
+  lookbookId?: string;
   /** Public carousel pages. Empty for private / inner-circle lists. */
   pages?: ListPage[];
 };

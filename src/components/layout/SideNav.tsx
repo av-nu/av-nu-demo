@@ -83,7 +83,7 @@ export const SideNav = memo(function SideNav({ collapsed, onToggle }: SideNavPro
         style={{ width: logoHeaderWidth }}
         className="hidden md:flex md:fixed md:left-0 md:top-0 md:z-50 md:h-[88px] md:items-center md:justify-between md:px-5"
       >
-        <div>
+        <Link href="/" onClick={() => window.scrollTo(0, 0)} aria-label="Go to Discover">
           <img
             src="/logo.svg"
             alt="av | nu"
@@ -93,7 +93,7 @@ export const SideNav = memo(function SideNav({ collapsed, onToggle }: SideNavPro
             loading="eager"
             decoding="async"
           />
-                  </div>
+        </Link>
         {!collapsed && (
           <button
             onClick={onToggle}
@@ -145,6 +145,7 @@ export const SideNav = memo(function SideNav({ collapsed, onToggle }: SideNavPro
           <div className="border-t border-divider/60 px-3 py-4">
             <div className="space-y-1">
               <a href="#" className="block px-3 py-1.5 text-xs text-text/50 hover:text-text/70 transition-colors">About av | nu</a>
+              <a href="/returns" className="block px-3 py-1.5 text-xs text-text/50 hover:text-text/70 transition-colors">Start a Return</a>
               <a href="#" className="block px-3 py-1.5 text-xs text-text/50 hover:text-text/70 transition-colors">Shipping & Returns</a>
               <a href="#" className="block px-3 py-1.5 text-xs text-text/50 hover:text-text/70 transition-colors">Contact Us</a>
               <a href="#" className="block px-3 py-1.5 text-xs text-text/50 hover:text-text/70 transition-colors">Terms & Privacy</a>

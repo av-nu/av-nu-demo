@@ -21,6 +21,7 @@ interface ProductCardProps {
   /** When true, the card stretches to fill its container height with a
    *  rectangular image (used in the shoppable feed to align with videos). */
   stretch?: boolean;
+  imageAspect?: "square" | "portrait" | "tall";
 }
 
 export const ProductCard = memo(function ProductCard({
@@ -28,6 +29,7 @@ export const ProductCard = memo(function ProductCard({
   priority = false,
   onShare,
   stretch = false,
+  imageAspect = "square",
 }: ProductCardProps) {
   const brand = getBrandById(product.brandId);
   const { getUserRating, setUserRating } = useUserRatings();
@@ -94,7 +96,7 @@ export const ProductCard = memo(function ProductCard({
       <div
         className={cn(
           "relative overflow-hidden rounded-xl bg-surface",
-          stretch ? "aspect-square md:aspect-auto md:min-h-0 md:flex-1" : "aspect-square",
+          stretch ? "aspect-square md:aspect-auto md:min-h-0 md:flex-1" : imageAspect === "tall" ? "aspect-[3/5]" : imageAspect === "portrait" ? "aspect-[4/5]" : "aspect-square",
         )}
       >
         <Link

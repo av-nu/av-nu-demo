@@ -14,6 +14,7 @@ import { ProfilePostGrid } from "@/components/social/ProfilePostGrid";
 import { EditProfileDialog } from "@/components/social/EditProfileDialog";
 import { AddPostMenu } from "@/components/social/AddPostMenu";
 import { FindPeopleDialog } from "@/components/social/FindPeopleDialog";
+import { SavedLooksSection } from "@/components/social/SavedLooksSection";
 import { InterestPicker } from "@/components/personalize/InterestPicker";
 
 export default function ProfilePage() {
@@ -129,6 +130,8 @@ export default function ProfilePage() {
           </div>
         )}
       </section>
+
+      <SavedLooksSection />
 
       {/* Personalize */}
       <section className="rounded-2xl border border-divider/50 bg-surface/30 p-5 sm:p-6">

@@ -3,19 +3,17 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Heart, Plus, Search, Send } from "lucide-react";
+import { Heart, Plus, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/ProductCard";
 import { FaveListCard } from "@/components/faves/FaveListCard";
-import { SharedWithYouCard } from "@/components/faves/SharedWithYouCard";
 import { CreateListDialog } from "@/components/faves/CreateListDialog";
-import { PublishListDialog } from "@/components/social/PublishListDialog";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useFaveLists } from "@/hooks/useFaveLists";
 import { useToast } from "@/components/ui/Toast";
 import { getProductById } from "@/lib/data";
-import { type FaveList, sharedWithMe } from "@/data/faves";
+import { type FaveList } from "@/data/faves";
 
 const RECENT_LIMIT = 5;
 
@@ -44,7 +42,7 @@ function EmptyState() {
 
       <h2 className="font-headline text-2xl tracking-tight text-text">Start your Faves</h2>
       <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-text/50">
-        Tap the heart on anything you love to save it here, then organize favorites into lists you can keep private or publish.
+        Tap the heart on anything you love to save it here, then organize favorites into your own lists.
       </p>
 
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -59,7 +57,7 @@ function EmptyState() {
   );
 }
 
-function Header({ onCreate, onPublish }: { onCreate: () => void; onPublish: () => void }) {
+function Header({ onCreate }: { onCreate: () => void }) {
   return (
     <div className="flex items-center justify-between gap-4">
       <div>
@@ -67,10 +65,6 @@ function Header({ onCreate, onPublish }: { onCreate: () => void; onPublish: () =
         <p className="mt-1 text-sm text-text/50">Your saved items and curated lists</p>
       </div>
       <div className="flex items-center gap-2">
-        <Button variant="surface" onClick={onPublish} className="gap-2">
-          <Send className="h-4 w-4" />
-          Publish a list
-        </Button>
         <Button onClick={onCreate} className="gap-2">
           <Plus className="h-4 w-4" />
           Create list
@@ -95,13 +89,6 @@ export default function FavoritesPage() {
   const [query, setQuery] = useState("");
   const [showAllLists, setShowAllLists] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [publishOpen, setPublishOpen] = useState(false);
-  const [publishPreselect, setPublishPreselect] = useState<string | undefined>(undefined);
-
-  const handlePublish = (list?: FaveList) => {
-    setPublishPreselect(list?.id);
-    setPublishOpen(true);
-  };
 
   const q = query.trim().toLowerCase();
 
@@ -133,7 +120,7 @@ export default function FavoritesPage() {
   if (isHydrated && !hasAnything) {
     return (
       <div className="space-y-8">
-        <Header onCreate={() => setCreating(true)} onPublish={() => handlePublish()} />
+        <Header onCreate={() => setCreating(true)} />
         <EmptyState />
         {creating && (
           <CreateListDialog
@@ -148,7 +135,7 @@ export default function FavoritesPage() {
 
   return (
     <div className="space-y-8">
-      <Header onCreate={() => setCreating(true)} onPublish={() => handlePublish()} />
+      <Header onCreate={() => setCreating(true)} />
 
       {/* Search */}
       <div className="relative">
@@ -192,25 +179,11 @@ export default function FavoritesPage() {
                 key={list.id}
                 list={list}
                 onDelete={handleDeleteList}
-                onPublish={(l) => handlePublish(l)}
               />
             ))}
           </div>
         )}
       </section>
-
-      {/* Shared with you (inner-circle shares received) */}
-      {!q && sharedWithMe.length > 0 && (
-        <section>
-          <h2 className="mb-1 font-headline text-lg tracking-tight text-text">Shared with you</h2>
-          <p className="mb-4 text-sm text-text/50">Lists your inner circle shared with you</p>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {sharedWithMe.map((shared) => (
-              <SharedWithYouCard key={shared.id} shared={shared} onToast={showToast} />
-            ))}
-          </div>
-        </section>
-      )}
 
       {/* Saved items (umbrella) */}
       <section>
@@ -230,7 +203,6 @@ export default function FavoritesPage() {
                 key={product.id}
                 product={product}
                 priority={index < 8}
-                onShare={showToast}
               />
             ))}
           </div>
@@ -241,13 +213,6 @@ export default function FavoritesPage() {
         <CreateListDialog
           onClose={() => setCreating(false)}
           onCreated={() => showToast("List created")}
-        />
-      )}
-      {publishOpen && (
-        <PublishListDialog
-          preselectedListId={publishPreselect}
-          onClose={() => setPublishOpen(false)}
-          onToast={showToast}
         />
       )}
       <ToastContainer />

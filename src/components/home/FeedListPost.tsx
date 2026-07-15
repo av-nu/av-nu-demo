@@ -8,6 +8,7 @@ import { Heart, MessageCircle, Bookmark, ArrowRight, ChevronLeft, ChevronRight, 
 import { cn } from "@/lib/utils";
 import { flattenPages, type ListComment, type ListPage } from "@/data/faves";
 import { ListTileGrid } from "@/components/faves/ListTileGrid";
+import { EditorialRenderer } from "@/components/looks/editorial/EditorialRenderer";
 import { Portal } from "@/components/ui/Portal";
 import { getProductById } from "@/lib/data";
 import { useListSocial } from "@/hooks/useListSocial";
@@ -118,7 +119,7 @@ export function FeedListPost({
 
       {/* Carousel */}
       <div className="relative">
-        <ListTileGrid productIds={current.productIds} template={current.template} className="rounded-none" />
+        {current.editorial ? <EditorialRenderer design={current.editorial} productLinks /> : <ListTileGrid productIds={current.productIds} template={current.template} className="rounded-none" />}
         {pageCount > 1 && (
           <>
             {page > 0 && (
@@ -217,7 +218,7 @@ export function FeedListPost({
               >
                 {/* Media */}
                 <div className="bg-surface">
-                  <ListTileGrid productIds={current.productIds} template={current.template} className="rounded-none" />
+                  {current.editorial ? <EditorialRenderer design={current.editorial} productLinks /> : <ListTileGrid productIds={current.productIds} template={current.template} className="rounded-none" />}
                 </div>
                 {/* Engagement */}
                 <div className="flex max-h-[85vh] flex-col">

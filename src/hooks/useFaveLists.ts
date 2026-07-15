@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useLocalStorage } from "./useLocalStorage";
 import { type FaveList, type FaveVisibility, type ListPage } from "@/data/faves";
 import { DEFAULT_TEMPLATE, type TemplateId } from "@/data/listTemplates";
+import type { SavedLook } from "@/lib/lookEngine";
 
 const LISTS_KEY = "avnu-fave-lists";
 
@@ -96,6 +97,34 @@ export function useFaveLists() {
           };
         }),
       );
+    },
+    [setLists],
+  );
+
+  const upsertLookbookPost = useCallback(
+    (look: SavedLook, visibility: FaveVisibility, sharedWith: string[] = []) => {
+      const id = look.postListId ?? `lookbook-${look.id}`;
+      const template: TemplateId = look.layout === "editorial" ? 1 : 4;
+      setLists((prev) => {
+        const lookPages = look.pages?.length ? look.pages : [{ id: `page-${look.id}`, productIds: look.selectedProductIds }];
+        const productIds = [...new Set(lookPages.flatMap((page) => page.productIds))];
+        const pages = visibility === "public" ? lookPages.map((page) => ({ id: page.id, template, productIds: page.productIds, editorial: look.layout === "editorial" ? page.editorial : undefined })) : [];
+        const post: FaveList = {
+          id,
+          name: look.title,
+          productIds,
+          createdAt: look.createdAt,
+          visibility,
+          sharedWith,
+          template,
+          caption: look.description,
+          lookbookId: look.id,
+          pages,
+        };
+        const exists = prev.some((list) => list.id === id);
+        return exists ? prev.map((list) => (list.id === id ? { ...list, ...post } : list)) : [post, ...prev];
+      });
+      return id;
     },
     [setLists],
   );
@@ -215,6 +244,7 @@ export function useFaveLists() {
     setTemplate,
     setProductIds,
     toggleProductInList,
+    upsertLookbookPost,
     removeProductEverywhere,
     setVisibility,
     setCaption,

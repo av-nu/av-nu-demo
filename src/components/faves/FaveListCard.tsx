@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Lock, Users, Globe2, ImageIcon, Trash2, Send } from "lucide-react";
 
+import { EditorialRenderer } from "@/components/looks/editorial/EditorialRenderer";
 import { cn } from "@/lib/utils";
 import { type FaveList, flattenPages } from "@/data/faves";
 import { getProductById } from "@/lib/data";
@@ -35,6 +36,7 @@ export function FaveListCard({
     .slice(0, 4) as string[];
 
   const itemCount = sourceIds.length;
+  const editorialCover = list.pages?.find((page) => page.editorial)?.editorial;
   const vis = VISIBILITY_META[list.visibility];
   const VisIcon = vis.icon;
 
@@ -45,7 +47,9 @@ export function FaveListCard({
     >
       {/* Cover collage */}
       <div className="relative aspect-[4/3] bg-surface">
-        {images.length === 0 ? (
+        {editorialCover ? (
+          <div className="absolute inset-0 flex items-center overflow-hidden bg-black/5"><EditorialRenderer design={editorialCover} /></div>
+        ) : images.length === 0 ? (
           <div className="flex h-full w-full items-center justify-center text-text/30">
             <ImageIcon className="h-8 w-8" strokeWidth={1.5} />
           </div>
