@@ -42,6 +42,7 @@ export type SavedLook = {
   rails: LookRail[];
   createdAt: number;
   updatedAt: number;
+  seedVersion?: number;
 };
 
 export function normalizeSavedLook(look: SavedLook): SavedLook {

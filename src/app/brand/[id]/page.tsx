@@ -18,8 +18,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/ProductCard";
-import { getBrandById } from "@/lib/data";
-import { mockProducts } from "@/data/mockProducts";
+import { getBrandById, getProductsByBrandId } from "@/lib/data";
 import { useToast } from "@/components/ui/Toast";
 
 const ITEMS_PER_PAGE = 12;
@@ -52,7 +51,7 @@ export default function BrandPage({ params }: { params: { id: string } }) {
     }
   };
 
-  const brandProducts = mockProducts.filter((p) => p.brandId === brand.id);
+  const brandProducts = getProductsByBrandId(brand.id);
   const visibleProducts = brandProducts.slice(0, visibleCount);
   const hasMore = visibleCount < brandProducts.length;
 

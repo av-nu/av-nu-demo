@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 
 import type { Brand } from "@/data/mockBrands";
@@ -46,7 +46,18 @@ export function WindowShoppingClient({
   }, [windows]);
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-6xl space-y-7 pb-8">
+      <header className="rounded-[2rem] border border-pink/20 bg-gradient-to-br from-pink/10 via-bg to-accent/10 px-5 py-7 sm:px-8 sm:py-9">
+        <div className="flex items-start gap-3">
+          <span className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-pink/15 text-pink"><Sparkles className="h-4 w-4" /></span>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Meet the makers</p>
+            <h1 className="mt-2 font-headline text-3xl tracking-tight text-text sm:text-4xl">Brands worth knowing</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-text/60">Browse the original av | nu brand stories, now paired with fresh apparel and beauty finds from the new catalog.</p>
+          </div>
+        </div>
+      </header>
+
       <div className="relative">
         <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-text/40" />
         <input
@@ -54,7 +65,7 @@ export function WindowShoppingClient({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search brands by name, category, or location..."
-          className="h-12 w-full rounded-xl border border-divider/50 bg-surface/50 pl-12 pr-4 text-text placeholder:text-text/40 focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
+          className="h-12 w-full rounded-2xl border border-divider/60 bg-bg/80 pl-12 pr-4 text-text placeholder:text-text/40 shadow-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/20"
         />
       </div>
 
@@ -64,8 +75,8 @@ export function WindowShoppingClient({
           onClick={() => setSearchQuery("")}
           className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
             !searchQuery
-              ? "bg-accent text-white"
-              : "bg-surface/50 text-text/60 hover:bg-surface hover:text-text"
+              ? "bg-accent text-white shadow-sm"
+              : "bg-pink/10 text-text/65 hover:bg-pink/20 hover:text-text"
           }`}
         >
           All

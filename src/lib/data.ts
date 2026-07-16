@@ -27,15 +27,26 @@ export function getProductById(productId: string): Product | undefined {
 }
 
 export function getProductsByBrandId(brandId: string): Product[] {
-  return mockProducts.filter((p) => p.brandId === brandId);
+  const products = mockProducts.filter((p) => p.brandId === brandId);
+  return products.length > 0 ? products : getBrandWindowProducts(brandId);
 }
 
-// Simple average of every product rating for a brand (0 when no products).
+function getBrandWindowProducts(brandId: string): Product[] {
+  const brand = getBrandById(brandId);
+  if (!brand) return [];
+  const preferredCategory = brand.categories.includes("Apparel") ? "Apparel" : "Beauty";
+  const eligible = mockProducts.filter((product) => product.category === preferredCategory);
+  if (eligible.length === 0) return mockProducts.slice(0, 6);
+
+  const offset = Array.from(brandId).reduce((sum, character) => sum + character.charCodeAt(0), 0) % eligible.length;
+  return Array.from({ length: Math.min(6, eligible.length) }, (_, index) => eligible[(offset + index * 5) % eligible.length]);
+}
+
 export function getBrandAverageRating(brandId: string): {
   average: number;
   productCount: number;
 } {
-  const products = getProductsByBrandId(brandId);
+  const products = getBrandWindowProducts(brandId);
   if (products.length === 0) return { average: 0, productCount: 0 };
   const sum = products.reduce((acc, p) => acc + p.rating, 0);
   return { average: sum / products.length, productCount: products.length };
@@ -86,7 +97,7 @@ export function getBrandWindowImages(brandId: string): {
   products: WindowProductPhoto[];
 } {
   const brand = getBrandById(brandId);
-  const products = getProductsByBrandId(brandId);
+  const products = getBrandWindowProducts(brandId);
 
   const productPhotos: WindowProductPhoto[] = products
     .filter((p) => Boolean(p.images[0]))

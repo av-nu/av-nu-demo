@@ -64,37 +64,43 @@ export type CommunityList = {
   comments: ListComment[];
 };
 
-function pickProductIds(start: number, count: number): string[] {
+function pickProductIdsFrom(source: typeof mockProducts, start: number, count: number): string[] {
   const ids: string[] = [];
   for (let i = 0; i < count; i += 1) {
-    const product = mockProducts[(start + i * 7) % mockProducts.length];
+    const product = source[(start + i * 3) % source.length];
     if (product && !ids.includes(product.id)) ids.push(product.id);
   }
   return ids;
 }
 
+const outfitProducts = mockProducts.filter((product) => product.category === "Apparel");
+const beautyProducts = mockProducts.filter((product) => product.category === "Beauty");
+
+const pickOutfits = (start: number, count: number) => pickProductIdsFrom(outfitProducts, start, count);
+const pickBeauty = (start: number, count: number) => pickProductIdsFrom(beautyProducts, start, count);
+
 export const communityLists: CommunityList[] = [
   {
     id: "comm-1",
     authorId: "c-mara",
-    name: "Slow Sunday Reset",
-    caption: "Everything I reach for on a slow morning ☕️ Swipe for the full ritual.",
+    name: "Slow Sunday Layers",
+    caption: "Soft layers, an easy dress, and the pieces that make a slow morning feel pulled together.",
     pages: [
-      { id: "comm-1-p1", template: 4, productIds: pickProductIds(3, 4) },
-      { id: "comm-1-p2", template: 2, productIds: pickProductIds(31, 2) },
+      { id: "comm-1-p1", template: 4, productIds: pickOutfits(0, 4) },
+      { id: "comm-1-p2", template: 4, productIds: pickOutfits(12, 4) },
     ],
     likes: 248,
     comments: [
-      { id: "cmt-1", authorName: "Jonah Reed", authorInitials: "JR", authorColor: "bg-accent", text: "Saving this whole list!", createdAt: Date.now() - 1000 * 60 * 60 * 5 },
-      { id: "cmt-2", authorName: "Priya Nair", authorInitials: "PN", authorColor: "bg-burgundy", text: "That throw is gorgeous 😍", createdAt: Date.now() - 1000 * 60 * 60 * 2 },
+      { id: "cmt-1", authorName: "Jonah Reed", authorInitials: "JR", authorColor: "bg-accent", text: "Saving this whole look!", createdAt: Date.now() - 1000 * 60 * 60 * 5 },
+      { id: "cmt-2", authorName: "Priya Nair", authorInitials: "PN", authorColor: "bg-burgundy", text: "The texture mix is perfect 😍", createdAt: Date.now() - 1000 * 60 * 60 * 2 },
     ],
   },
   {
     id: "comm-2",
     authorId: "f-aria",
     name: "Cozy Layers",
-    caption: "Layering staples for the in-between weather. Tap to shop each piece.",
-    pages: [{ id: "comm-2-p1", template: 3, productIds: pickProductIds(11, 3) }],
+    caption: "Four easy pieces for the in-between weather — the full outfit, not just the hero piece.",
+    pages: [{ id: "comm-2-p1", template: 4, productIds: pickOutfits(24, 4) }],
     likes: 132,
     comments: [
       { id: "cmt-3", authorName: "Theo Park", authorInitials: "TP", authorColor: "bg-pink", text: "Need that jacket immediately", createdAt: Date.now() - 1000 * 60 * 90 },
@@ -103,13 +109,42 @@ export const communityLists: CommunityList[] = [
   {
     id: "comm-3",
     authorId: "c-priya",
-    name: "Housewarming Picks",
-    caption: "My go-to gifts for new homes — always a hit.",
+    name: "Dinner After Dark",
+    caption: "A polished black-and-white edit for dinner plans that start casual and end somewhere special.",
     pages: [
-      { id: "comm-3-p1", template: 6, productIds: pickProductIds(23, 6) },
-      { id: "comm-3-p2", template: 4, productIds: pickProductIds(40, 4) },
+      { id: "comm-3-p1", template: 6, productIds: pickOutfits(36, 6) },
+      { id: "comm-3-p2", template: 4, productIds: pickOutfits(54, 4) },
     ],
-    likes: 87,
+    likes: 187,
+    comments: [],
+  },
+  {
+    id: "comm-4",
+    authorId: "c-sof",
+    name: "Wedding Guest Edit",
+    caption: "Romantic silhouettes and statement color, edited down to the pieces worth trying first.",
+    pages: [{ id: "comm-4-p1", template: 6, productIds: pickOutfits(66, 6) }],
+    likes: 214,
+    comments: [
+      { id: "cmt-4", authorName: "Aria Blume", authorInitials: "AB", authorColor: "bg-accent", text: "The blue dress is everything.", createdAt: Date.now() - 1000 * 60 * 60 * 8 },
+    ],
+  },
+  {
+    id: "comm-5",
+    authorId: "c-leo",
+    name: "The Weekend Uniform",
+    caption: "A few considered pieces that make packing light feel much easier.",
+    pages: [{ id: "comm-5-p1", template: 4, productIds: pickOutfits(78, 4) }],
+    likes: 156,
+    comments: [],
+  },
+  {
+    id: "comm-6",
+    authorId: "f-noor",
+    name: "Five-Minute Face",
+    caption: "A small beauty edit to finish the look — makeup as the last layer, not the whole story.",
+    pages: [{ id: "comm-6-p1", template: 4, productIds: pickBeauty(0, 4) }],
+    likes: 96,
     comments: [],
   },
 ];
@@ -135,14 +170,14 @@ export const sharedWithMe: SharedList[] = [
     id: "shared-1",
     authorId: "c-jonah",
     name: "Birthday ideas for you 🎁",
-    productIds: pickProductIds(5, 5),
+    productIds: pickOutfits(5, 5),
     sharedAt: Date.now() - 1000 * 60 * 60 * 26,
   },
   {
     id: "shared-2",
     authorId: "c-sof",
     name: "Our trip packing list",
-    productIds: pickProductIds(17, 7),
+    productIds: pickOutfits(17, 7),
     sharedAt: Date.now() - 1000 * 60 * 60 * 50,
   },
 ];

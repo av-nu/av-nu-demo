@@ -21,7 +21,7 @@ type LookbookSocialPostPreviewProps = {
 
 export function LookbookSocialPostPreview({ title, products, layout, backgroundColor, backgroundImage, editorialDesign, media, layflatStyle, gridItemCount }: LookbookSocialPostPreviewProps) {
   return (
-    <article className="overflow-hidden rounded-2xl bg-[#2f2f2d] shadow-sm ring-1 ring-black/5">
+    <article className="overflow-hidden rounded-2xl bg-burgundy shadow-sm ring-1 ring-black/5">
       <div className="flex items-center gap-3 px-4 py-3 text-white">
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-burgundy text-xs font-semibold">AV</span>
         <div className="min-w-0 flex-1"><p className="text-sm font-semibold">Your Lookbook</p><p className="truncate text-xs text-white/55">{title}</p></div>

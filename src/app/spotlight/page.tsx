@@ -6,16 +6,22 @@ import Image from "next/image";
 import { Heart, MessageCircle, Send, ShoppingBag, Volume2, VolumeX, ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { mockBrands } from "@/data/mockBrands";
+import { mockProducts } from "@/data/mockProducts";
+
+function productAt(index: number) {
+  const product = mockProducts[index % mockProducts.length];
+  return { id: product.id, name: product.name, price: product.price, image: product.images[0] };
+}
 
 const spotlightReels = [
-  { id: "1", videoUrl: "/Spotlight/39e95057ed53db829cc7d82c80239d00.mp4", brandId: "ashwood-atelier", caption: "Morning rituals deserve beautiful objects", likes: 1243, comments: 89, products: [{ id: "p1", name: "Ceramic Pour-Over Set", price: 68, image: "/products/_pool/ela-de-pure-5eoYsqzmDW4-unsplash.jpg" }, { id: "p2", name: "Stoneware Mug", price: 32, image: "/products/_pool/twinewood-studio-7ZaRKlsIK6w-unsplash.jpg" }] },
-  { id: "3", videoUrl: "/Spotlight/bbce981aa900fff9b34cb9b4a2ffff19.mp4", brandId: "citrus-and-clay", caption: "Handcrafted with intention", likes: 2156, comments: 134, products: [{ id: "p4", name: "Hand-thrown Vase", price: 85, image: "/products/_pool/behnam-norouzi-y0K8EMigxV4-unsplash.jpg" }, { id: "p5", name: "Terracotta Planter", price: 45, image: "/products/_pool/andrej-lisakov-fOo4p1SFbrk-unsplash.jpg" }] },
-  { id: "4", videoUrl: "/Spotlight/ce70a8b87a7f83ec5cf69ec54064aa01.mp4", brandId: "coastal-knitworks", caption: "Cozy textures for every season", likes: 1567, comments: 98, products: [{ id: "p6", name: "Chunky Knit Throw", price: 128, image: "/products/_pool/daiga-ellaby-Fs9Vw1OYHJU-unsplash.jpg" }] },
-  { id: "5", videoUrl: "/Spotlight/ec4ead950131f9e1e73e937e1260d371.mp4", brandId: "ember-and-bloom", caption: "Bringing warmth to your space", likes: 1834, comments: 112, products: [{ id: "p7", name: "Soy Candle Trio", price: 54, image: "/products/_pool/daiga-ellaby-eKBG7QgDQq0-unsplash.jpg" }, { id: "p8", name: "Reed Diffuser", price: 38, image: "/products/_pool/the-nix-company-tR-fqLlBg5c-unsplash.jpg" }] },
-  { id: "2", videoUrl: "/Spotlight/993799343ac142ab7709ef951dd31fe1.mp4", brandId: "aurelith", caption: "Sound, refined to its essence", likes: 892, comments: 45, products: [{ id: "p3", name: "Wireless Speaker", price: 189, image: "/products/_pool/simon-reza-DNEIasg9HaY-unsplash.jpg" }] },
-  { id: "6", videoUrl: "/Spotlight/f06ada50637c635f0c800e0be78fb11a.mp4", brandId: "forma-studio", caption: "Form follows function", likes: 945, comments: 67, products: [{ id: "p9", name: "Minimalist Desk Lamp", price: 145, image: "/products/_pool/james-lewis-GeXsUpTSYFg-unsplash.jpg" }] },
-  { id: "7", videoUrl: "/Spotlight/new1.mp4", brandId: "golden-grove", caption: "Natures finest ingredients", likes: 1102, comments: 73, products: [{ id: "p10", name: "Botanical Face Oil", price: 62, image: "/products/_pool/mockup-free-BBUbUMxC_rc-unsplash.jpg" }, { id: "p11", name: "Herbal Body Butter", price: 34, image: "/products/_pool/karolina-grabowska-fpz3RrJtoh8-unsplash.jpg" }] },
-  { id: "8", videoUrl: "/Spotlight/new2.mp4", brandId: "hearth-and-hide", caption: "Crafted to last generations", likes: 1456, comments: 91, products: [{ id: "p12", name: "Leather Tote Bag", price: 195, image: "/products/_pool/matus-gocman-_VD-KDdnoOM-unsplash.jpg" }] },
+  { id: "1", videoUrl: "/Spotlight/39e95057ed53db829cc7d82c80239d00.mp4", brandId: "ashwood-atelier", caption: "Morning rituals deserve beautiful objects", likes: 1243, comments: 89, products: [productAt(0), productAt(1)] },
+  { id: "3", videoUrl: "/Spotlight/bbce981aa900fff9b34cb9b4a2ffff19.mp4", brandId: "citrus-and-clay", caption: "Handcrafted with intention", likes: 2156, comments: 134, products: [productAt(2), productAt(3)] },
+  { id: "4", videoUrl: "/Spotlight/ce70a8b87a7f83ec5cf69ec54064aa01.mp4", brandId: "coastal-knitworks", caption: "Cozy textures for every season", likes: 1567, comments: 98, products: [productAt(4)] },
+  { id: "5", videoUrl: "/Spotlight/ec4ead950131f9e1e73e937e1260d371.mp4", brandId: "ember-and-bloom", caption: "Bringing warmth to your space", likes: 1834, comments: 112, products: [productAt(5), productAt(6)] },
+  { id: "2", videoUrl: "/Spotlight/993799343ac142ab7709ef951dd31fe1.mp4", brandId: "aurelith", caption: "Sound, refined to its essence", likes: 892, comments: 45, products: [productAt(7)] },
+  { id: "6", videoUrl: "/Spotlight/f06ada50637c635f0c800e0be78fb11a.mp4", brandId: "forma-studio", caption: "Form follows function", likes: 945, comments: 67, products: [productAt(8)] },
+  { id: "7", videoUrl: "/Spotlight/new1.mp4", brandId: "golden-grove", caption: "Natures finest ingredients", likes: 1102, comments: 73, products: [productAt(9), productAt(10)] },
+  { id: "8", videoUrl: "/Spotlight/new2.mp4", brandId: "hearth-and-hide", caption: "Crafted to last generations", likes: 1456, comments: 91, products: [productAt(11)] },
 ];
 
 type ReelType = (typeof spotlightReels)[0];

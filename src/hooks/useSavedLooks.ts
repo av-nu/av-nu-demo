@@ -34,7 +34,12 @@ export function useSavedLooks() {
   );
 
   const seedLookbook = useCallback(
-    (seed: SavedLook[]) => setLooks((current) => (current.length >= seed.length ? current : [...current, ...seed.slice(0, seed.length - current.length)])),
+    (seed: SavedLook[]) => setLooks((current) => {
+      const seedPrompts = new Set(seed.map((look) => look.prompt));
+      const refreshedSeed = seed.map((look, index) => ({ ...look, id: `seed-look-${index + 1}`, seedVersion: 2 }));
+      const userLooks = current.filter((look) => look.seedVersion !== undefined ? look.seedVersion !== 2 : !seedPrompts.has(look.prompt));
+      return [...refreshedSeed, ...userLooks];
+    }),
     [setLooks],
   );
 

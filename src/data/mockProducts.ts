@@ -1,4 +1,5 @@
 import { mockBrands } from "@/data/mockBrands";
+import { seedProducts } from "@/data/seedProducts";
 
 export type Product = {
   id: string;
@@ -792,4 +793,4 @@ function buildProducts(): Product[] {
   return combined;
 }
 
-export const mockProducts: Product[] = buildProducts();
+export const mockProducts: Product[] = [...seedProducts, ...ashwoodAtelierProducts, ...aurelithProducts];

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Film, ListPlus, ChevronRight } from "lucide-react";
+import { X, Film, ListPlus, BookOpen, ChevronRight } from "lucide-react";
 
 import { Portal } from "@/components/ui/Portal";
 import { VideoReviewUploadDialog } from "./VideoReviewUploadDialog";
@@ -20,6 +21,7 @@ export function AddPostMenu({
   onClose: () => void;
   onToast?: (message: string) => void;
 }) {
+  const router = useRouter();
   const [mode, setMode] = useState<Mode>("choose");
 
   if (mode === "video") {
@@ -41,6 +43,12 @@ export function AddPostMenu({
       icon: ListPlus,
       title: "Publish a list",
       description: "Share one of your faves lists with a caption",
+    },
+    {
+      key: "lookbook" as const,
+      icon: BookOpen,
+      title: "Create a Lookbook",
+      description: "Build a shoppable look from a vibe or image",
     },
   ];
 
@@ -81,7 +89,13 @@ export function AddPostMenu({
                   <button
                     key={opt.key}
                     type="button"
-                    onClick={() => setMode(opt.key)}
+                    onClick={() => {
+                      if (opt.key === "lookbook") {
+                        router.push("/create-a-look");
+                        return;
+                      }
+                      setMode(opt.key);
+                    }}
                     className="flex w-full items-center gap-3 rounded-xl border border-divider/60 p-3 text-left transition-colors hover:border-accent/40 hover:bg-surface/50"
                   >
                     <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 text-accent">

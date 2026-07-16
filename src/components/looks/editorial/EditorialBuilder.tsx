@@ -415,7 +415,7 @@ export function EditorialBuilder({ title, design, products, onChangeAction }: Ed
       </div>
 
       <div className="grid min-w-0 lg:grid-cols-[minmax(0,1fr)_290px]">
-        <div className="min-w-0 overflow-auto bg-[#e8e6e1] p-4 sm:p-7 lg:min-h-[680px]">
+        <div className="min-w-0 overflow-auto bg-sky/25 p-4 sm:p-7 lg:min-h-[680px]">
           <div className="mx-auto origin-top transition-[width,max-width]" style={{ width: `${zoom * 100}%`, maxWidth: `${(present.format === "spread" ? 900 : 680) * zoom}px` }}>
             <EditorialRenderer design={present} selectedId={selectedId} interactive guides={snapGuides} canvasRef={canvasRef} onCanvasPointerDown={(event) => { if (event.target === event.currentTarget) setSelectedId(undefined); }} onElementSelect={setSelectedId} onElementPointerDown={(event, elementId) => startInteraction(event, elementId, "drag")} onHandlePointerDown={(event, elementId, handle) => startInteraction(event, elementId, handle)} />
           </div>

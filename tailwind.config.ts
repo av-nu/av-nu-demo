@@ -15,6 +15,8 @@ const config: Config = {
         text: "rgb(var(--text-rgb) / <alpha-value>)",
         accent: "rgb(var(--accent-rgb) / <alpha-value>)",
         pink: "rgb(var(--pink-rgb) / <alpha-value>)",
+        sky: "rgb(var(--sky-rgb) / <alpha-value>)",
+        sun: "rgb(var(--sun-rgb) / <alpha-value>)",
         burgundy: "rgb(var(--burgundy-rgb) / <alpha-value>)",
         divider: "var(--divider)",
       },

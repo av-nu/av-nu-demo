@@ -38,7 +38,7 @@ type LayflatPostPreviewProps = {
   gridItemCount?: number;
 };
 
-export function LayflatPostPreview({ products, title, layout = "layflat", backgroundColor = "#ded6c9", backgroundImage, editorialDesign, media = [], layflatStyle = "classic", gridItemCount = 4 }: LayflatPostPreviewProps) {
+export function LayflatPostPreview({ products, title, layout = "layflat", backgroundColor = "#fffaf0", backgroundImage, editorialDesign, media = [], layflatStyle = "classic", gridItemCount = 4 }: LayflatPostPreviewProps) {
   const label = layout === "grid" ? "Grid post preview" : layout === "editorial" ? "Editorial post preview" : "Styled layflat preview";
   const itemLimit = layout === "grid" ? Math.min(8, Math.max(1, gridItemCount)) : 8;
   const items = [...products.map((product) => ({ id: product.id, type: "product" as const, src: product.images[0], name: product.name })), ...media].slice(0, itemLimit);
@@ -52,7 +52,7 @@ export function LayflatPostPreview({ products, title, layout = "layflat", backgr
   };
 
   return (
-    <div className="max-w-full overflow-hidden rounded-2xl border border-divider/60 bg-[#eee9e0] p-3 shadow-sm">
+    <div className="max-w-full overflow-hidden rounded-2xl border border-divider/60 bg-sky/25 p-3 shadow-sm">
       <div className="flex items-center justify-between px-1 pb-3">
         <span className="text-xs font-semibold uppercase tracking-[0.16em] text-text/55">{label}</span>
         <span className="rounded-full bg-bg/75 px-2 py-1 text-[10px] font-semibold text-text/55">Shoppable</span>
@@ -61,7 +61,7 @@ export function LayflatPostPreview({ products, title, layout = "layflat", backgr
         <div className="overflow-hidden rounded-xl"><EditorialRenderer design={editorialDesign} /></div>
       ) : <div className="relative aspect-square overflow-hidden rounded-xl" style={{ backgroundColor }}>
         {backgroundImage && <Image src={backgroundImage} alt="" fill sizes="(max-width: 640px) 78vw, 360px" className="object-cover opacity-35" unoptimized />}
-        <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.38),transparent_42%),radial-gradient(circle_at_78%_72%,rgba(98,76,59,0.13),transparent_34%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.55),transparent_42%),radial-gradient(circle_at_78%_72%,rgba(239,155,111,0.18),transparent_34%)]" />
         {layout === "grid" ? (
           <div className="absolute inset-4 grid grid-cols-12 grid-rows-12 gap-2 pt-10">
             {items.map((item, index) => renderItem(item, `relative min-h-0 overflow-hidden rounded-lg bg-bg shadow-sm ${gridPositions[itemLimit][index]}`))}
@@ -69,8 +69,8 @@ export function LayflatPostPreview({ products, title, layout = "layflat", backgr
         ) : (
           items.map((item, index) => renderItem(item, `absolute overflow-hidden ${item.type === "product" ? "bg-transparent" : "rounded-sm bg-bg/70 shadow-sm"} ${layflatPositions[layflatStyle][index]}`))
         )}
-        <p className="absolute left-4 top-4 z-10 max-w-[55%] rounded-full bg-white/75 px-3 py-1.5 font-headline text-sm leading-tight text-[#51413f] backdrop-blur-sm">{title}</p>
-        {products.length > 0 && <span className="absolute bottom-4 right-4 z-10 rounded-full bg-[#51413f]/90 px-3 py-1.5 text-[10px] font-semibold text-white">Tap to shop</span>}
+        <p className="absolute left-4 top-4 z-10 max-w-[55%] rounded-full bg-white/75 px-3 py-1.5 font-headline text-sm leading-tight text-burgundy backdrop-blur-sm">{title}</p>
+        {products.length > 0 && <span className="absolute bottom-4 right-4 z-10 rounded-full bg-burgundy/90 px-3 py-1.5 text-[10px] font-semibold text-white">Tap to shop</span>}
       </div>}
     </div>
   );
