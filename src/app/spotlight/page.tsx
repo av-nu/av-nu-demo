@@ -70,30 +70,30 @@ function ReelCard({ reel }: { reel: ReelType }) {
   return (
     <div ref={cardRef} className="group">
       <div className="relative aspect-[9/16] overflow-hidden rounded-xl bg-black">
-        <video ref={videoRef} src={reel.videoUrl} className="h-full w-full object-cover cursor-pointer" loop playsInline muted={isMuted} onClick={togglePlay} />
-        <button onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }} className="absolute right-3 top-3 rounded-full bg-black/40 p-2 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity">
+        <video ref={videoRef} src={reel.videoUrl} className="h-full w-full cursor-pointer object-cover" loop playsInline muted={isMuted} onClick={togglePlay} />
+        <button onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }} className="absolute right-3 top-3 rounded-full bg-black/40 p-2 backdrop-blur-sm opacity-0 transition-opacity group-hover:opacity-100">
           {isMuted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
         </button>
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent overflow-hidden rounded-b-xl">
-          <button onClick={(e) => { e.stopPropagation(); setShowProducts(!showProducts); setShowFullCaption(false); }} className="flex w-full items-center justify-between px-4 py-3 h-16">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <div className="h-8 w-8 overflow-hidden rounded-full border border-white/50 bg-white flex-shrink-0">
-                {brand?.logoMark ? (<Image src={brand.logoMark} alt={brand.name} width={32} height={32} className="h-full w-full object-contain p-0.5" />) : (<div className="flex h-full w-full items-center justify-center bg-accent text-white text-xs font-bold">{brand?.name.charAt(0)}</div>)}
-              </div>
-              <div className="text-left min-w-0 flex-1">
-                <span className="font-semibold text-white text-sm block truncate">{brand?.name}</span>
-                {reel.products.length > 0 && <span className="text-xs text-white/70">{reel.products.length} {reel.products.length === 1 ? "product" : "products"}</span>}
-              </div>
+      </div>
+      <div className="mt-3 overflow-hidden rounded-xl border border-divider bg-white">
+        <button onClick={(e) => { e.stopPropagation(); setShowProducts(!showProducts); setShowFullCaption(false); }} className="flex h-16 w-full items-center justify-between px-4 py-3">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-full border border-divider bg-surface">
+              {brand?.logoMark ? (<Image src={brand.logoMark} alt={brand.name} width={32} height={32} className="h-full w-full object-contain p-0.5" />) : (<div className="flex h-full w-full items-center justify-center bg-accent text-xs font-bold text-white">{brand?.name.charAt(0)}</div>)}
             </div>
-            {reel.products.length > 0 && (<div className="flex items-center gap-1 text-white/80 flex-shrink-0"><ShoppingBag className="h-4 w-4" />{showProducts ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}</div>)}
-          </button>
-          {showProducts && reel.products.length > 0 && (
-            <div className="px-3 pb-3 space-y-2 animate-in slide-in-from-bottom-4 duration-200">
-              {reel.products.map((product) => (<Link key={product.id} href={brandUrl} onClick={(e) => e.stopPropagation()} className="flex items-center gap-3 rounded-lg bg-white/10 backdrop-blur-sm p-2 transition-colors hover:bg-white/20"><div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md bg-white/20"><Image src={product.image} alt={product.name} width={48} height={48} className="h-full w-full object-cover" /></div><div className="flex-1 min-w-0"><p className="text-sm font-medium text-white truncate">{product.name}</p><p className="text-sm text-white/80">${product.price}</p></div><div className="flex-shrink-0 rounded-full bg-white px-3 py-1"><span className="text-xs font-medium text-text">Shop</span></div></Link>))}
+            <div className="min-w-0 flex-1 text-left">
+              <span className="block truncate text-sm font-semibold text-text">{brand?.name}</span>
+              {reel.products.length > 0 && <span className="text-xs text-text/50">{reel.products.length} {reel.products.length === 1 ? "product" : "products"}</span>}
             </div>
-          )}
-          {!showProducts && (<div className="px-4 pb-3 overflow-hidden"><button onClick={(e) => { e.stopPropagation(); setShowFullCaption(!showFullCaption); }} className="text-left w-full"><p className={showFullCaption ? "text-sm text-white/90" : "text-sm text-white/90 truncate"}>{reel.caption}</p></button></div>)}
-        </div>
+          </div>
+          {reel.products.length > 0 && (<div className="flex flex-shrink-0 items-center gap-1 text-burgundy/70"><ShoppingBag className="h-4 w-4" />{showProducts ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}</div>)}
+        </button>
+        {showProducts && reel.products.length > 0 && (
+          <div className="animate-in space-y-2 border-t border-divider/60 px-3 pb-3 pt-3 slide-in-from-bottom-4 duration-200">
+            {reel.products.map((product) => (<Link key={product.id} href={brandUrl} onClick={(e) => e.stopPropagation()} className="flex items-center gap-3 rounded-lg bg-surface/70 p-2 transition-colors hover:bg-surface"><div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md bg-divider"><Image src={product.image} alt={product.name} width={48} height={48} className="h-full w-full object-cover" /></div><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium text-text">{product.name}</p><p className="text-sm text-text/60">${product.price}</p></div><div className="flex-shrink-0 rounded-full bg-text px-3 py-1"><span className="text-xs font-medium text-bg">Shop</span></div></Link>))}
+          </div>
+        )}
+        {!showProducts && (<div className="overflow-hidden px-4 pb-3"><button onClick={(e) => { e.stopPropagation(); setShowFullCaption(!showFullCaption); }} className="w-full text-left"><p className={showFullCaption ? "text-sm text-text/70" : "truncate text-sm text-text/70"}>{reel.caption}</p></button></div>)}
       </div>
       <div className="mt-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
