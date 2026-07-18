@@ -8,14 +8,15 @@ type FeaturedGuideArtworkProps = {
   guide: CommunityList;
   productIds: string[];
   author?: Contact;
+  className?: string;
 };
 
-export function FeaturedGuideArtwork({ guide, productIds, author }: FeaturedGuideArtworkProps) {
+export function FeaturedGuideArtwork({ guide, productIds, author, className }: FeaturedGuideArtworkProps) {
   const products = productIds.map(getProductById).filter((product): product is NonNullable<ReturnType<typeof getProductById>> => Boolean(product));
   const hero = products[0];
 
   return (
-    <div className="relative aspect-[4/5] overflow-hidden bg-text">
+    <div className={`relative aspect-[4/5] overflow-hidden bg-text ${className ?? ""}`}>
       {hero && <Image src={hero.images[0]} alt={guide.name} fill sizes="(max-width: 768px) 50vw, 25vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />}
       <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/5 to-black/65" />
       <div className="absolute inset-x-0 top-0 z-10 p-4 text-white">

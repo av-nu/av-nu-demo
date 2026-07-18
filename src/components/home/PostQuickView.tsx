@@ -6,6 +6,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { Bookmark, Check, ChevronLeft, ChevronRight, Film, Heart, MessageCircle, Send, ShoppingBag, UserPlus, X } from "lucide-react";
 
+import { FeaturedGuideArtwork } from "@/components/home/FeaturedGuideArtwork";
 import { SavePostDialog } from "@/components/social/SavePostDialog";
 import { SharePostDialog } from "@/components/social/SharePostDialog";
 import { Portal } from "@/components/ui/Portal";
@@ -70,7 +71,7 @@ export function PostQuickView({ post, onClose }: { post: DiscoverPost; onClose: 
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/55 p-0 backdrop-blur-sm sm:items-center sm:p-5"
+          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/55 p-0 backdrop-blur-sm lg:items-center lg:p-5"
         >
           <motion.div
             initial={{ y: 28, opacity: 0, scale: 0.98 }}
@@ -78,25 +79,31 @@ export function PostQuickView({ post, onClose }: { post: DiscoverPost; onClose: 
             exit={{ y: 28, opacity: 0 }}
             transition={{ type: "spring", stiffness: 360, damping: 32 }}
             onClick={(event) => event.stopPropagation()}
-            className="flex max-h-[94vh] w-full flex-col overflow-hidden rounded-t-3xl bg-bg shadow-2xl sm:max-w-5xl sm:flex-row sm:rounded-3xl"
+            className="relative flex h-[100dvh] max-h-[100dvh] w-full flex-col overflow-y-auto overscroll-contain rounded-none bg-bg shadow-2xl lg:h-[760px] lg:max-h-[94vh] lg:max-w-5xl lg:flex-row lg:overflow-hidden lg:rounded-3xl"
           >
-            <div className="relative flex min-h-0 items-center justify-center bg-text sm:w-[56%]">
+            <div className="sticky top-0 z-40 flex shrink-0 items-center justify-between border-b border-divider/60 bg-bg/95 px-5 py-3 backdrop-blur-md lg:hidden">
+              <span className="text-sm font-semibold text-text">Post</span>
+              <button type="button" onClick={onClose} className="inline-flex items-center gap-1.5 rounded-full border border-divider/70 px-3 py-1.5 text-xs font-semibold text-text/70" aria-label="Close post"><X className="h-3.5 w-3.5" />Close</button>
+            </div>
+            <div className="relative flex h-[62dvh] max-h-[640px] w-full shrink-0 items-center justify-center overflow-hidden bg-text lg:h-full lg:max-h-none lg:min-h-0 lg:w-[56%] lg:shrink">
               {post.kind === "video" ? (
-                <video src={post.data.videoUrl} controls autoPlay playsInline className="max-h-[58vh] w-full object-contain sm:max-h-[94vh]" />
+                <video src={post.data.videoUrl} controls autoPlay playsInline className="h-full w-full object-contain" />
+              ) : post.data.format === "featured" ? (
+                <div className="flex h-full w-full items-center justify-center bg-surface lg:px-8">
+                  <FeaturedGuideArtwork guide={post.data} productIds={products.map((product) => product.id)} author={author} className="h-full w-auto max-w-full" />
+                </div>
               ) : currentPage ? (
-                <div className="relative w-full max-w-2xl bg-surface p-3 sm:p-8">
-                  <div className="overflow-hidden rounded-2xl bg-white shadow-lg">
-                    {currentPage.editorial ? (
-                      <div className="p-4 text-center text-sm text-text/60">Editorial Guide preview</div>
-                    ) : (
-                      <div className="grid grid-cols-2">
-                        {currentPage.productIds.slice(0, 4).map((productId) => {
-                          const product = getProductById(productId);
-                          return product ? <Image key={product.id} src={product.images[0]} alt={product.name} width={320} height={320} className="aspect-square object-cover" /> : null;
-                        })}
-                      </div>
-                    )}
-                  </div>
+                <div className="relative flex h-full w-full items-center justify-center bg-surface lg:p-8">
+                  {currentPage.editorial ? (
+                    <div className="flex h-full max-w-full aspect-square items-center justify-center bg-white p-4 text-center text-sm text-text/60 shadow-lg lg:rounded-2xl">Editorial Guide preview</div>
+                  ) : (
+                    <div className="grid h-full max-w-full aspect-square grid-cols-2 overflow-hidden bg-white shadow-lg lg:rounded-2xl">
+                      {currentPage.productIds.slice(0, 4).map((productId) => {
+                        const product = getProductById(productId);
+                        return product ? <div key={product.id} className="relative min-h-0 min-w-0"><Image src={product.images[0]} alt={product.name} fill sizes="(max-width: 640px) 45vw, 28vw" className="object-cover" /></div> : null;
+                      })}
+                    </div>
+                  )}
                   {pages.length > 1 && (
                     <div className="absolute inset-x-5 top-1/2 flex -translate-y-1/2 justify-between">
                       <button type="button" disabled={page === 0} onClick={() => setPage((current) => Math.max(0, current - 1))} className="flex h-9 w-9 items-center justify-center rounded-full bg-bg/90 text-text shadow disabled:opacity-30" aria-label="Previous page"><ChevronLeft className="h-5 w-5" /></button>
@@ -105,10 +112,9 @@ export function PostQuickView({ post, onClose }: { post: DiscoverPost; onClose: 
                   )}
                 </div>
               ) : null}
-              <button type="button" onClick={onClose} className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white sm:hidden" aria-label="Close post"><X className="h-5 w-5" /></button>
             </div>
 
-            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+            <div className="flex shrink-0 flex-col overflow-visible lg:min-h-0 lg:flex-1 lg:shrink lg:overflow-hidden">
               <div className="flex items-center gap-3 border-b border-divider/60 px-5 py-4">
                 <Link href={author ? `/u/${author.id}` : "#"} className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-semibold text-white ${author?.color ?? "bg-accent"}`}>
                   {author?.initials ?? "AV"}
@@ -122,24 +128,24 @@ export function PostQuickView({ post, onClose }: { post: DiscoverPost; onClose: 
                     {relationship?.iFollow ? <><Check className="h-3.5 w-3.5" />Following</> : <><UserPlus className="h-3.5 w-3.5" />Follow</>}
                   </button>
                 )}
-                <button type="button" onClick={onClose} className="hidden h-9 w-9 items-center justify-center rounded-full text-text/50 hover:bg-surface hover:text-text sm:flex" aria-label="Close post"><X className="h-5 w-5" /></button>
+                <button type="button" onClick={onClose} className="hidden h-9 w-9 items-center justify-center rounded-full text-text/50 hover:bg-surface hover:text-text lg:flex" aria-label="Close post"><X className="h-5 w-5" /></button>
               </div>
 
-              <div className="flex-1 space-y-5 px-5 py-5">
+              <div className="px-5 py-5 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-contain"> <div className="space-y-5">
+                <div className="flex items-center gap-4 border-y border-divider/60 py-3">
+                  <button type="button" onClick={() => setLiked((current) => !current)} className={`inline-flex items-center gap-1.5 text-sm font-semibold ${liked ? "text-pink" : "text-text/60"}`}><Heart className={`h-5 w-5 ${liked ? "fill-current" : ""}`} />{liked ? "Liked" : "Like"}</button>
+                  <button type="button" onClick={() => setSaveOpen(true)} className={`inline-flex items-center gap-1.5 text-sm font-semibold ${isSaved ? "text-accent" : "text-text/60"}`}><Bookmark className={`h-5 w-5 ${isSaved ? "fill-current" : ""}`} />{isSaved ? "Saved" : "Save"}</button>
+                  <button type="button" onClick={() => setShareOpen(true)} className="ml-auto text-text/50 hover:text-text" aria-label="Share post"><Send className="h-5 w-5" /></button>
+                </div>
+
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${post.kind === "video" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"}`}>{post.kind === "video" ? "Moment" : "List"}</span>
+                    <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${post.kind === "video" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"}`}>{post.kind === "video" ? "Moment" : "Guide"}</span>
                     {post.kind === "video" && <Film className="h-4 w-4 text-text/40" />}
                   </div>
                   <h2 className="mt-3 font-headline text-2xl leading-tight text-text">{post.kind === "video" ? post.data.featured.name : post.data.name}</h2>
                   <p className="mt-2 text-sm leading-relaxed text-text/65">{caption}</p>
                   {author?.bio && <p className="mt-3 rounded-xl bg-surface/60 p-3 text-xs leading-relaxed text-text/60">{author.bio}</p>}
-                </div>
-
-                <div className="flex items-center gap-4 border-y border-divider/60 py-3">
-                  <button type="button" onClick={() => setLiked((current) => !current)} className={`inline-flex items-center gap-1.5 text-sm font-semibold ${liked ? "text-pink" : "text-text/60"}`}><Heart className={`h-5 w-5 ${liked ? "fill-current" : ""}`} />{liked ? "Liked" : "Like"}</button>
-                  <button type="button" onClick={() => setSaveOpen(true)} className={`inline-flex items-center gap-1.5 text-sm font-semibold ${isSaved ? "text-accent" : "text-text/60"}`}><Bookmark className={`h-5 w-5 ${isSaved ? "fill-current" : ""}`} />{isSaved ? "Saved" : "Save"}</button>
-                  <button type="button" onClick={() => setShareOpen(true)} className="ml-auto text-text/50 hover:text-text" aria-label="Share post"><Send className="h-5 w-5" /></button>
                 </div>
 
                 <section>
@@ -160,6 +166,7 @@ export function PostQuickView({ post, onClose }: { post: DiscoverPost; onClose: 
                   </div>
                   <form onSubmit={(event) => { event.preventDefault(); addComment(); }} className="mt-3 flex gap-2"><input value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Add a comment…" className="h-10 min-w-0 flex-1 rounded-full border border-divider bg-surface/40 px-4 text-sm focus:border-accent/50 focus:outline-none" /><button type="submit" disabled={!comment.trim()} className="rounded-full bg-text px-4 text-xs font-semibold text-bg disabled:opacity-40">Post</button></form>
                 </section>
+              </div>
               </div>
             </div>
           </motion.div>

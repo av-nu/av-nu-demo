@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Heart, MessageCircle, Send, ShoppingBag } from "lucide-react";
 
+import { FeaturedGuideArtwork } from "@/components/home/FeaturedGuideArtwork";
 import { FaveButton } from "@/components/faves/FaveButton";
 import { ListTileGrid } from "@/components/faves/ListTileGrid";
 import { useToast } from "@/components/ui/Toast";
@@ -53,7 +54,7 @@ export default function SocialPostPage({ params }: { params: { type: string; id:
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]">
         <div className="overflow-hidden rounded-3xl bg-[#2f292d]">
-          {video ? <video src={video.videoUrl} controls autoPlay playsInline className="max-h-[82vh] min-h-[520px] w-full bg-black object-contain" /> : list ? <div className="bg-[#efe7eb] p-4 sm:p-8"><div className="mx-auto max-w-3xl overflow-hidden rounded-2xl bg-white shadow-xl"><ListTileGrid productIds={list.pages[0].productIds} template={list.pages[0].template} /></div></div> : null}
+          {video ? <video src={video.videoUrl} controls autoPlay playsInline className="max-h-[82vh] min-h-[520px] w-full bg-black object-contain" /> : list?.format === "featured" ? <div className="flex min-h-[520px] items-center justify-center bg-[#efe7eb] p-4 sm:p-8"><FeaturedGuideArtwork guide={list} productIds={products.map((product) => product.id)} author={author} className="w-full max-w-lg" /></div> : list ? <div className="bg-[#efe7eb] p-4 sm:p-8"><div className="mx-auto max-w-3xl overflow-hidden rounded-2xl bg-white shadow-xl"><ListTileGrid productIds={list.pages[0].productIds} template={list.pages[0].template} /></div></div> : null}
         </div>
 
         <aside className="space-y-6">
