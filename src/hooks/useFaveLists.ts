@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useLocalStorage } from "./useLocalStorage";
 import { type FaveList, type FaveVisibility, type ListPage } from "@/data/faves";
 import { DEFAULT_TEMPLATE, type TemplateId } from "@/data/listTemplates";
 import type { SavedLook } from "@/lib/lookEngine";
 
 const LISTS_KEY = "avnu-fave-lists";
+export const DEFAULT_PRODUCT_LIST_NAME = "My Favorite Products";
 
 function makeId() {
   return `list-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -18,6 +19,34 @@ function makePageId() {
 
 export function useFaveLists() {
   const [lists, setLists, isHydrated] = useLocalStorage<FaveList[]>(LISTS_KEY, []);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    const legacyFavorites = (() => {
+      try {
+        return JSON.parse(window.localStorage.getItem("avnu-favorites") ?? "[]") as string[];
+      } catch {
+        return [];
+      }
+    })();
+    setLists((current) => {
+      const existing = current.find((list) => list.name === DEFAULT_PRODUCT_LIST_NAME);
+      if (!existing) {
+        return [{
+          id: "my-favorite-products",
+          name: DEFAULT_PRODUCT_LIST_NAME,
+          productIds: [...new Set(legacyFavorites)],
+          createdAt: Date.now(),
+          visibility: "private",
+          sharedWith: [],
+          template: DEFAULT_TEMPLATE,
+        }, ...current];
+      }
+      const mergedProductIds = [...new Set([...existing.productIds, ...legacyFavorites])];
+      if (mergedProductIds.length === existing.productIds.length) return current;
+      return current.map((list) => list.id === existing.id ? { ...list, productIds: mergedProductIds } : list);
+    });
+  }, [isHydrated, setLists]);
 
   const createList = useCallback(
     (name: string, initialProductId?: string): string => {

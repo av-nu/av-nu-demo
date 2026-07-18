@@ -3,13 +3,13 @@
 import { useCallback, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Check, Plus, X } from "lucide-react";
+import { ListPlus, Check, Plus, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { Product } from "@/data/mockProducts";
 import { Portal } from "@/components/ui/Portal";
 import { useFavorites } from "@/hooks/useFavorites";
-import { useFaveLists } from "@/hooks/useFaveLists";
+import { DEFAULT_PRODUCT_LIST_NAME, useFaveLists } from "@/hooks/useFaveLists";
 
 interface SaveToListDialogProps {
   product: Product;
@@ -24,25 +24,13 @@ export function SaveToListDialog({ product, onClose, onToast }: SaveToListDialog
     createList,
     toggleProductInList,
     isInList,
-    removeProductEverywhere,
   } = useFaveLists();
 
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
 
   const saved = isFavorite(product.id);
-
-  const handleToggleMyFaves = useCallback(() => {
-    if (saved) {
-      // Unsave entirely: remove from umbrella + every list.
-      toggleFavorite(product.id);
-      removeProductEverywhere(product.id);
-      onToast?.("Removed from My Faves");
-    } else {
-      toggleFavorite(product.id);
-      onToast?.("Added to My Faves");
-    }
-  }, [saved, product.id, toggleFavorite, removeProductEverywhere, onToast]);
+  const defaultList = lists.find((list) => list.name === DEFAULT_PRODUCT_LIST_NAME);
 
   const handleToggleList = useCallback(
     (listId: string, listName: string) => {
@@ -115,26 +103,26 @@ export function SaveToListDialog({ product, onClose, onToast }: SaveToListDialog
 
           {/* Scrollable body */}
           <div className="flex-1 overflow-y-auto p-2">
-            {/* My Faves (umbrella) */}
-            <button
+            {/* Default product list */}
+            {defaultList && <button
               type="button"
-              onClick={handleToggleMyFaves}
+              onClick={() => handleToggleList(defaultList.id, defaultList.name)}
               className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors hover:bg-surface/60"
             >
               <span
                 className={cn(
                   "flex h-10 w-10 items-center justify-center rounded-full",
-                  saved ? "bg-pink/15 text-pink" : "bg-surface text-text/50",
+                  isInList(defaultList.id, product.id) ? "bg-accent/15 text-accent" : "bg-surface text-text/50",
                 )}
               >
-                <Heart className={cn("h-5 w-5", saved && "fill-pink")} />
+                <ListPlus className="h-5 w-5" />
               </span>
               <span className="flex-1">
-                <span className="block text-sm font-medium text-text">My Faves</span>
-                <span className="block text-xs text-text/50">Everything you save</span>
+                <span className="block text-sm font-medium text-text">{DEFAULT_PRODUCT_LIST_NAME}</span>
+                <span className="block text-xs text-text/50">Your default product collection</span>
               </span>
-              {saved && <Check className="h-5 w-5 text-pink" />}
-            </button>
+              {isInList(defaultList.id, product.id) && <Check className="h-5 w-5 text-accent" />}
+            </button>}
 
             {lists.length > 0 && (
               <p className="px-3 pb-1 pt-3 text-[11px] font-medium uppercase tracking-wide text-text/40">
@@ -142,7 +130,7 @@ export function SaveToListDialog({ product, onClose, onToast }: SaveToListDialog
               </p>
             )}
 
-            {lists.map((list) => {
+            {lists.filter((list) => list.id !== defaultList?.id).map((list) => {
               const inList = isInList(list.id, product.id);
               return (
                 <button

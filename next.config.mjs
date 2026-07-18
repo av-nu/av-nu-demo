@@ -1,6 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  async redirects() {
+    return [
+      { source: "/search", destination: "/shop", permanent: false },
+      { source: "/create-a-look", destination: "/create", permanent: false },
+      { source: "/create-a-look/:id", destination: "/create/:id", permanent: false },
+    ];
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "contestimg.wish.com" },

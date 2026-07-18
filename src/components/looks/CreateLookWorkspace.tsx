@@ -3,13 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { BookOpen, ChevronRight, Film, Heart, ImagePlus, LoaderCircle, Lock, PanelRightOpen, Save, Send, Sparkles, WandSparkles, X } from "lucide-react";
+import { BookOpen, ChevronRight, Film, Heart, ImagePlus, LoaderCircle, PanelRightOpen, Plus, Save, Send, Sparkles, WandSparkles, X } from "lucide-react";
 
 import { LayflatPostPreview } from "@/components/looks/LayflatPostPreview";
 import { LookbookSocialPostPreview } from "@/components/looks/LookbookSocialPostPreview";
 import { EditorialBuilder } from "@/components/looks/editorial/EditorialBuilder";
 import { EditorialColorPicker } from "@/components/looks/editorial/EditorialColorPicker";
 import { ProductPickerDialog } from "@/components/faves/ProductPickerDialog";
+import { GuideProductOrder } from "@/components/looks/GuideProductOrder";
 import { LookProductTile } from "@/components/looks/LookProductTile";
 import { SaveLookDialog } from "@/components/looks/SaveLookDialog";
 import { ShareLookbookDialog } from "@/components/looks/ShareLookbookDialog";
@@ -21,12 +22,12 @@ import { useSavedLooks } from "@/hooks/useSavedLooks";
 import { socialService } from "@/lib/social";
 import { createEditorialPage, createProductElement, editorialProductIds, normalizeEditorialPage, type EditorialPageDesign } from "@/lib/editorial";
 import type { FaveVisibility } from "@/data/faves";
-import { generateLook, refineLook, toggleLookLock, type LayflatStyle, type LookbookLayout, type LookbookMedia, type SavedLook } from "@/lib/lookEngine";
+import { generateLook, refineLook, type LayflatStyle, type LookbookLayout, type LookbookMedia, type SavedLook } from "@/lib/lookEngine";
 
 const promptChips = ["Summer dinner", "Wedding guest", "Vacation outfit", "Work look", "First date", "Brunch", "Minimalist", "Coastal", "Under $150"];
 const refinementChips = ["More casual", "Dressier", "Lower price", "More colorful", "More neutral", "More minimalist", "Swap shoes", "Add accessories"];
 const demoLookPrompts = ["A coastal dinner look", "Wedding guest under $200", "Easy Saturday brunch", "Polished work outfit", "Weekend city getaway", "Minimalist date night", "Garden party in spring", "Everyday neutrals"];
-const layoutOptions: Array<{ value: LookbookLayout; label: string }> = [{ value: "layflat", label: "Layflat" }, { value: "grid", label: "Grid" }, { value: "editorial", label: "Editorial" }];
+const layoutOptions: Array<{ value: LookbookLayout; label: string }> = [{ value: "layflat", label: "Layflat" }, { value: "grid", label: "Grid" }, { value: "featured", label: "Featured" }, { value: "editorial", label: "Editorial" }];
 const layflatOptions: Array<{ value: LayflatStyle; label: string; description: string }> = [{ value: "classic", label: "Tailored", description: "Two hero pieces with smaller accessories" }, { value: "diagonal", label: "Weekend", description: "Relaxed separates with shoes below" }, { value: "stacked", label: "Tonal", description: "Large close-cropped pieces on a clean surface" }, { value: "orbit", label: "Styled", description: "A centered statement piece framed by the look" }];
 
 type CreateLookWorkspaceProps = {
@@ -56,7 +57,6 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
   const [showSocialPostPreview, setShowSocialPostPreview] = useState(false);
   const [favesPickerOpen, setFavesPickerOpen] = useState(false);
   const [activePageIndex, setActivePageIndex] = useState(0);
-  const [draggedProductId, setDraggedProductId] = useState<string>();
   const [expandedRailIds, setExpandedRailIds] = useState<string[]>([]);
   const fileInput = useRef<HTMLInputElement>(null);
   const mediaInput = useRef<HTMLInputElement>(null);
@@ -250,6 +250,26 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
     updateActivePageProducts([...activeProductIds, productId]);
   };
 
+  const addProducts = (productIds: string[]) => {
+    if (!look) return;
+    const availableIds = productIds.filter((id) => !activeProductIds.includes(id));
+    if (look.layout === "editorial") {
+      const design = normalizeEditorialPage(activePage?.editorial, activeProductIds, look.title);
+      const maxZ = Math.max(0, ...design.elements.map((element) => element.zIndex));
+      const elements = availableIds.map((productId, index) => ({ ...createProductElement(productId, design.elements.length + index), zIndex: maxZ + index + 1 }));
+      updateEditorialPage({ ...design, elements: [...design.elements, ...elements] });
+      return;
+    }
+    const availableCapacity = Math.max(0, pageCapacity - activeProductIds.length - activeMedia.length);
+    const idsToAdd = availableIds.slice(0, availableCapacity);
+    if (idsToAdd.length === 0) {
+      showToast(`This page already has its maximum of ${pageCapacity} items.`, "error");
+      return;
+    }
+    updateActivePageProducts([...activeProductIds, ...idsToAdd]);
+    showToast(`${idsToAdd.length} product${idsToAdd.length === 1 ? "" : "s"} added to this Guide`);
+  };
+
   const removeProduct = (productId: string) => {
     if (look?.layout === "editorial" && activePage?.editorial) {
       updateEditorialPage({ ...activePage.editorial, elements: activePage.editorial.elements.filter((element) => element.type !== "product" || element.productId !== productId) });
@@ -295,25 +315,13 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
     setActivePageIndex(Math.min(pageIndex, nextPages.length - 1));
   };
 
-  const reorderProduct = (targetId: string) => {
-    if (!draggedProductId || draggedProductId === targetId) return;
-    const from = activeProductIds.indexOf(draggedProductId);
-    const to = activeProductIds.indexOf(targetId);
-    if (from < 0 || to < 0) return;
-    const next = [...activeProductIds];
-    next.splice(from, 1);
-    next.splice(to, 0, draggedProductId);
-    updateActivePageProducts(next);
-    setDraggedProductId(undefined);
-  };
-
   const loadSavedLook = (savedLook: SavedLook) => {
     setLook(savedLook);
     setPrompt(savedLook.prompt);
     setSourceImage(savedLook.sourceImage);
     setActivePageIndex(0);
     setExpandedRailIds([]);
-    window.history.replaceState(null, "", `/create-a-look/${savedLook.id}`);
+    window.history.replaceState(null, "", `/create/${savedLook.id}`);
     setLookbookOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -327,14 +335,14 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
         <div className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-pink/10 text-pink"><BookOpen className="h-4 w-4" /></span>
           <div>
-            <h2 className="font-headline text-lg tracking-tight text-text">{compact ? "Other Lookbooks" : "Lookbook"}</h2>
+            <h2 className="font-headline text-lg tracking-tight text-text">{compact ? "Other Guides" : "Guides"}</h2>
             <p className="text-xs text-text/45">{compact ? "Choose another saved look" : "Saved looks"}</p>
           </div>
         </div>
         <span className="rounded-full bg-bg px-2 py-1 text-[10px] font-semibold text-text/50">{visibleLooks.length}</span>
       </div>
       {visibleLooks.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-divider/60 px-3 py-5 text-center text-xs leading-relaxed text-text/45">{compact ? "No other saved Lookbooks yet." : "Save a look to build your collection."}</p>
+        <p className="rounded-xl border border-dashed border-divider/60 px-3 py-5 text-center text-xs leading-relaxed text-text/45">{compact ? "No other saved Guides yet." : "Save a look to build your collection."}</p>
       ) : (
         <div className={`${compact ? "grid grid-cols-2 gap-3" : "grid grid-cols-2 gap-2"} overflow-y-auto pr-1`}>
           {visibleLooks.map((savedLook) => {
@@ -366,7 +374,7 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
     <section className="min-w-0 overflow-hidden rounded-3xl border border-accent/35 bg-bg p-4 shadow-sm sm:p-7">
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 max-w-xl lg:max-w-none lg:flex-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Editing Lookbook</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Editing Guide</p>
           <label className="mt-3 block text-[10px] font-semibold uppercase tracking-[0.14em] text-text/45">Title</label>
           <input value={look.title} onChange={(event) => setLook({ ...look, title: event.target.value, updatedAt: Date.now() })} aria-label="Lookbook title" className="mt-1 w-full rounded-xl border border-divider/60 bg-surface/30 px-3 py-2 font-headline text-2xl tracking-tight text-text transition-colors hover:border-text/30 focus:border-accent/50 focus:outline-none sm:text-3xl" />
           <label className="mt-3 block text-[10px] font-semibold uppercase tracking-[0.14em] text-text/45">Description</label>
@@ -380,7 +388,7 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
       <div className="mt-4 flex flex-wrap items-center gap-2">
         {pages.map((page, index) => <button key={page.id} type="button" onClick={() => { setActivePageIndex(index); setShowSocialPostPreview(false); }} aria-pressed={pageIndex === index} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${pageIndex === index ? "bg-text text-bg" : "border border-divider/70 text-text/60 hover:bg-surface"}`}>Page {index + 1} · {page.productIds.length + (page.media?.length ?? 0)}{look.layout === "editorial" ? " items" : `/${look.layout === "grid" ? (page.gridItemCount ?? 4) : 8}`}</button>)}
         <button type="button" onClick={addPage} className="rounded-full border border-accent/40 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/5">+ Add page</button>
-        <button type="button" onClick={() => setFavesPickerOpen(true)} className="inline-flex items-center gap-1.5 rounded-full border border-pink/35 px-3 py-1.5 text-xs font-semibold text-pink hover:bg-pink/5"><Heart className="h-3.5 w-3.5" />Add from Faves</button>
+        <button type="button" onClick={() => setFavesPickerOpen(true)} className="inline-flex items-center gap-1.5 rounded-full border border-pink/35 px-3 py-1.5 text-xs font-semibold text-pink hover:bg-pink/5"><Plus className="h-3.5 w-3.5" />Add products</button>
         {look.layout !== "editorial" && <><button type="button" onClick={() => mediaInput.current?.click()} className="inline-flex items-center gap-1.5 rounded-full border border-divider/70 px-3 py-1.5 text-xs font-semibold text-text/65 hover:bg-surface"><ImagePlus className="h-3.5 w-3.5" />Add image or video</button><input ref={mediaInput} type="file" accept="image/*,video/*" onChange={(event) => handlePageMedia(event.target.files?.[0])} className="sr-only" /></>}
         {look.layout === "editorial" && <div className="flex items-center gap-1 rounded-full border border-divider/60 p-1"><button type="button" onClick={() => movePage(-1)} disabled={pageIndex === 0} className="rounded-full px-2 py-1 text-[10px] font-semibold text-text/55 disabled:opacity-30">←</button><button type="button" onClick={duplicatePage} className="rounded-full px-2 py-1 text-[10px] font-semibold text-text/55">Duplicate</button><button type="button" onClick={() => movePage(1)} disabled={pageIndex === pages.length - 1} className="rounded-full px-2 py-1 text-[10px] font-semibold text-text/55 disabled:opacity-30">→</button><button type="button" onClick={deletePage} disabled={pages.length <= 1} className="rounded-full px-2 py-1 text-[10px] font-semibold text-pink disabled:opacity-30">Delete</button></div>}
         <button type="button" onClick={() => setLookbookOpen(true)} className="inline-flex items-center gap-1.5 rounded-full border border-divider/70 px-3 py-1.5 text-xs font-semibold text-text/65 hover:bg-surface xl:hidden"><PanelRightOpen className="h-3.5 w-3.5" />Other Lookbooks <span className="rounded-full bg-surface px-1.5 py-0.5 text-[10px]">{Math.max(looks.length - 1, 0)}</span></button>
@@ -389,7 +397,7 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
         <div className="mt-5 min-w-0 space-y-4">
           <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-text/45">Post layout</p><div className="mt-2 flex flex-wrap gap-2">{layoutOptions.map((option) => <button key={option.value} type="button" onClick={() => setLayout(option.value)} aria-pressed={(look.layout ?? "layflat") === option.value} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${((look.layout ?? "layflat") === option.value) ? "bg-text text-bg" : "border border-divider/70 text-text/60 hover:bg-surface"}`}>{option.label}</button>)}</div></div>
           <div className="flex flex-wrap gap-2"><button type="button" onClick={() => { setShowSocialPostPreview(false); setShowLayflatPreview(false); }} aria-pressed={!showLayflatPreview && !showSocialPostPreview} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${!showLayflatPreview && !showSocialPostPreview ? "bg-text text-bg" : "border border-divider/70 text-text/60"}`}>Edit canvas</button><button type="button" onClick={() => { setShowSocialPostPreview(false); setShowLayflatPreview(true); }} aria-pressed={!showSocialPostPreview && showLayflatPreview} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${!showSocialPostPreview && showLayflatPreview ? "bg-text text-bg" : "border border-divider/70 text-text/60"}`}>Preview design</button><button type="button" onClick={() => { setShowSocialPostPreview(true); setShowLayflatPreview(true); }} aria-pressed={showSocialPostPreview} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${showSocialPostPreview ? "bg-text text-bg" : "border border-divider/70 text-text/60"}`}>Preview social post</button></div>
-          {showSocialPostPreview ? <div className="mx-auto w-full max-w-lg"><LookbookSocialPostPreview title={look.title} products={selected} layout="editorial" editorialDesign={normalizeEditorialPage(activePage?.editorial, activeProductIds, look.title)} /></div> : showLayflatPreview ? <div className="mx-auto w-full max-w-2xl"><LayflatPostPreview products={selected} title={look.title} layout="editorial" editorialDesign={normalizeEditorialPage(activePage?.editorial, activeProductIds, look.title)} /></div> : <EditorialBuilder key={activePage?.id} title={look.title} design={normalizeEditorialPage(activePage?.editorial, activeProductIds, look.title)} products={editorialProducts} onChangeAction={updateEditorialPage} />}
+          {showSocialPostPreview ? <div className="mx-auto w-full max-w-lg"><LookbookSocialPostPreview title={look.title} description={look.description} products={selected} layout="editorial" editorialDesign={normalizeEditorialPage(activePage?.editorial, activeProductIds, look.title)} /></div> : showLayflatPreview ? <div className="mx-auto w-full max-w-2xl"><LayflatPostPreview products={selected} title={look.title} description={look.description} layout="editorial" editorialDesign={normalizeEditorialPage(activePage?.editorial, activeProductIds, look.title)} /></div> : <EditorialBuilder key={activePage?.id} title={look.title} design={normalizeEditorialPage(activePage?.editorial, activeProductIds, look.title)} products={editorialProducts} onChangeAction={updateEditorialPage} />}
         </div>
       ) : (
       <div className="mt-5 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(360px,460px)] xl:items-start">
@@ -414,9 +422,9 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
           </div>
         </div>
         <div className="order-2 w-full min-w-0 max-w-md justify-self-center xl:col-start-2 xl:row-start-1 xl:row-span-3 xl:max-w-full xl:justify-self-stretch">
-          {showSocialPostPreview ? <LookbookSocialPostPreview title={look.title} products={selected} layout={look.layout} backgroundColor={look.backgroundColor} backgroundImage={look.backgroundImage} media={activeMedia} layflatStyle={activePage?.layflatStyle} gridItemCount={gridItemCount} /> : showLayflatPreview ? <LayflatPostPreview products={selected} title={look.title} layout={look.layout} backgroundColor={look.backgroundColor} backgroundImage={look.backgroundImage} media={activeMedia} layflatStyle={activePage?.layflatStyle} gridItemCount={gridItemCount} /> : <><p className="mb-3 text-xs font-medium text-text/50">Drag products to arrange this page. Uploaded media stays unlinked.</p><div className="grid gap-3 sm:grid-cols-2">{selected.map((product) => <div key={product.id} draggable onDragStart={() => setDraggedProductId(product.id)} onDragOver={(event) => event.preventDefault()} onDrop={() => reorderProduct(product.id)} className="cursor-grab active:cursor-grabbing"><LookProductTile product={product} selected locked={look.lockedProductIds.includes(product.id)} onLock={() => setLook(toggleLookLock(look, product.id))} onRemove={() => removeProduct(product.id)} /></div>)}{activeMedia.map((item) => <article key={item.id} className="relative overflow-hidden rounded-2xl border border-divider/60 bg-bg"><div className="relative aspect-[4/5] bg-surface">{item.type === "video" ? <video src={item.src} controls playsInline className="h-full w-full object-cover" /> : <Image src={item.src} alt={item.name} fill sizes="220px" className="object-cover" unoptimized />}</div><div className="flex items-center justify-between gap-2 p-3"><span className="flex min-w-0 items-center gap-1.5 truncate text-xs text-text/60">{item.type === "video" && <Film className="h-3.5 w-3.5" />}{item.name}</span><button type="button" onClick={() => updateActivePageMedia(activeMedia.filter((media) => media.id !== item.id))} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-pink/10 text-pink" aria-label={`Remove ${item.name}`}><X className="h-3.5 w-3.5" /></button></div></article>)}</div></>}
+          {showSocialPostPreview ? <LookbookSocialPostPreview title={look.title} description={look.description} products={selected} layout={look.layout} backgroundColor={look.backgroundColor} backgroundImage={look.backgroundImage} media={activeMedia} layflatStyle={activePage?.layflatStyle} gridItemCount={gridItemCount} /> : showLayflatPreview ? <LayflatPostPreview products={selected} title={look.title} description={look.description} layout={look.layout} backgroundColor={look.backgroundColor} backgroundImage={look.backgroundImage} media={activeMedia} layflatStyle={activePage?.layflatStyle} gridItemCount={gridItemCount} /> : <><GuideProductOrder products={selected} onChangeAction={updateActivePageProducts} /><div className="mt-4 flex flex-wrap gap-2"><button type="button" onClick={() => setFavesPickerOpen(true)} className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white"><Plus className="h-4 w-4" />Add products</button><button type="button" onClick={save} disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-burgundy px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><Save className="h-4 w-4" />{saving ? "Saving..." : "Save guide"}</button></div><div className="mt-3 grid gap-3 sm:grid-cols-2">{activeMedia.map((item) => <article key={item.id} className="relative overflow-hidden rounded-2xl border border-divider/60 bg-bg"><div className="relative aspect-[4/5] bg-surface">{item.type === "video" ? <video src={item.src} controls playsInline className="h-full w-full object-cover" /> : <Image src={item.src} alt={item.name} fill sizes="220px" className="object-cover" unoptimized />}</div><div className="flex items-center justify-between gap-2 p-3"><span className="flex min-w-0 items-center gap-1.5 truncate text-xs text-text/60">{item.type === "video" && <Film className="h-3.5 w-3.5" />}{item.name}</span><button type="button" onClick={() => updateActivePageMedia(activeMedia.filter((media) => media.id !== item.id))} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-pink/10 text-pink" aria-label={`Remove ${item.name}`}><X className="h-3.5 w-3.5" /></button></div></article>)}</div></>}
           <div className="mt-4 flex flex-wrap justify-center gap-2 xl:justify-start"><button type="button" onClick={() => { setShowSocialPostPreview(true); setShowLayflatPreview(true); }} aria-pressed={showSocialPostPreview} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${showSocialPostPreview ? "bg-text text-bg" : "border border-divider/70 text-text/60"}`}>Preview social post</button><button type="button" onClick={() => { setShowSocialPostPreview(false); setShowLayflatPreview(true); }} aria-pressed={!showSocialPostPreview && showLayflatPreview} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${!showSocialPostPreview && showLayflatPreview ? "bg-text text-bg" : "border border-divider/70 text-text/60"}`}>Preview design</button><button type="button" onClick={() => { setShowSocialPostPreview(false); setShowLayflatPreview(false); }} aria-pressed={!showLayflatPreview && !showSocialPostPreview} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${!showLayflatPreview && !showSocialPostPreview ? "bg-text text-bg" : "border border-divider/70 text-text/60"}`}>Edit products</button></div>
-          <p className="mt-3 flex items-start justify-center gap-1.5 text-center text-xs leading-relaxed text-text/45 xl:justify-start xl:text-left"><Lock className="mt-0.5 h-3.5 w-3.5 shrink-0" /> Lock a piece to preserve it while refining. Use the minus icon to remove a piece.</p>
+          <p className="mt-3 text-center text-xs leading-relaxed text-text/45 xl:text-left">Use Make featured to choose the hero product, then move supporting products into their display order.</p>
         </div>
       </div>
       )}
@@ -443,9 +451,9 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
               <Sparkles className="h-3.5 w-3.5" />
               Your inspiration, shoppable
             </span>
-            <h1 className="mt-4 font-headline text-4xl tracking-tight text-text sm:text-5xl">Lookbook</h1>
+            <h1 className="mt-4 font-headline text-4xl tracking-tight text-text sm:text-5xl">Create a Guide</h1>
             <p className="mt-3 max-w-xl text-sm leading-relaxed text-text/60 sm:text-base">
-              Create a shoppable look from a vibe or inspiration image, then save it to your Lookbook.
+              Create a shoppable story from a vibe or inspiration image, then choose the layout that fits your point of view.
             </p>
           </div>
           <div
@@ -499,7 +507,7 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
           <section className="space-y-6">
             {look.rails.map((rail) => (
               <div key={rail.id}>
-                <div className="mb-3 flex items-center justify-between"><h2 className="font-headline text-xl tracking-tight text-text">{rail.title}</h2>{rail.productIds.length > 5 && <button type="button" onClick={() => setExpandedRailIds((current) => current.includes(rail.id) ? current.filter((id) => id !== rail.id) : [...current, rail.id])} className="inline-flex items-center gap-1 text-sm font-semibold text-accent">{expandedRailIds.includes(rail.id) ? "Show less" : "See all"} <ChevronRight className={`h-4 w-4 transition-transform ${expandedRailIds.includes(rail.id) ? "rotate-90" : ""}`} /></button>}</div>
+                <div className="mb-3 flex items-center justify-between gap-3"><h2 className="font-headline text-xl tracking-tight text-text">{rail.title}</h2><div className="flex shrink-0 items-center gap-2"><button type="button" onClick={() => addProducts(rail.productIds.slice(0, expandedRailIds.includes(rail.id) ? rail.productIds.length : 5))} className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent hover:text-white"><Plus className="h-3.5 w-3.5" />Add shown</button>{rail.productIds.length > 5 && <button type="button" onClick={() => setExpandedRailIds((current) => current.includes(rail.id) ? current.filter((id) => id !== rail.id) : [...current, rail.id])} className="inline-flex items-center gap-1 text-sm font-semibold text-accent">{expandedRailIds.includes(rail.id) ? "Show less" : "See all"} <ChevronRight className={`h-4 w-4 transition-transform ${expandedRailIds.includes(rail.id) ? "rotate-90" : ""}`} /></button>}</div></div>
                 <div className="flex gap-3 overflow-x-auto pb-2">
                   {rail.productIds.slice(0, expandedRailIds.includes(rail.id) ? rail.productIds.length : 5).map((id) => {
                     const product = productFor(id);
@@ -530,7 +538,7 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
         </div>
       )}
 
-      {favesPickerOpen && look && <ProductPickerDialog multi inListIds={activeProductIds} onClose={() => setFavesPickerOpen(false)} onSelect={addProduct} />}
+      {favesPickerOpen && look && <ProductPickerDialog multi inListIds={activeProductIds} onClose={() => setFavesPickerOpen(false)} onSelect={addProduct} onConfirm={addProducts} />}
       {saveDialogOpen && <SaveLookDialog onClose={() => setSaveDialogOpen(false)} onCreatedAccount={() => { setSaveDialogOpen(false); if (look) { saveLook(look); showToast("Account created — look saved to your profile"); } }} />}
       {shareDialogOpen && look && <ShareLookbookDialog title={look.title} onClose={() => setShareDialogOpen(false)} onShare={publishLookbook} />}
       <ToastContainer />

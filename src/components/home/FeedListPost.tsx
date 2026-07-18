@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, MessageCircle, Bookmark, ArrowRight, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, ArrowRight, ChevronLeft, ChevronRight, Send, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { flattenPages, type ListComment, type ListPage } from "@/data/faves";
@@ -12,7 +12,8 @@ import { EditorialRenderer } from "@/components/looks/editorial/EditorialRendere
 import { Portal } from "@/components/ui/Portal";
 import { getProductById } from "@/lib/data";
 import { useListSocial } from "@/hooks/useListSocial";
-import { useFaveLists } from "@/hooks/useFaveLists";
+import { SavePostDialog } from "@/components/social/SavePostDialog";
+import { SharePostDialog } from "@/components/social/SharePostDialog";
 
 export type FeedListPost = {
   id: string;
@@ -40,12 +41,12 @@ export function FeedListPost({
 }) {
   const { isLiked, toggleLike, isSaved, markSaved, getLocalComments, addComment } =
     useListSocial();
-  const { createListWithProducts } = useFaveLists();
-
   const [page, setPage] = useState(0);
   const [inlineOpen, setInlineOpen] = useState(false); // mobile inline expansion
   const [modalOpen, setModalOpen] = useState(false); // desktop pop-forward
   const [draft, setDraft] = useState("");
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const allProductIds = flattenPages(post.pages);
   if (allProductIds.length === 0) return null;
@@ -72,10 +73,8 @@ export function FeedListPost({
   };
 
   const handleSave = () => {
-    if (!post.savePayload || saved) return;
-    createListWithProducts(post.savePayload.name, post.savePayload.productIds, current.template);
-    markSaved(post.id);
-    onToast?.(`Saved "${post.name}" to your faves`);
+    if (!post.savePayload) return;
+    setSaveOpen(true);
   };
 
   const handleComment = () => {
@@ -158,6 +157,7 @@ export function FeedListPost({
             <Bookmark className={cn("h-6 w-6", saved && "fill-accent")} />
           </button>
         )}
+        <button type="button" onClick={() => setShareOpen(true)} aria-label="Share post" className="text-white/70 transition-colors hover:text-white"><Send className="h-6 w-6" /></button>
       </div>
 
       {/* Collapsed summary: likes + 1-line caption + comments trigger */}
@@ -252,6 +252,8 @@ export function FeedListPost({
           </AnimatePresence>
         </Portal>
       )}
+      {saveOpen && <SavePostDialog postId={post.id} onClose={() => setSaveOpen(false)} onToast={onToast} onSaved={() => markSaved(post.id)} />}
+      {shareOpen && <SharePostDialog postTitle={post.name} onClose={() => setShareOpen(false)} onToast={onToast} />}
     </article>
   );
 }

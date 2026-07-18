@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, MessageCircle, Play, Star, Trash2 } from "lucide-react";
+import { Bookmark, Heart, MessageCircle, Play, Send, Star, Trash2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { getProductById } from "@/lib/data";
@@ -11,6 +11,8 @@ import { SAMPLE_REVIEW_VIDEO } from "@/data/videoReviews";
 import { useListSocial } from "@/hooks/useListSocial";
 import type { SocialUser, VideoReview } from "@/lib/social";
 import { Avatar } from "./Avatar";
+import { SavePostDialog } from "@/components/social/SavePostDialog";
+import { SharePostDialog } from "@/components/social/SharePostDialog";
 
 export function VideoReviewCard({
   review,
@@ -21,13 +23,18 @@ export function VideoReviewCard({
   author: SocialUser;
   onDelete?: (id: string) => void;
 }) {
-  const { isLiked, toggleLike, getLocalComments } = useListSocial();
+  const { isLiked, toggleLike, isSaved, markSaved, getLocalComments, addComment } = useListSocial();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(true);
   const [src, setSrc] = useState(review.videoUrl);
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [commentOpen, setCommentOpen] = useState(false);
+  const [commentDraft, setCommentDraft] = useState("");
 
   const product = getProductById(review.productId);
   const liked = isLiked(review.id);
+  const saved = isSaved(review.id);
   const likeCount = review.likes + (liked ? 1 : 0);
   const commentCount = review.comments.length + getLocalComments(review.id).length;
 
@@ -101,9 +108,9 @@ export function VideoReviewCard({
         >
           <Heart className={cn("h-6 w-6", liked && "fill-pink")} />
         </button>
-        <span className="flex items-center gap-1 text-text/60">
-          <MessageCircle className="h-6 w-6" />
-        </span>
+        <button type="button" onClick={() => setShareOpen(true)} aria-label="Share moment" className="text-text/60 transition-colors hover:text-text"><Send className="h-6 w-6" /></button>
+        <button type="button" onClick={() => setSaveOpen(true)} aria-label={saved ? "Saved" : "Save moment"} className={cn("ml-auto transition-colors", saved ? "text-accent" : "text-text/60 hover:text-accent")}><Bookmark className={cn("h-6 w-6", saved && "fill-current")} /></button>
+        <button type="button" onClick={() => setCommentOpen((current) => !current)} aria-label="Comment on moment" className="flex items-center gap-1 text-text/60 transition-colors hover:text-text"><MessageCircle className="h-6 w-6" /></button>
       </div>
 
       <div className="space-y-1 px-3 pb-3 pt-2">
@@ -121,6 +128,7 @@ export function VideoReviewCard({
             {commentCount} {commentCount === 1 ? "comment" : "comments"}
           </p>
         )}
+        {commentOpen && <form onSubmit={(event) => { event.preventDefault(); if (!commentDraft.trim()) return; addComment(review.id, commentDraft.trim()); setCommentDraft(""); }} className="mt-2 flex gap-2"><input autoFocus value={commentDraft} onChange={(event) => setCommentDraft(event.target.value)} placeholder="Add a comment…" className="h-9 min-w-0 flex-1 rounded-full border border-divider bg-surface/50 px-3 text-xs focus:border-accent/50 focus:outline-none" /><button type="submit" disabled={!commentDraft.trim()} className="rounded-full bg-text px-3 text-xs font-semibold text-bg disabled:opacity-40">Post</button></form>}
         {product && (
           <Link
             href={`/product/${product.id}`}
@@ -136,6 +144,8 @@ export function VideoReviewCard({
           </Link>
         )}
       </div>
+      {saveOpen && <SavePostDialog postId={review.id} onClose={() => setSaveOpen(false)} onSaved={() => markSaved(review.id)} />}
+      {shareOpen && <SharePostDialog postTitle={product?.name ?? "Moment"} onClose={() => setShareOpen(false)} />}
     </article>
   );
 }

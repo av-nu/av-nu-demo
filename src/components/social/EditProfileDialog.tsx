@@ -10,6 +10,7 @@ import { socialService } from "@/lib/social";
 import type { MyProfile } from "@/lib/social";
 
 const COLORS = ["bg-burgundy", "bg-accent", "bg-pink"];
+const THEMES = ["bg-pink/5", "bg-accent/5", "bg-amber-50", "bg-emerald-50"];
 
 export function EditProfileDialog({
   profile,
@@ -26,6 +27,7 @@ export function EditProfileDialog({
   const [bio, setBio] = useState(profile.bio);
   const [avatarColor, setAvatarColor] = useState(profile.avatarColor);
   const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl);
+  const [themeColor, setThemeColor] = useState(profile.themeColor);
 
   const handleAvatar = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -39,6 +41,7 @@ export function EditProfileDialog({
       bio: bio.trim(),
       avatarColor,
       avatarUrl,
+      themeColor,
     });
     onToast?.("Profile updated");
     onClose();
@@ -110,6 +113,11 @@ export function EditProfileDialog({
                     ))}
                   </div>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-text/60">Profile theme</label>
+                <div className="flex items-center gap-2">{THEMES.map((theme) => <button key={theme} type="button" onClick={() => setThemeColor(theme)} aria-label={`Use ${theme} profile theme`} className={cn("h-8 w-8 rounded-full border border-divider/60 ring-2 ring-offset-2 ring-offset-bg", theme, themeColor === theme ? "ring-text/40" : "ring-transparent")} />)}</div>
               </div>
 
               <Field label="Name" value={name} onChange={setName} placeholder="Your name" />

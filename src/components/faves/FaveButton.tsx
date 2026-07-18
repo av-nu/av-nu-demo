@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { motion } from "framer-motion";
-import { Heart } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { Product } from "@/data/mockProducts";
@@ -48,19 +48,19 @@ export function FaveButton({
             ? cn(
                 "h-8 w-8 backdrop-blur-sm",
                 saved
-                  ? "bg-pink/20 text-pink"
-                  : "bg-bg/80 text-text/60 hover:bg-bg hover:text-pink",
+                  ? "bg-accent/20 text-accent"
+                  : "bg-bg/80 text-text/60 hover:bg-bg hover:text-accent",
               )
             : cn(
                 "h-8 w-8",
                 saved
-                  ? "bg-pink/15 text-pink"
-                  : "text-text/50 hover:bg-surface hover:text-pink",
+                  ? "bg-accent/15 text-accent"
+                  : "text-text/50 hover:bg-surface hover:text-accent",
               ),
           className,
         )}
       >
-        <Heart className={cn("h-4 w-4 transition-all", saved && "fill-pink")} />
+        <Plus className={cn("h-4 w-4 transition-all", saved && "stroke-[2.5]")} />
       </motion.button>
 
       {open && (

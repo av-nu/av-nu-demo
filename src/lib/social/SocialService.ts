@@ -21,6 +21,8 @@ export interface SocialService {
   // --- relationships -------------------------------------------------------
   follow(userId: string): Promise<void>;
   unfollow(userId: string): Promise<void>;
+  followBrand(brandId: string): Promise<void>;
+  unfollowBrand(brandId: string): Promise<void>;
   requestInnerCircle(userId: string): Promise<void>;
   cancelInnerRequest(userId: string): Promise<void>;
   /** Accept an incoming inner-circle invitation. */

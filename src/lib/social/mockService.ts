@@ -82,6 +82,7 @@ class MockSocialService implements SocialService {
       return {
         profile: { ...seed.profile, ...(parsed.profile ?? {}) },
         connections: { ...seed.connections, ...(parsed.connections ?? {}) },
+        followedBrands: parsed.followedBrands ?? seed.followedBrands,
         notifications: parsed.notifications ?? seed.notifications,
         videoReviews: parsed.videoReviews ?? seed.videoReviews,
       };
@@ -146,6 +147,17 @@ class MockSocialService implements SocialService {
 
   async unfollow(userId: string): Promise<void> {
     this.patchConnection(userId, { iFollow: false });
+  }
+
+  async followBrand(brandId: string): Promise<void> {
+    const state = this.read();
+    if (state.followedBrands.includes(brandId)) return;
+    this.write({ ...state, followedBrands: [...state.followedBrands, brandId] });
+  }
+
+  async unfollowBrand(brandId: string): Promise<void> {
+    const state = this.read();
+    this.write({ ...state, followedBrands: state.followedBrands.filter((id) => id !== brandId) });
   }
 
   async requestInnerCircle(userId: string): Promise<void> {

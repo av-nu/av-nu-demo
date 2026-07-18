@@ -24,9 +24,9 @@ const moreLinks = [
     icon: User,
   },
   {
-    href: "/create-a-look",
-    label: "Lookbook",
-    description: "Create and revisit your shoppable looks",
+    href: "/create",
+    label: "Create",
+    description: "Make Moments, Guides, and Lists",
     icon: Sparkles,
   },
   {

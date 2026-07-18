@@ -84,6 +84,13 @@ export default function SearchPage() {
       }
     }
 
+    if (selectedLeaf) {
+      const category = categories.find((c) => c.id === selectedCategory);
+      const subcategory = category?.subcategories.find((s) => s.id === selectedSubcategory);
+      const leaf = subcategory?.leaves?.find((item) => item.id === selectedLeaf);
+      if (leaf) results = results.filter((p) => p.leaf?.toLowerCase() === leaf.name.toLowerCase());
+    }
+
     return results;
   }, [query, selectedCategory, selectedSubcategory, selectedLeaf]);
 
@@ -289,6 +296,20 @@ export default function SearchPage() {
             </button>
           </div>
         </form>
+
+        <section className="mb-6" aria-labelledby="shop-categories">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 id="shop-categories" className="text-xs font-semibold uppercase tracking-[0.16em] text-text/45">Shop by category</h2>
+            <button type="button" onClick={() => handleCategorySelect()} className="text-xs font-semibold text-accent hover:underline">View all</button>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {categories.map((category, index) => {
+              const active = selectedCategory === category.id;
+              const colorClasses = ["bg-pink/20 text-burgundy", "bg-accent/15 text-accent", "bg-amber-100 text-amber-800", "bg-emerald-100 text-emerald-800", "bg-sky-100 text-sky-800", "bg-violet-100 text-violet-800", "bg-orange-100 text-orange-800", "bg-rose-100 text-rose-800", "bg-lime-100 text-lime-800"];
+              return <button key={category.id} type="button" onClick={() => handleCategorySelect(category.id)} className={cn("shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-all", colorClasses[index % colorClasses.length], active && "ring-2 ring-text/25 ring-offset-2 ring-offset-bg")}>{category.name}</button>;
+            })}
+          </div>
+        </section>
 
         {/* Filter chips */}
         <div className="mb-6">

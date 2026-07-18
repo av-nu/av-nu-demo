@@ -59,6 +59,7 @@ export type CommunityList = {
   authorId: string;
   name: string;
   caption: string;
+  format?: "standard" | "featured";
   pages: ListPage[];
   likes: number;
   comments: ListComment[];
@@ -85,6 +86,7 @@ export const communityLists: CommunityList[] = [
     authorId: "c-mara",
     name: "Slow Sunday Layers",
     caption: "Soft layers, an easy dress, and the pieces that make a slow morning feel pulled together.",
+    format: "featured",
     pages: [
       { id: "comm-1-p1", template: 4, productIds: pickOutfits(0, 4) },
       { id: "comm-1-p2", template: 4, productIds: pickOutfits(12, 4) },
@@ -123,6 +125,7 @@ export const communityLists: CommunityList[] = [
     authorId: "c-sof",
     name: "Wedding Guest Edit",
     caption: "Romantic silhouettes and statement color, edited down to the pieces worth trying first.",
+    format: "featured",
     pages: [{ id: "comm-4-p1", template: 6, productIds: pickOutfits(66, 6) }],
     likes: 214,
     comments: [
@@ -143,6 +146,7 @@ export const communityLists: CommunityList[] = [
     authorId: "f-noor",
     name: "Five-Minute Face",
     caption: "A small beauty edit to finish the look — makeup as the last layer, not the whole story.",
+    format: "featured",
     pages: [{ id: "comm-6-p1", template: 4, productIds: pickBeauty(0, 4) }],
     likes: 96,
     comments: [],

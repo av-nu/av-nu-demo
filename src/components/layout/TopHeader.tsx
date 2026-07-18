@@ -10,7 +10,9 @@ const routeConfig: Record<
   { title: string; subtitle?: string; showSearch?: boolean }
 > = {
   "/": { title: "av | nu", subtitle: "A refined marketplace" },
-  "/search": { title: "" },
+  "/search": { title: "Shop" },
+  "/shop": { title: "Shop" },
+  "/create": { title: "Create" },
   "/brands": { title: "" },
   "/window-shopping": { title: "" },
   "/favorites": { title: "" },

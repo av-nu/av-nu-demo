@@ -7,7 +7,7 @@ export type LookRail = {
   productIds: string[];
 };
 
-export type LookbookLayout = "layflat" | "grid" | "editorial";
+export type LookbookLayout = "layflat" | "grid" | "featured" | "editorial";
 export type LayflatStyle = "classic" | "diagonal" | "stacked" | "orbit";
 
 export type LookbookMedia = {

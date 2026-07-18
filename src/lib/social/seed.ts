@@ -97,9 +97,11 @@ export function buildSeedState(): SocialState {
       handle: currentUser.handle,
       bio: "",
       avatarColor: "bg-burgundy",
+      themeColor: "bg-pink/5",
       visibility: "public",
     },
     connections: buildConnections(),
+    followedBrands: [],
     notifications: buildNotifications(),
     videoReviews: [],
   };

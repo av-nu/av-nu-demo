@@ -26,6 +26,7 @@ export function useSocialGraph() {
   const innerCircle = useMemo(() => selectInnerCircle(state), [state]);
   const followers = useMemo(() => selectFollowers(state), [state]);
   const following = useMemo(() => selectFollowing(state), [state]);
+  const followedBrands = state.followedBrands;
   const incomingRequests = useMemo(() => selectIncomingRequests(state), [state]);
   const suggestions = useMemo(() => selectSuggestions(state), [state]);
   const counts = useMemo(() => selectCounts(state), [state]);
@@ -42,6 +43,8 @@ export function useSocialGraph() {
 
   const follow = useCallback((userId: string) => socialService.follow(userId), []);
   const unfollow = useCallback((userId: string) => socialService.unfollow(userId), []);
+  const followBrand = useCallback((brandId: string) => socialService.followBrand(brandId), []);
+  const unfollowBrand = useCallback((brandId: string) => socialService.unfollowBrand(brandId), []);
   const requestInnerCircle = useCallback(
     (userId: string) => socialService.requestInnerCircle(userId),
     [],
@@ -72,6 +75,7 @@ export function useSocialGraph() {
     innerCircle,
     followers,
     following,
+    followedBrands,
     incomingRequests,
     suggestions,
     counts,
@@ -79,6 +83,8 @@ export function useSocialGraph() {
     getUser,
     follow,
     unfollow,
+    followBrand,
+    unfollowBrand,
     requestInnerCircle,
     cancelInnerRequest,
     acceptRequest,

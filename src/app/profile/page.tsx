@@ -2,15 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
-import { Plus, Pencil, Settings as SettingsIcon, Users, UserPlus, Sparkles } from "lucide-react";
+import { Plus, Pencil, Settings as SettingsIcon, Users, UserPlus, Sparkles, Store } from "lucide-react";
 
 import { useToast } from "@/components/ui/Toast";
+import { mockBrands } from "@/data/mockBrands";
 import { useSocialGraph } from "@/hooks/useSocialGraph";
 import { useSocialStore } from "@/hooks/useSocialStore";
 import { socialService, toSocialUser } from "@/lib/social";
 import { ProfileHeader } from "@/components/social/ProfileHeader";
-import { ProfilePostGrid } from "@/components/social/ProfilePostGrid";
+import { ProfilePostGrid, type ProfilePostFilter } from "@/components/social/ProfilePostGrid";
 import { EditProfileDialog } from "@/components/social/EditProfileDialog";
 import { AddPostMenu } from "@/components/social/AddPostMenu";
 import { FindPeopleDialog } from "@/components/social/FindPeopleDialog";
@@ -19,12 +21,13 @@ import { InterestPicker } from "@/components/personalize/InterestPicker";
 
 export default function ProfilePage() {
   const { state, isHydrated } = useSocialStore();
-  const { counts, innerCircle } = useSocialGraph();
+  const { counts, innerCircle, followedBrands, unfollowBrand } = useSocialGraph();
   const { showToast, ToastContainer } = useToast();
 
   const [editing, setEditing] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [findingPeople, setFindingPeople] = useState(false);
+  const [postFilter, setPostFilter] = useState<ProfilePostFilter>("all");
 
   if (!isHydrated) {
     return (
@@ -43,7 +46,7 @@ export default function ProfilePage() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="space-y-8 pb-8"
+      className={`space-y-8 rounded-3xl pb-8 ${profile.themeColor ?? "bg-pink/5"}`}
     >
       <ProfileHeader
         user={me}
@@ -133,6 +136,14 @@ export default function ProfilePage() {
 
       <SavedLooksSection />
 
+      <section>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2 className="flex items-center gap-2 font-headline text-lg tracking-tight text-text"><Store className="h-4 w-4 text-accent" />My favorite brands</h2>
+          <Link href="/window-shopping" className="text-sm font-medium text-accent hover:underline">Browse brands</Link>
+        </div>
+        {followedBrands.length === 0 ? <p className="rounded-xl border border-dashed border-divider/60 px-4 py-6 text-center text-sm text-text/50">Follow brands from Discover or Brands to see them here.</p> : <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{followedBrands.map((brandId) => { const brand = mockBrands.find((item) => item.id === brandId); if (!brand) return null; return <div key={brand.id} className="rounded-2xl border border-divider/60 bg-surface/30 p-3"><Link href={`/brand/${brand.id}`} className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white p-1"><Image src={brand.logoMark} alt={brand.name} width={32} height={32} className="h-full w-full object-contain" /></span><span className="truncate text-sm font-semibold text-text">{brand.name}</span></Link><button type="button" onClick={() => unfollowBrand(brand.id)} className="mt-3 text-xs font-medium text-text/50 hover:text-text">Following · remove</button></div>; })}</div>}
+      </section>
+
       {/* Personalize */}
       <section className="rounded-2xl border border-divider/50 bg-surface/30 p-5 sm:p-6">
         <div className="mb-1 flex items-center gap-2">
@@ -147,8 +158,13 @@ export default function ProfilePage() {
 
       {/* Posts */}
       <section>
-        <h2 className="mb-4 font-headline text-lg tracking-tight text-text">Your posts</h2>
-        <ProfilePostGrid user={me} onToast={showToast} />
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-headline text-lg tracking-tight text-text">Your posts</h2>
+          <div className="flex rounded-full border border-divider/60 bg-surface/40 p-1">
+            {(["all", "moment", "guide", "list"] as ProfilePostFilter[]).map((filter) => <button key={filter} type="button" onClick={() => setPostFilter(filter)} className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize transition-colors ${postFilter === filter ? "bg-text text-bg" : "text-text/50 hover:text-text"}`}>{filter === "all" ? "All" : filter === "moment" ? "Moments" : `${filter}s`}</button>)}
+          </div>
+        </div>
+        <ProfilePostGrid user={me} onToast={showToast} filter={postFilter} />
       </section>
 
       {editing && (

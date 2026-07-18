@@ -3,14 +3,15 @@
 import { memo, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, Share2 } from "lucide-react";
+import { Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
 import type { Product } from "@/data/mockProducts";
 import { getBrandById } from "@/lib/data";
 import { StarRating } from "@/components/ui/StarRating";
-import { useFavorites } from "@/hooks/useFavorites";
+import { FaveButton } from "@/components/faves/FaveButton";
+import { ShareProductDialog } from "@/components/product/ShareProductDialog";
 import { useUserRatings } from "@/hooks/useUserRatings";
 
 interface ProductCardVerticalProps {
@@ -25,50 +26,17 @@ export const ProductCardVertical = memo(function ProductCardVertical({
   onShare,
 }: ProductCardVerticalProps) {
   const brand = getBrandById(product.brandId);
-  const { isFavorite, toggleFavorite } = useFavorites();
   const { getUserRating, setUserRating } = useUserRatings();
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
-  const favorite = isFavorite(product.id);
   const userRating = getUserRating(product.id);
 
-  const handleFavoriteClick = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      toggleFavorite(product.id);
-    },
-    [product.id, toggleFavorite],
-  );
-
-  const handleShareClick = useCallback(
-    async (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const url = `${window.location.origin}/product/${product.id}`;
-      const shareData = {
-        title: product.name,
-        text: `Check out ${product.name} on av | nu`,
-        url,
-      };
-
-      try {
-        if (navigator.share && navigator.canShare?.(shareData)) {
-          await navigator.share(shareData);
-        } else {
-          await navigator.clipboard.writeText(url);
-          onShare?.("Link copied to clipboard");
-        }
-      } catch (err) {
-        if ((err as Error).name !== "AbortError") {
-          await navigator.clipboard.writeText(url);
-          onShare?.("Link copied to clipboard");
-        }
-      }
-    },
-    [product.id, product.name, onShare],
-  );
+  const handleShareClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShareOpen(true);
+  }, []);
 
   const handleRate = useCallback(
     (rating: number) => {
@@ -152,25 +120,11 @@ export const ProductCardVertical = memo(function ProductCardVertical({
               <Share2 className="h-4 w-4" />
             </motion.button>
 
-            <motion.button
-              type="button"
-              aria-label={favorite ? "Remove from favorites" : "Add to favorites"}
-              onClick={handleFavoriteClick}
-              whileTap={{ scale: 0.85 }}
-              className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
-                favorite
-                  ? "bg-pink/20 text-pink"
-                  : "text-text/50 hover:bg-surface hover:text-pink",
-              )}
-            >
-              <Heart
-                className={cn("h-4 w-4 transition-all", favorite && "fill-pink")}
-              />
-            </motion.button>
+            <FaveButton product={product} onToast={onShare} variant="plain" />
           </div>
         </div>
       </div>
+      {shareOpen && <ShareProductDialog product={product} onClose={() => setShareOpen(false)} onToast={onShare} />}
     </motion.article>
   );
 });

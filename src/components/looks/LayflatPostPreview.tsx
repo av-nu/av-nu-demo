@@ -29,6 +29,7 @@ const gridPositions: Record<number, string[]> = {
 type LayflatPostPreviewProps = {
   products: Product[];
   title: string;
+  description?: string;
   layout?: LookbookLayout;
   backgroundColor?: string;
   backgroundImage?: string;
@@ -38,10 +39,11 @@ type LayflatPostPreviewProps = {
   gridItemCount?: number;
 };
 
-export function LayflatPostPreview({ products, title, layout = "layflat", backgroundColor = "#fffaf0", backgroundImage, editorialDesign, media = [], layflatStyle = "classic", gridItemCount = 4 }: LayflatPostPreviewProps) {
-  const label = layout === "grid" ? "Grid post preview" : layout === "editorial" ? "Editorial post preview" : "Styled layflat preview";
+export function LayflatPostPreview({ products, title, description, layout = "layflat", backgroundColor = "#fffaf0", backgroundImage, editorialDesign, media = [], layflatStyle = "classic", gridItemCount = 4 }: LayflatPostPreviewProps) {
+  const label = layout === "grid" ? "Grid post preview" : layout === "featured" ? "Featured guide preview" : layout === "editorial" ? "Editorial post preview" : "Styled layflat preview";
   const itemLimit = layout === "grid" ? Math.min(8, Math.max(1, gridItemCount)) : 8;
   const items = [...products.map((product) => ({ id: product.id, type: "product" as const, src: product.images[0], name: product.name })), ...media].slice(0, itemLimit);
+  const featuredHero = media[0] ?? (products[0] ? { id: products[0].id, type: "product" as const, src: products[0].images[0], name: products[0].name } : undefined);
   const renderItem = (item: (typeof items)[number], className: string) => {
     const content = item.type === "video"
       ? <video src={item.src} className="h-full w-full object-cover" controls playsInline />
@@ -59,6 +61,22 @@ export function LayflatPostPreview({ products, title, layout = "layflat", backgr
       </div>
       {layout === "editorial" && editorialDesign ? (
         <div className="overflow-hidden rounded-xl"><EditorialRenderer design={editorialDesign} /></div>
+      ) : layout === "featured" ? (
+        <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-text">
+          {featuredHero?.type === "video" ? <video src={featuredHero.src} className="h-full w-full object-cover" controls playsInline /> : featuredHero ? <Image src={featuredHero.src} alt={featuredHero.name} fill sizes="(max-width: 640px) 78vw, 460px" className="object-cover" unoptimized={featuredHero.src.startsWith("data:")} /> : null}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/5 to-black/60" />
+          <div className="absolute inset-x-0 top-0 z-10 p-5 text-white sm:p-7">
+            <span className="inline-flex rounded-md bg-pink px-2 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-burgundy">Guide</span>
+            <h3 className="mt-3 max-w-[78%] font-headline text-3xl leading-[0.95] drop-shadow-sm sm:text-4xl">{title}</h3>
+            {description && <p className="mt-4 max-w-[72%] text-[11px] leading-relaxed text-white/90 drop-shadow-sm sm:text-xs">{description}</p>}
+          </div>
+          <div className="absolute inset-x-0 bottom-0 z-10 flex items-end gap-2 p-4 sm:p-5">
+            <div className="flex min-w-0 flex-1 gap-2">
+              {products.slice(0, 3).map((product) => <Link key={product.id} href={`/product/${product.id}`} aria-label={`Shop ${product.name}`} className="relative aspect-square w-[24%] min-w-12 overflow-hidden rounded-lg border-2 border-white bg-white shadow-md"><Image src={product.images[0]} alt={product.name} fill sizes="100px" className="object-cover" /></Link>)}
+            </div>
+            {products.length > 0 && <span className="shrink-0 text-[10px] font-semibold text-white drop-shadow-sm">See the edit</span>}
+          </div>
+        </div>
       ) : <div className="relative aspect-square overflow-hidden rounded-xl" style={{ backgroundColor }}>
         {backgroundImage && <Image src={backgroundImage} alt="" fill sizes="(max-width: 640px) 78vw, 360px" className="object-cover opacity-35" unoptimized />}
         <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(255,255,255,0.55),transparent_42%),radial-gradient(circle_at_78%_72%,rgba(239,155,111,0.18),transparent_34%)]" />

@@ -10,8 +10,10 @@ import type { SocialUser, VideoReview } from "@/lib/social";
 import { useFaveLists } from "@/hooks/useFaveLists";
 import { useVideoReviews } from "@/hooks/useVideoReviews";
 
+export type ProfilePostFilter = "all" | "moment" | "guide" | "list";
+
 type Item =
-  | { kind: "list"; createdAt: number; post: FeedListPostType }
+  | { kind: "list" | "guide"; createdAt: number; post: FeedListPostType }
   | { kind: "review"; createdAt: number; review: VideoReview };
 
 /**
@@ -22,9 +24,11 @@ type Item =
 export function ProfilePostGrid({
   user,
   onToast,
+  filter = "all",
 }: {
   user: SocialUser;
   onToast?: (m: string) => void;
+  filter?: ProfilePostFilter;
 }) {
   const isMe = Boolean(user.isCurrentUser);
   const { lists } = useFaveLists();
@@ -38,7 +42,7 @@ export function ProfilePostGrid({
         .filter((l) => l.visibility !== "private" && flattenPages(l.pages ?? []).length > 0)
         .forEach((l) =>
           out.push({
-            kind: "list",
+            kind: l.lookbookId ? "guide" : "list",
             createdAt: l.createdAt,
             post: {
               id: l.id,
@@ -87,14 +91,16 @@ export function ProfilePostGrid({
     return out.sort((a, b) => b.createdAt - a.createdAt);
   }, [isMe, lists, myReviews, reviewsByAuthor, user]);
 
-  if (items.length === 0) {
+  const filteredItems = filter === "all" ? items : items.filter((item) => filter === "moment" ? item.kind === "review" : item.kind === filter);
+
+  if (filteredItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-divider/60 py-16 text-center">
         <span className="flex h-12 w-12 items-center justify-center rounded-full bg-surface">
           <LayoutGrid className="h-6 w-6 text-text/30" />
         </span>
         <p className="text-sm text-text/50">
-          {isMe ? "No posts yet — publish a video review or a list to get started." : "No posts to show."}
+          {isMe ? "No posts in this view yet — create a Moment, Guide, or List to get started." : "No posts to show."}
         </p>
       </div>
     );
@@ -102,7 +108,7 @@ export function ProfilePostGrid({
 
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-      {items.map((item) =>
+      {filteredItems.map((item) =>
         item.kind === "review" ? (
           <VideoReviewCard
             key={`r-${item.review.id}`}

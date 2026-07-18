@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Heart, Plus, Search } from "lucide-react";
 
@@ -13,7 +14,9 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { useFaveLists } from "@/hooks/useFaveLists";
 import { useToast } from "@/components/ui/Toast";
 import { getProductById } from "@/lib/data";
-import { type FaveList } from "@/data/faves";
+import { type FaveList, communityLists, flattenPages } from "@/data/faves";
+import { buildSpotlightRows } from "@/data/spotlight";
+import { useSavedPostGroups } from "@/hooks/useSavedPostGroups";
 
 const RECENT_LIMIT = 5;
 
@@ -78,6 +81,19 @@ export default function FavoritesPage() {
   const { favorites } = useFavorites();
   const { lists, isHydrated, deleteList } = useFaveLists();
   const { showToast, ToastContainer } = useToast();
+  const { groups: savedPostGroups } = useSavedPostGroups();
+  const savedPostIds = useMemo(() => [...new Set(savedPostGroups.flatMap((group) => group.postIds))], [savedPostGroups]);
+  const savedPostEntries = useMemo(() => {
+    const videos = buildSpotlightRows(4);
+    return savedPostIds.map((id) => {
+      const video = videos.find((item) => item.id === id);
+      if (video) return { id, title: video.featured.name, caption: "Moment · saved from Discover", image: video.featured.images[0], href: `/post/video/${id}` };
+      const list = communityLists.find((item) => item.id === id);
+      if (!list) return null;
+      const image = getProductById(flattenPages(list.pages)[0] ?? "")?.images[0];
+      return { id, title: list.name, caption: "List · saved from Discover", image, href: `/post/list/${id}` };
+    }).filter((item): item is NonNullable<typeof item> => Boolean(item));
+  }, [savedPostIds]);
 
   const handleDeleteList = (list: FaveList) => {
     if (window.confirm(`Delete "${list.name}"? This can't be undone.`)) {
@@ -115,7 +131,7 @@ export default function FavoritesPage() {
     ? filteredLists
     : filteredLists.slice(0, RECENT_LIMIT);
 
-  const hasAnything = lists.length > 0 || favorites.length > 0;
+  const hasAnything = lists.length > 0 || favorites.length > 0 || savedPostEntries.length > 0;
 
   if (isHydrated && !hasAnything) {
     return (
@@ -183,6 +199,13 @@ export default function FavoritesPage() {
             ))}
           </div>
         )}
+      </section>
+
+      <section>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div><h2 className="font-headline text-lg tracking-tight text-text">Saved posts <span className="ml-2 text-sm font-normal text-text/40">{savedPostEntries.length}</span></h2><p className="mt-1 text-sm text-text/50">Posts you intentionally bookmarked for later.</p></div>
+        </div>
+        {savedPostEntries.length === 0 ? <p className="rounded-xl border border-dashed border-divider/60 px-4 py-8 text-center text-sm text-text/50">Use Save on a post to keep it here. Likes stay separate.</p> : <div className="space-y-5">{savedPostGroups.map((group) => { const groupPosts = group.postIds.map((id) => savedPostEntries.find((post) => post.id === id)).filter((post): post is NonNullable<typeof post> => Boolean(post)); if (groupPosts.length === 0) return null; return <div key={group.id}><div className="mb-2 flex items-center justify-between"><h3 className="font-headline text-base text-text">{group.name}</h3><span className="text-xs text-text/45">{group.postIds.length} saved</span></div><div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">{groupPosts.map((post) => <Link key={`${group.id}-${post.id}`} href={post.href} className="group overflow-hidden rounded-2xl border border-divider/60 bg-white transition-shadow hover:shadow-md"><div className="relative aspect-[4/3] bg-surface">{post.image && <Image src={post.image} alt="" fill sizes="(max-width: 640px) 50vw, 25vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />}</div><div className="p-3"><p className="line-clamp-2 font-headline text-sm leading-tight text-text">{post.title}</p><p className="mt-1 text-[11px] text-text/50">{post.caption}</p></div></Link>)}</div></div>; })}</div>}
       </section>
 
       {/* Saved items (umbrella) */}

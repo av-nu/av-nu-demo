@@ -11,6 +11,7 @@ import type { Product } from "@/data/mockProducts";
 import { getBrandById } from "@/lib/data";
 import { StarRating } from "@/components/ui/StarRating";
 import { FaveButton } from "@/components/faves/FaveButton";
+import { ShareProductDialog } from "@/components/product/ShareProductDialog";
 import { useUserRatings } from "@/hooks/useUserRatings";
 import { useCart } from "@/hooks/useCart";
 
@@ -35,37 +36,15 @@ export const ProductCard = memo(function ProductCard({
   const { getUserRating, setUserRating } = useUserRatings();
   const { addToCart } = useCart();
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const userRating = getUserRating(product.id);
 
-  const handleShareClick = useCallback(
-    async (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const url = `${window.location.origin}/product/${product.id}`;
-      const shareData = {
-        title: product.name,
-        text: `Check out ${product.name} on av | nu`,
-        url,
-      };
-
-      try {
-        if (navigator.share && navigator.canShare?.(shareData)) {
-          await navigator.share(shareData);
-        } else {
-          await navigator.clipboard.writeText(url);
-          onShare?.("Link copied to clipboard");
-        }
-      } catch (err) {
-        if ((err as Error).name !== "AbortError") {
-          await navigator.clipboard.writeText(url);
-          onShare?.("Link copied to clipboard");
-        }
-      }
-    },
-    [product.id, product.name, onShare],
-  );
+  const handleShareClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShareOpen(true);
+  }, []);
 
   const handleRate = useCallback(
     (rating: number) => {
@@ -177,6 +156,7 @@ export const ProductCard = memo(function ProductCard({
           />
         </div>
       </div>
+      {shareOpen && <ShareProductDialog product={product} onClose={() => setShareOpen(false)} onToast={onShare} />}
     </motion.article>
   );
 });

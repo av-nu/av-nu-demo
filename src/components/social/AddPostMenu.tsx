@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Film, ListPlus, BookOpen, ChevronRight } from "lucide-react";
+import { X, Camera, ListPlus, BookOpen, ChevronRight } from "lucide-react";
 
 import { Portal } from "@/components/ui/Portal";
 import { VideoReviewUploadDialog } from "./VideoReviewUploadDialog";
@@ -34,21 +34,21 @@ export function AddPostMenu({
   const options = [
     {
       key: "video" as const,
-      icon: Film,
-      title: "Video review",
-      description: "Upload a video, tag a product, add a caption",
+      icon: Camera,
+      title: "Moment",
+      description: "Review or share how you use a product",
     },
     {
       key: "list" as const,
       icon: ListPlus,
-      title: "Publish a list",
-      description: "Share one of your faves lists with a caption",
+      title: "List",
+      description: "Create a private list or share it with a friend",
     },
     {
       key: "lookbook" as const,
       icon: BookOpen,
-      title: "Create a Lookbook",
-      description: "Build a shoppable look from a vibe or image",
+      title: "Guide",
+      description: "Inspire others with your shoppable curation",
     },
   ];
 
@@ -91,7 +91,7 @@ export function AddPostMenu({
                     type="button"
                     onClick={() => {
                       if (opt.key === "lookbook") {
-                        router.push("/create-a-look");
+                        router.push("/create/guide");
                         return;
                       }
                       setMode(opt.key);
