@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { RotateCw } from "lucide-react";
 import { useId, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 
 import { mockProducts } from "@/data/mockProducts";
@@ -145,7 +146,7 @@ export function EditorialRenderer({ design, selectedId, interactive = false, pro
               <>
                 <button type="button" aria-label="Resize element" className="absolute -bottom-4 -right-4 z-[100] h-8 w-8 cursor-nwse-resize rounded-full border-2 border-white bg-sky-500 shadow-md sm:-bottom-3 sm:-right-3 sm:h-6 sm:w-6" onPointerDown={(event) => onHandlePointerDown?.(event, element.id, "resize")} />
                 <span className="pointer-events-none absolute -top-10 left-1/2 h-10 w-px -translate-x-1/2 bg-sky-500 sm:-top-8 sm:h-8" />
-                <button type="button" aria-label="Rotate element" className="absolute -top-14 left-1/2 z-[100] h-8 w-8 -translate-x-1/2 cursor-grab rounded-full border-2 border-white bg-sky-500 shadow-md sm:-top-11 sm:h-6 sm:w-6" onPointerDown={(event) => onHandlePointerDown?.(event, element.id, "rotate")} />
+                <button type="button" aria-label="Rotate element" title="Rotate element" className="absolute -top-14 left-1/2 z-[100] flex h-9 w-9 -translate-x-1/2 cursor-grab items-center justify-center rounded-full border-2 border-sky-600 bg-white text-sky-700 shadow-[0_3px_8px_rgba(14,116,144,0.28)] sm:-top-11 sm:h-7 sm:w-7" onPointerDown={(event) => onHandlePointerDown?.(event, element.id, "rotate")}><RotateCw className="h-5 w-5 sm:h-4 sm:w-4" strokeWidth={2.75} aria-hidden="true" /></button>
               </>
             )}
           </div>
