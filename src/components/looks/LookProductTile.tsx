@@ -2,10 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Lock, LockOpen, Minus, Plus, Sparkles } from "lucide-react";
+import { BookPlus, Lock, LockOpen, Minus, ShoppingBag, Sparkles } from "lucide-react";
 
 import type { Product } from "@/data/mockProducts";
+import { FaveButton } from "@/components/faves/FaveButton";
 import { getBrandById } from "@/lib/data";
+import { useCart } from "@/hooks/useCart";
 import { cn } from "@/lib/utils";
 
 type LookProductTileProps = {
@@ -16,6 +18,8 @@ type LookProductTileProps = {
   onAdd?: () => void;
   onRemove?: () => void;
   onSwap?: () => void;
+  onToast?: (message: string) => void;
+  returnTo?: string;
 };
 
 export function LookProductTile({
@@ -26,8 +30,18 @@ export function LookProductTile({
   onAdd,
   onRemove,
   onSwap,
+  onToast,
+  returnTo,
 }: LookProductTileProps) {
   const brand = getBrandById(product.brandId);
+  const productHref = returnTo ? `/product/${product.id}?returnTo=${encodeURIComponent(returnTo)}` : `/product/${product.id}`;
+  const { addToCart, getItemQuantity } = useCart();
+  const cartQuantity = getItemQuantity(product.id);
+
+  const handleQuickAdd = () => {
+    addToCart(product.id, product.brandId);
+    onToast?.(`${product.name} added to cart`);
+  };
 
   return (
     <article
@@ -36,7 +50,7 @@ export function LookProductTile({
         selected ? "border-accent ring-1 ring-accent/20" : "border-divider/60 hover:border-text/20",
       )}
     >
-      <Link href={`/product/${product.id}`} className="relative block aspect-[4/5] overflow-hidden bg-surface">
+      <Link href={productHref} className="relative block aspect-[4/5] overflow-hidden bg-surface">
         <Image
           src={product.images[0]}
           alt={product.name}
@@ -51,12 +65,13 @@ export function LookProductTile({
           </span>
         )}
       </Link>
+      <FaveButton product={product} onToast={onToast} className="absolute right-2 top-2 z-10 bg-bg/85 shadow-sm backdrop-blur" />
 
       <div className="space-y-1.5 p-3">
         <p className="truncate text-[10px] font-medium uppercase tracking-wide text-text/45">
           {brand?.name ?? "Independent brand"}
         </p>
-        <Link href={`/product/${product.id}`} className="line-clamp-2 min-h-10 font-headline text-sm leading-snug text-text hover:text-accent">
+        <Link href={productHref} className="line-clamp-2 min-h-10 font-headline text-sm leading-snug text-text hover:text-accent">
           {product.name}
         </Link>
         <div className="flex items-center justify-between gap-2 pt-1">
@@ -80,9 +95,13 @@ export function LookProductTile({
                 <Minus className="h-3.5 w-3.5" />
               </button>
             )}
+            <button type="button" onClick={handleQuickAdd} aria-label={`Add ${product.name} to cart`} className="relative flex h-7 w-7 items-center justify-center rounded-full bg-text/10 text-text/65 transition-colors hover:bg-text hover:text-bg">
+              <ShoppingBag className="h-3.5 w-3.5" />
+              {cartQuantity > 0 && <span className="absolute -right-1 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-text px-0.5 text-[8px] font-bold text-bg">{cartQuantity}</span>}
+            </button>
             {onAdd && (
-              <button type="button" onClick={onAdd} aria-label={`Add ${product.name} to this look`} className="flex h-7 w-7 items-center justify-center rounded-full bg-accent/10 text-accent transition-colors hover:bg-accent hover:text-white">
-                <Plus className="h-3.5 w-3.5" />
+              <button type="button" onClick={onAdd} aria-label={`Add ${product.name} to this Guide`} title="Add to this Guide" className="flex h-7 w-7 items-center justify-center rounded-full bg-accent/10 text-accent transition-colors hover:bg-accent hover:text-white">
+                <BookPlus className="h-3.5 w-3.5" />
               </button>
             )}
             {onSwap && (

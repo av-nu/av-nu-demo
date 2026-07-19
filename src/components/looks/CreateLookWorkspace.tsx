@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type UIEvent } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { BookOpen, ChevronRight, Film, Heart, ImagePlus, LoaderCircle, PanelRightOpen, Plus, Save, Send, Sparkles, WandSparkles, X } from "lucide-react";
+import { ArrowDown, BookOpen, BookPlus, Film, Heart, ImagePlus, LoaderCircle, PanelRightOpen, Save, Send, Sparkles, WandSparkles, X } from "lucide-react";
 
 import { LayflatPostPreview } from "@/components/looks/LayflatPostPreview";
 import { LookbookSocialPostPreview } from "@/components/looks/LookbookSocialPostPreview";
@@ -17,17 +17,18 @@ import { ShareLookbookDialog } from "@/components/looks/ShareLookbookDialog";
 import { useToast } from "@/components/ui/Toast";
 import { mockProducts } from "@/data/mockProducts";
 import { useAuth } from "@/hooks/useAuth";
-import { useFaveLists } from "@/hooks/useFaveLists";
+import { DEFAULT_PRODUCT_LIST_NAME, useFaveLists } from "@/hooks/useFaveLists";
 import { useSavedLooks } from "@/hooks/useSavedLooks";
 import { socialService } from "@/lib/social";
 import { createEditorialPage, createProductElement, editorialProductIds, normalizeEditorialPage, type EditorialPageDesign } from "@/lib/editorial";
-import type { FaveVisibility } from "@/data/faves";
+import { flattenPages, type FaveVisibility } from "@/data/faves";
 import { generateLook, refineLook, type LayflatStyle, type LookbookLayout, type LookbookMedia, type SavedLook } from "@/lib/lookEngine";
 
 const promptChips = ["Summer dinner", "Wedding guest", "Vacation outfit", "Work look", "First date", "Brunch", "Minimalist", "Coastal", "Under $150"];
 const refinementChips = ["More casual", "Dressier", "Lower price", "More colorful", "More neutral", "More minimalist", "Swap shoes", "Add accessories"];
 const demoLookPrompts = ["A coastal dinner look", "Wedding guest under $200", "Easy Saturday brunch", "Polished work outfit", "Weekend city getaway", "Minimalist date night", "Garden party in spring", "Everyday neutrals"];
-const layoutOptions: Array<{ value: LookbookLayout; label: string }> = [{ value: "layflat", label: "Layflat" }, { value: "grid", label: "Grid" }, { value: "featured", label: "Featured" }, { value: "editorial", label: "Editorial" }];
+const GUIDE_DRAFT_KEY = "avnu-create-guide-draft";
+const layoutOptions: Array<{ value: LookbookLayout; label: string }> = [{ value: "editorial", label: "Editorial" }, { value: "layflat", label: "Layflat" }, { value: "grid", label: "Grid" }, { value: "featured", label: "Featured" }];
 const layflatOptions: Array<{ value: LayflatStyle; label: string; description: string }> = [{ value: "classic", label: "Tailored", description: "Two hero pieces with smaller accessories" }, { value: "diagonal", label: "Weekend", description: "Relaxed separates with shoes below" }, { value: "stacked", label: "Tonal", description: "Large close-cropped pieces on a clean surface" }, { value: "orbit", label: "Styled", description: "A centered statement piece framed by the look" }];
 
 type CreateLookWorkspaceProps = {
@@ -41,7 +42,7 @@ function productFor(id: string) {
 export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
   const { isAuthenticated } = useAuth();
   const { looks, isHydrated, getLook, saveLook, seedLookbook } = useSavedLooks();
-  const { upsertLookbookPost } = useFaveLists();
+  const { lists, upsertLookbookPost } = useFaveLists();
   const { showToast, ToastContainer } = useToast();
   const [prompt, setPrompt] = useState("");
   const [look, setLook] = useState<SavedLook | null>(null);
@@ -53,14 +54,15 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [lookbookOpen, setLookbookOpen] = useState(false);
-  const [showLayflatPreview, setShowLayflatPreview] = useState(true);
+  const [showLayflatPreview, setShowLayflatPreview] = useState(false);
   const [showSocialPostPreview, setShowSocialPostPreview] = useState(false);
   const [favesPickerOpen, setFavesPickerOpen] = useState(false);
   const [activePageIndex, setActivePageIndex] = useState(0);
-  const [expandedRailIds, setExpandedRailIds] = useState<string[]>([]);
+  const [railVisibleCounts, setRailVisibleCounts] = useState<Record<string, number>>({});
   const fileInput = useRef<HTMLInputElement>(null);
   const mediaInput = useRef<HTMLInputElement>(null);
   const backgroundInput = useRef<HTMLInputElement>(null);
+  const draftRestorationRef = useRef(false);
 
   useEffect(() => {
     if (!savedLookId || look) return;
@@ -70,6 +72,38 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
     setPrompt(saved.prompt);
     setSourceImage(saved.sourceImage);
   }, [getLook, look, savedLookId]);
+
+  useEffect(() => {
+    if (savedLookId || look || new URLSearchParams(window.location.search).get("restoreDraft") !== "1") return;
+    const serialized = window.sessionStorage.getItem(GUIDE_DRAFT_KEY);
+    if (!serialized) return;
+    try {
+      const draft = JSON.parse(serialized) as { look?: SavedLook; prompt?: string; sourceImage?: string; activePageIndex?: number; railVisibleCounts?: Record<string, number> };
+      if (!draft.look) return;
+      draftRestorationRef.current = true;
+      setLook(draft.look);
+      setPrompt(draft.prompt ?? draft.look.prompt);
+      setSourceImage(draft.sourceImage);
+      setActivePageIndex(draft.activePageIndex ?? 0);
+      setRailVisibleCounts(draft.railVisibleCounts ?? {});
+      window.sessionStorage.removeItem(GUIDE_DRAFT_KEY);
+    } catch {
+      window.sessionStorage.removeItem(GUIDE_DRAFT_KEY);
+    }
+  }, [look, savedLookId]);
+
+  useEffect(() => {
+    if (savedLookId || !look) return;
+    if (draftRestorationRef.current) {
+      draftRestorationRef.current = false;
+      return;
+    }
+    try {
+      window.sessionStorage.setItem(GUIDE_DRAFT_KEY, JSON.stringify({ look, prompt, sourceImage, activePageIndex, railVisibleCounts }));
+    } catch {
+      return;
+    }
+  }, [activePageIndex, look, prompt, railVisibleCounts, savedLookId, sourceImage]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -84,7 +118,8 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
     setGenerating(true);
     window.setTimeout(() => {
       const next = generateLook(prompt, { budget: Number(budget) || undefined, sourceImage });
-      setLook(next);
+      const editorialPage = { id: `page-${next.id}`, productIds: [], editorial: createEditorialPage([], next.title, "collection-story") };
+      setLook({ ...next, selectedProductIds: [], pages: [editorialPage] });
       setActivePageIndex(0);
       setGenerating(false);
     }, 650);
@@ -165,9 +200,33 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
   const selected = activeProductIds
     .map(productFor)
     .filter((product): product is NonNullable<ReturnType<typeof productFor>> => Boolean(product));
-  const editorialProducts = look ? Array.from(new Set([...activeProductIds, ...look.rails.flatMap((rail) => rail.productIds)]))
+  const favoriteProductIds = lists.find((list) => list.name === DEFAULT_PRODUCT_LIST_NAME)?.productIds ?? [];
+  const favoriteProducts = Array.from(new Set([...favoriteProductIds, ...activeProductIds]))
+    .map(productFor)
+    .filter((product): product is NonNullable<ReturnType<typeof productFor>> => Boolean(product));
+  const promptProducts = look ? Array.from(new Set(look.rails.flatMap((rail) => rail.productIds)))
     .map(productFor)
     .filter((product): product is NonNullable<ReturnType<typeof productFor>> => Boolean(product)) : [];
+  const savedProductIds = Array.from(new Set(lists.flatMap((list) => [...list.productIds, ...flattenPages(list.pages)])));
+  const savedProducts = savedProductIds
+    .map(productFor)
+    .filter((product): product is NonNullable<ReturnType<typeof productFor>> => Boolean(product));
+  const productReturnTo = savedLookId ? `/create/${savedLookId}` : "/create/guide?restoreDraft=1";
+  const browsePromptResults = () => document.getElementById("prompt-product-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const browseSavedProducts = () => document.getElementById("saved-product-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const loadMoreRailResults = (railId: string) => {
+    const rail = look?.rails.find((item) => item.id === railId);
+    if (!rail) return;
+    setRailVisibleCounts((current) => {
+      const visible = current[railId] ?? 5;
+      if (visible >= rail.productIds.length) return current;
+      return { ...current, [railId]: Math.min(visible + 5, rail.productIds.length) };
+    });
+  };
+  const handleRailScroll = (event: UIEvent<HTMLDivElement>, railId: string) => {
+    const target = event.currentTarget;
+    if (target.scrollLeft + target.clientWidth >= target.scrollWidth - 120) loadMoreRailResults(railId);
+  };
 
   const updateActivePageProducts = (productIds: string[], removeLocks = false) => {
     if (!look) return;
@@ -320,7 +379,7 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
     setPrompt(savedLook.prompt);
     setSourceImage(savedLook.sourceImage);
     setActivePageIndex(0);
-    setExpandedRailIds([]);
+    setRailVisibleCounts({});
     window.history.replaceState(null, "", `/create/${savedLook.id}`);
     setLookbookOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -388,23 +447,23 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
       <div className="mt-4 flex flex-wrap items-center gap-2">
         {pages.map((page, index) => <button key={page.id} type="button" onClick={() => { setActivePageIndex(index); setShowSocialPostPreview(false); }} aria-pressed={pageIndex === index} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${pageIndex === index ? "bg-text text-bg" : "border border-divider/70 text-text/60 hover:bg-surface"}`}>Page {index + 1} · {page.productIds.length + (page.media?.length ?? 0)}{look.layout === "editorial" ? " items" : `/${look.layout === "grid" ? (page.gridItemCount ?? 4) : 8}`}</button>)}
         <button type="button" onClick={addPage} className="rounded-full border border-accent/40 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/5">+ Add page</button>
-        <button type="button" onClick={() => setFavesPickerOpen(true)} className="inline-flex items-center gap-1.5 rounded-full border border-pink/35 px-3 py-1.5 text-xs font-semibold text-pink hover:bg-pink/5"><Plus className="h-3.5 w-3.5" />Add products</button>
+        <button type="button" onClick={() => setFavesPickerOpen(true)} className="inline-flex items-center gap-1.5 rounded-full border border-pink/35 px-3 py-1.5 text-xs font-semibold text-pink hover:bg-pink/5"><BookPlus className="h-3.5 w-3.5" />Add products</button>
         {look.layout !== "editorial" && <><button type="button" onClick={() => mediaInput.current?.click()} className="inline-flex items-center gap-1.5 rounded-full border border-divider/70 px-3 py-1.5 text-xs font-semibold text-text/65 hover:bg-surface"><ImagePlus className="h-3.5 w-3.5" />Add image or video</button><input ref={mediaInput} type="file" accept="image/*,video/*" onChange={(event) => handlePageMedia(event.target.files?.[0])} className="sr-only" /></>}
         {look.layout === "editorial" && <div className="flex items-center gap-1 rounded-full border border-divider/60 p-1"><button type="button" onClick={() => movePage(-1)} disabled={pageIndex === 0} className="rounded-full px-2 py-1 text-[10px] font-semibold text-text/55 disabled:opacity-30">←</button><button type="button" onClick={duplicatePage} className="rounded-full px-2 py-1 text-[10px] font-semibold text-text/55">Duplicate</button><button type="button" onClick={() => movePage(1)} disabled={pageIndex === pages.length - 1} className="rounded-full px-2 py-1 text-[10px] font-semibold text-text/55 disabled:opacity-30">→</button><button type="button" onClick={deletePage} disabled={pages.length <= 1} className="rounded-full px-2 py-1 text-[10px] font-semibold text-pink disabled:opacity-30">Delete</button></div>}
         <button type="button" onClick={() => setLookbookOpen(true)} className="inline-flex items-center gap-1.5 rounded-full border border-divider/70 px-3 py-1.5 text-xs font-semibold text-text/65 hover:bg-surface xl:hidden"><PanelRightOpen className="h-3.5 w-3.5" />Other Lookbooks <span className="rounded-full bg-surface px-1.5 py-0.5 text-[10px]">{Math.max(looks.length - 1, 0)}</span></button>
       </div>
       {look.layout === "editorial" ? (
         <div className="mt-5 min-w-0 space-y-4">
-          <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-text/45">Post layout</p><div className="mt-2 flex flex-wrap gap-2">{layoutOptions.map((option) => <button key={option.value} type="button" onClick={() => setLayout(option.value)} aria-pressed={(look.layout ?? "layflat") === option.value} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${((look.layout ?? "layflat") === option.value) ? "bg-text text-bg" : "border border-divider/70 text-text/60 hover:bg-surface"}`}>{option.label}</button>)}</div></div>
+          <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-text/45">Post layout</p><div className="mt-2 flex flex-wrap gap-2">{layoutOptions.map((option) => <button key={option.value} type="button" onClick={() => setLayout(option.value)} aria-pressed={(look.layout ?? "editorial") === option.value} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${((look.layout ?? "editorial") === option.value) ? "bg-text text-bg" : "border border-divider/70 text-text/60 hover:bg-surface"}`}>{option.label}</button>)}</div></div>
           <div className="flex flex-wrap gap-2"><button type="button" onClick={() => { setShowSocialPostPreview(false); setShowLayflatPreview(false); }} aria-pressed={!showLayflatPreview && !showSocialPostPreview} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${!showLayflatPreview && !showSocialPostPreview ? "bg-text text-bg" : "border border-divider/70 text-text/60"}`}>Edit canvas</button><button type="button" onClick={() => { setShowSocialPostPreview(false); setShowLayflatPreview(true); }} aria-pressed={!showSocialPostPreview && showLayflatPreview} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${!showSocialPostPreview && showLayflatPreview ? "bg-text text-bg" : "border border-divider/70 text-text/60"}`}>Preview design</button><button type="button" onClick={() => { setShowSocialPostPreview(true); setShowLayflatPreview(true); }} aria-pressed={showSocialPostPreview} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${showSocialPostPreview ? "bg-text text-bg" : "border border-divider/70 text-text/60"}`}>Preview social post</button></div>
-          {showSocialPostPreview ? <div className="mx-auto w-full max-w-lg"><LookbookSocialPostPreview title={look.title} description={look.description} products={selected} layout="editorial" editorialDesign={normalizeEditorialPage(activePage?.editorial, activeProductIds, look.title)} /></div> : showLayflatPreview ? <div className="mx-auto w-full max-w-2xl"><LayflatPostPreview products={selected} title={look.title} description={look.description} layout="editorial" editorialDesign={normalizeEditorialPage(activePage?.editorial, activeProductIds, look.title)} /></div> : <EditorialBuilder key={activePage?.id} title={look.title} design={normalizeEditorialPage(activePage?.editorial, activeProductIds, look.title)} products={editorialProducts} onChangeAction={updateEditorialPage} />}
+          {showSocialPostPreview ? <div className="mx-auto w-full max-w-lg"><LookbookSocialPostPreview title={look.title} description={look.description} products={selected} layout="editorial" editorialDesign={normalizeEditorialPage(activePage?.editorial, activeProductIds, look.title)} /></div> : showLayflatPreview ? <div className="mx-auto w-full max-w-2xl"><LayflatPostPreview products={selected} title={look.title} description={look.description} layout="editorial" editorialDesign={normalizeEditorialPage(activePage?.editorial, activeProductIds, look.title)} /></div> : <div className="space-y-3"><div className="rounded-xl border border-accent/25 bg-accent/5 px-3 py-3"><p className="text-xs font-semibold text-text">Start with your prompt results</p><p className="mt-1 text-[11px] leading-relaxed text-text/55">Your prompt matched products below. Browse them first, then add only the pieces that belong on this Guide page.</p><button type="button" onClick={browsePromptResults} className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-[10px] font-semibold text-white">Browse Product Results <ArrowDown className="h-3 w-3" /></button></div><EditorialBuilder key={activePage?.id} title={look.title} design={normalizeEditorialPage(activePage?.editorial, activeProductIds, look.title)} products={favoriteProducts} promptProducts={promptProducts} onChangeAction={updateEditorialPage} onAddPromptProduct={addProduct} onBrowsePromptResults={browsePromptResults} /></div>}
         </div>
       ) : (
       <div className="mt-5 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(360px,460px)] xl:items-start">
         <div className="contents">
           <div className="order-1 xl:col-start-1">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-text/45">Post layout</p>
-            <div className="mt-2 flex flex-wrap gap-2">{layoutOptions.map((option) => <button key={option.value} type="button" onClick={() => setLayout(option.value)} aria-pressed={(look.layout ?? "layflat") === option.value} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${((look.layout ?? "layflat") === option.value) ? "bg-text text-bg" : "border border-divider/70 text-text/60 hover:bg-surface"}`}>{option.label}</button>)}</div>
+            <div className="mt-2 flex flex-wrap gap-2">{layoutOptions.map((option) => <button key={option.value} type="button" onClick={() => setLayout(option.value)} aria-pressed={(look.layout ?? "editorial") === option.value} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${((look.layout ?? "editorial") === option.value) ? "bg-text text-bg" : "border border-divider/70 text-text/60 hover:bg-surface"}`}>{option.label}</button>)}</div>
           </div>
           {look.layout === "layflat" && <div className="order-1 xl:col-start-1"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-text/45">Styled overhead arrangement</p><div className="mt-2 grid gap-2 xl:grid-cols-2">{layflatOptions.map((option, optionIndex) => <button key={option.value} type="button" onClick={() => { const nextPages = pages.map((page, index) => index === pageIndex ? { ...page, layflatStyle: option.value } : page); setLook({ ...look, pages: nextPages, updatedAt: Date.now() }); }} aria-pressed={(activePage?.layflatStyle ?? "classic") === option.value} className={`flex min-w-0 items-start gap-2 rounded-xl border p-2 text-left ${(activePage?.layflatStyle ?? "classic") === option.value ? "border-text bg-text text-bg" : "border-divider/70 bg-bg text-text/65"}`}><span className="relative h-9 w-9 shrink-0 rounded-lg bg-surface"><span className={`absolute h-7 w-4 rounded-sm bg-accent/45 ${optionIndex % 2 ? "left-2 top-2 rotate-6" : "left-1.5 top-1.5 -rotate-3"}`} /><span className={`absolute h-8 w-4 rounded-sm bg-burgundy/35 ${optionIndex > 1 ? "right-1.5 top-1 rotate-3" : "right-2 bottom-1 -rotate-6"}`} /><span className="absolute bottom-1 left-5 h-2 w-2 rounded-full bg-pink/60" /></span><span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-semibold">{option.label}</span><span className={`mt-0.5 line-clamp-2 block text-[9px] leading-relaxed ${(activePage?.layflatStyle ?? "classic") === option.value ? "text-bg/65" : "text-text/40"}`}>{option.description}</span></span></button>)}</div></div>}
           {look.layout === "grid" && <div className="order-1 xl:col-start-1"><div className="flex items-end justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-text/45">Images on this page</p><p className="mt-1 text-[11px] text-text/45">Choose a layout capacity from 1 to 8.</p></div><span className="font-headline text-2xl text-text">{gridItemCount}</span></div><div className="mt-3 grid grid-cols-8 gap-1.5">{Array.from({ length: 8 }, (_, index) => index + 1).map((count) => <button key={count} type="button" onClick={() => setGridItemCount(count)} aria-pressed={gridItemCount === count} className={`aspect-square rounded-lg text-xs font-semibold ${gridItemCount === count ? "bg-text text-bg" : "border border-divider/70 bg-bg text-text/55 hover:border-text/30"}`}>{count}</button>)}</div></div>}
@@ -422,7 +481,7 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
           </div>
         </div>
         <div className="order-2 w-full min-w-0 max-w-md justify-self-center xl:col-start-2 xl:row-start-1 xl:row-span-3 xl:max-w-full xl:justify-self-stretch">
-          {showSocialPostPreview ? <LookbookSocialPostPreview title={look.title} description={look.description} products={selected} layout={look.layout} backgroundColor={look.backgroundColor} backgroundImage={look.backgroundImage} media={activeMedia} layflatStyle={activePage?.layflatStyle} gridItemCount={gridItemCount} /> : showLayflatPreview ? <LayflatPostPreview products={selected} title={look.title} description={look.description} layout={look.layout} backgroundColor={look.backgroundColor} backgroundImage={look.backgroundImage} media={activeMedia} layflatStyle={activePage?.layflatStyle} gridItemCount={gridItemCount} /> : <><GuideProductOrder products={selected} onChangeAction={updateActivePageProducts} /><div className="mt-4 flex flex-wrap gap-2"><button type="button" onClick={() => setFavesPickerOpen(true)} className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white"><Plus className="h-4 w-4" />Add products</button><button type="button" onClick={save} disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-burgundy px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><Save className="h-4 w-4" />{saving ? "Saving..." : "Save guide"}</button></div><div className="mt-3 grid gap-3 sm:grid-cols-2">{activeMedia.map((item) => <article key={item.id} className="relative overflow-hidden rounded-2xl border border-divider/60 bg-bg"><div className="relative aspect-[4/5] bg-surface">{item.type === "video" ? <video src={item.src} controls playsInline className="h-full w-full object-cover" /> : <Image src={item.src} alt={item.name} fill sizes="220px" className="object-cover" unoptimized />}</div><div className="flex items-center justify-between gap-2 p-3"><span className="flex min-w-0 items-center gap-1.5 truncate text-xs text-text/60">{item.type === "video" && <Film className="h-3.5 w-3.5" />}{item.name}</span><button type="button" onClick={() => updateActivePageMedia(activeMedia.filter((media) => media.id !== item.id))} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-pink/10 text-pink" aria-label={`Remove ${item.name}`}><X className="h-3.5 w-3.5" /></button></div></article>)}</div></>}
+          {showSocialPostPreview ? <LookbookSocialPostPreview title={look.title} description={look.description} products={selected} layout={look.layout} backgroundColor={look.backgroundColor} backgroundImage={look.backgroundImage} media={activeMedia} layflatStyle={activePage?.layflatStyle} gridItemCount={gridItemCount} /> : showLayflatPreview ? <LayflatPostPreview products={selected} title={look.title} description={look.description} layout={look.layout} backgroundColor={look.backgroundColor} backgroundImage={look.backgroundImage} media={activeMedia} layflatStyle={activePage?.layflatStyle} gridItemCount={gridItemCount} /> : <><GuideProductOrder products={selected} onChangeAction={updateActivePageProducts} /><div className="mt-4 flex flex-wrap gap-2"><button type="button" onClick={() => setFavesPickerOpen(true)} className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white"><BookPlus className="h-4 w-4" />Add products</button><button type="button" onClick={save} disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-burgundy px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><Save className="h-4 w-4" />{saving ? "Saving..." : "Save guide"}</button></div><div className="mt-3 grid gap-3 sm:grid-cols-2">{activeMedia.map((item) => <article key={item.id} className="relative overflow-hidden rounded-2xl border border-divider/60 bg-bg"><div className="relative aspect-[4/5] bg-surface">{item.type === "video" ? <video src={item.src} controls playsInline className="h-full w-full object-cover" /> : <Image src={item.src} alt={item.name} fill sizes="220px" className="object-cover" unoptimized />}</div><div className="flex items-center justify-between gap-2 p-3"><span className="flex min-w-0 items-center gap-1.5 truncate text-xs text-text/60">{item.type === "video" && <Film className="h-3.5 w-3.5" />}{item.name}</span><button type="button" onClick={() => updateActivePageMedia(activeMedia.filter((media) => media.id !== item.id))} className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-pink/10 text-pink" aria-label={`Remove ${item.name}`}><X className="h-3.5 w-3.5" /></button></div></article>)}</div></>}
           <div className="mt-4 flex flex-wrap justify-center gap-2 xl:justify-start"><button type="button" onClick={() => { setShowSocialPostPreview(true); setShowLayflatPreview(true); }} aria-pressed={showSocialPostPreview} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${showSocialPostPreview ? "bg-text text-bg" : "border border-divider/70 text-text/60"}`}>Preview social post</button><button type="button" onClick={() => { setShowSocialPostPreview(false); setShowLayflatPreview(true); }} aria-pressed={!showSocialPostPreview && showLayflatPreview} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${!showSocialPostPreview && showLayflatPreview ? "bg-text text-bg" : "border border-divider/70 text-text/60"}`}>Preview design</button><button type="button" onClick={() => { setShowSocialPostPreview(false); setShowLayflatPreview(false); }} aria-pressed={!showLayflatPreview && !showSocialPostPreview} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${!showLayflatPreview && !showSocialPostPreview ? "bg-text text-bg" : "border border-divider/70 text-text/60"}`}>Edit products</button></div>
           <p className="mt-3 text-center text-xs leading-relaxed text-text/45 xl:text-left">Use Make featured to choose the hero product, then move supporting products into their display order.</p>
         </div>
@@ -504,21 +563,27 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
 
       {look && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="min-w-0 space-y-9">
-          <section className="space-y-6">
-            {look.rails.map((rail) => (
-              <div key={rail.id}>
-                <div className="mb-3 flex items-center justify-between gap-3"><h2 className="font-headline text-xl tracking-tight text-text">{rail.title}</h2><div className="flex shrink-0 items-center gap-2"><button type="button" onClick={() => addProducts(rail.productIds.slice(0, expandedRailIds.includes(rail.id) ? rail.productIds.length : 5))} className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent hover:text-white"><Plus className="h-3.5 w-3.5" />Add shown</button>{rail.productIds.length > 5 && <button type="button" onClick={() => setExpandedRailIds((current) => current.includes(rail.id) ? current.filter((id) => id !== rail.id) : [...current, rail.id])} className="inline-flex items-center gap-1 text-sm font-semibold text-accent">{expandedRailIds.includes(rail.id) ? "Show less" : "See all"} <ChevronRight className={`h-4 w-4 transition-transform ${expandedRailIds.includes(rail.id) ? "rotate-90" : ""}`} /></button>}</div></div>
-                <div className="flex gap-3 overflow-x-auto pb-2">
-                  {rail.productIds.slice(0, expandedRailIds.includes(rail.id) ? rail.productIds.length : 5).map((id) => {
+          <section id="prompt-product-results" className="scroll-mt-6 space-y-6">
+            <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-text/45">Prompt product results</p><p className="mt-1 text-[11px] text-text/45">Products matched to your Guide prompt. Keep scrolling through each rail to load more results, then add only the pieces that fit your story.</p></div>
+            {look.rails.map((rail) => {
+              const visibleCount = railVisibleCounts[rail.id] ?? 5;
+              const visibleIds = rail.productIds.slice(0, visibleCount);
+              return <div key={rail.id}>
+                <div className="mb-3 flex items-center justify-between gap-3"><h2 className="font-headline text-xl tracking-tight text-text">{rail.title}</h2><div className="flex shrink-0 items-center gap-2"><button type="button" onClick={() => addProducts(visibleIds)} className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent hover:text-white"><BookPlus className="h-3.5 w-3.5" />Add shown</button>{visibleCount < rail.productIds.length && <span className="hidden text-[10px] font-medium text-text/40 sm:inline">Scroll for more</span>}</div></div>
+                <div className="flex gap-3 overflow-x-auto pb-2" onScroll={(event) => handleRailScroll(event, rail.id)} aria-label={`${rail.title} prompt results`}>
+                  {visibleIds.map((id) => {
                     const product = productFor(id);
                     if (!product) return null;
                     const isSelected = activeProductIds.includes(id);
-                    return <LookProductTile key={id} product={product} selected={isSelected} onAdd={isSelected ? undefined : () => addProduct(id)} onRemove={isSelected ? () => removeProduct(id) : undefined} />;
+                    return <LookProductTile key={id} product={product} selected={isSelected} onAdd={isSelected ? undefined : () => addProduct(id)} onRemove={isSelected ? () => removeProduct(id) : undefined} onToast={showToast} returnTo={productReturnTo} />;
                   })}
+                  {visibleCount < rail.productIds.length && <span className="flex min-w-24 shrink-0 items-center justify-center rounded-xl border border-dashed border-divider/70 px-3 text-center text-[10px] font-semibold text-text/40">Keep scrolling</span>}
                 </div>
-              </div>
-            ))}
+              </div>;
+            })}
+            <div className="rounded-2xl border border-divider/60 bg-surface/35 px-4 py-4"><p className="text-sm font-semibold text-text">Looking for something you saved?</p><p className="mt-1 text-xs leading-relaxed text-text/55">Browse products from My Favorite Products and your other saved lists.</p><button type="button" onClick={browseSavedProducts} className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-accent/35 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/5">Show Favorites &amp; Lists <ArrowDown className="h-3.5 w-3.5" /></button></div>
           </section>
+          <section id="saved-product-results" className="scroll-mt-6 space-y-4"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-text/45">Favorites &amp; Lists</p><p className="mt-1 text-[11px] text-text/45">Products saved in My Favorite Products and your other lists.</p></div>{savedProducts.length > 0 ? <div className="flex gap-3 overflow-x-auto pb-2">{savedProducts.map((product) => { const isSelected = activeProductIds.includes(product.id); return <LookProductTile key={product.id} product={product} selected={isSelected} onAdd={isSelected ? undefined : () => addProduct(product.id)} onRemove={isSelected ? () => removeProduct(product.id) : undefined} onToast={showToast} returnTo={productReturnTo} />; })}</div> : <div className="rounded-xl border border-dashed border-divider/70 px-4 py-5 text-center text-xs text-text/45">Save products to My Favorite Products or another list to see them here.</div>}</section>
         </motion.div>
       )}
       </main>

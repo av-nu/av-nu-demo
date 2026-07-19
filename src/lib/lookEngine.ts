@@ -46,18 +46,19 @@ export type SavedLook = {
 };
 
 export function normalizeSavedLook(look: SavedLook): SavedLook {
+  const layout = look.layout ?? "editorial";
   const sourcePages = look.pages?.length ? look.pages : [{ id: `page-${look.id}`, productIds: look.selectedProductIds ?? [] }];
   const pages = sourcePages.map((page) => {
     const productIds = Array.from(new Set((page.productIds ?? []).filter((id): id is string => typeof id === "string"))).slice(0, 8);
     const media = (page.media ?? []).filter((item) => item && typeof item.id === "string" && (item.type === "image" || item.type === "video") && typeof item.src === "string").slice(0, Math.max(0, 8 - productIds.length));
-    if (look.layout !== "editorial") return { ...page, productIds, media, layflatStyle: page.layflatStyle ?? "classic", gridItemCount: Math.min(8, Math.max(1, Math.round(page.gridItemCount ?? Math.max(4, productIds.length + media.length)))) };
+    if (layout !== "editorial") return { ...page, productIds, media, layflatStyle: page.layflatStyle ?? "classic", gridItemCount: Math.min(8, Math.max(1, Math.round(page.gridItemCount ?? Math.max(4, productIds.length + media.length)))) };
     const editorial = normalizeEditorialPage(page.editorial, productIds, look.title);
     return { ...page, productIds: editorialProductIds(editorial), editorial };
   });
   const allProductIds = new Set(pages.flatMap((page) => page.productIds));
   return {
     ...look,
-    layout: look.layout ?? "layflat",
+    layout,
     pages,
     selectedProductIds: pages[0]?.productIds ?? [],
     lockedProductIds: (look.lockedProductIds ?? []).filter((id) => allProductIds.has(id)),
@@ -207,6 +208,7 @@ export function generateLook(prompt: string, options: GenerateOptions = {}): Sav
     description: createDescription(normalizedPrompt, categories, options.sourceImage),
     prompt: normalizedPrompt,
     sourceImage: options.sourceImage,
+    layout: "editorial",
     selectedProductIds: selectedProducts(rails, lockedProductIds),
     lockedProductIds,
     rails,

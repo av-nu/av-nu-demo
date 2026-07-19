@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -28,6 +28,12 @@ export default function ProductPage({ params }: { params: { id: string } }) {
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [returnTo, setReturnTo] = useState("/");
+
+  useEffect(() => {
+    const candidate = new URLSearchParams(window.location.search).get("returnTo");
+    if (candidate?.startsWith("/") && !candidate.startsWith("//")) setReturnTo(candidate);
+  }, []);
 
   const userRating = getUserRating(product.id);
   const cartQuantity = getItemQuantity(product.id);
@@ -74,9 +80,9 @@ export default function ProductPage({ params }: { params: { id: string } }) {
       {/* Back button */}
       <div className="flex items-center justify-between">
         <Button asChild variant="ghost" size="sm">
-          <Link href="/" className="gap-2">
+          <Link href={returnTo} className="gap-2">
             <ArrowLeft className="h-4 w-4" />
-            Back
+            {returnTo.startsWith("/create/") ? "Back to Guide" : "Back"}
           </Link>
         </Button>
       </div>
