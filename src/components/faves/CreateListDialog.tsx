@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 
@@ -15,11 +15,20 @@ interface CreateListDialogProps {
 export function CreateListDialog({ onClose, onCreated }: CreateListDialogProps) {
   const { createList } = useFaveLists();
   const [name, setName] = useState("");
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => nameInputRef.current?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   const handleCreate = () => {
     if (!name.trim()) return;
     const id = createList(name);
-    onCreated?.(id);
+    if (onCreated) {
+      onCreated(id);
+      return;
+    }
     onClose();
   };
 
@@ -55,11 +64,14 @@ export function CreateListDialog({ onClose, onCreated }: CreateListDialogProps) 
               </button>
             </div>
 
-            <label className="mb-1.5 block text-xs font-medium text-text/60">List name</label>
+            <label htmlFor="create-list-name" className="mb-1.5 block text-xs font-medium text-text/60">List name</label>
             <input
+              ref={nameInputRef}
+              id="create-list-name"
               autoFocus
               value={name}
               onChange={(e) => setName(e.target.value)}
+              onPointerDown={(e) => e.currentTarget.focus()}
               onKeyDown={(e) => e.key === "Enter" && handleCreate()}
               placeholder="e.g. Spring Refresh"
               className="mb-6 h-11 w-full rounded-xl border border-divider/60 bg-surface/50 px-4 text-sm text-text placeholder:text-text/40 focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20"

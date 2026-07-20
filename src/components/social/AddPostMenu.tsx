@@ -7,9 +7,8 @@ import { X, Camera, ListPlus, BookOpen, ChevronRight } from "lucide-react";
 
 import { Portal } from "@/components/ui/Portal";
 import { VideoReviewUploadDialog } from "./VideoReviewUploadDialog";
-import { PublishListDialog } from "./PublishListDialog";
 
-type Mode = "choose" | "video" | "list";
+type Mode = "choose" | "video";
 
 /**
  * Entry point for creating a profile post: a video review or a published list.
@@ -27,10 +26,6 @@ export function AddPostMenu({
   if (mode === "video") {
     return <VideoReviewUploadDialog onClose={onClose} onToast={onToast} />;
   }
-  if (mode === "list") {
-    return <PublishListDialog onClose={onClose} onToast={onToast} />;
-  }
-
   const options = [
     {
       key: "video" as const,
@@ -92,6 +87,10 @@ export function AddPostMenu({
                     onClick={() => {
                       if (opt.key === "lookbook") {
                         router.push("/create/guide");
+                        return;
+                      }
+                      if (opt.key === "list") {
+                        router.push("/create/list");
                         return;
                       }
                       setMode(opt.key);

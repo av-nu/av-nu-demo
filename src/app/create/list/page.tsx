@@ -6,5 +6,5 @@ import { CreateListDialog } from "@/components/faves/CreateListDialog";
 
 export default function ListPage() {
   const router = useRouter();
-  return <CreateListDialog onClose={() => router.push("/create")} onCreated={() => router.push("/favorites")} />;
+  return <CreateListDialog onClose={() => router.push("/create")} onCreated={(id) => router.push(`/favorites/${id}`)} />;
 }

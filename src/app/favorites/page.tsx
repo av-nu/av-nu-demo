@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Heart, Plus, Search } from "lucide-react";
@@ -78,6 +79,7 @@ function Header({ onCreate }: { onCreate: () => void }) {
 }
 
 export default function FavoritesPage() {
+  const router = useRouter();
   const { favorites } = useFavorites();
   const { lists, isHydrated, deleteList } = useFaveLists();
   const { showToast, ToastContainer } = useToast();
@@ -105,6 +107,11 @@ export default function FavoritesPage() {
   const [query, setQuery] = useState("");
   const [showAllLists, setShowAllLists] = useState(false);
   const [creating, setCreating] = useState(false);
+
+  const handleCreated = (id: string) => {
+    setCreating(false);
+    router.push(`/favorites/${id}`);
+  };
 
   const q = query.trim().toLowerCase();
 
@@ -141,7 +148,7 @@ export default function FavoritesPage() {
         {creating && (
           <CreateListDialog
             onClose={() => setCreating(false)}
-            onCreated={() => showToast("List created")}
+            onCreated={handleCreated}
           />
         )}
         <ToastContainer />
