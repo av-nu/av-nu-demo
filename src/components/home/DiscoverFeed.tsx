@@ -8,15 +8,44 @@ import { FeaturedGuideArtwork } from "@/components/home/FeaturedGuideArtwork";
 import { PostQuickView, type DiscoverPost } from "@/components/home/PostQuickView";
 import { SavePostDialog } from "@/components/social/SavePostDialog";
 import { ProductCard } from "@/components/product/ProductCard";
+import { VideoReviewCard } from "@/components/social/VideoReviewCard";
 import { buildSpotlightRows } from "@/data/spotlight";
+import { discoverGuidePosts } from "@/data/curatedGuides";
 import { communityLists, flattenPages } from "@/data/faves";
 import { contacts, getContactById } from "@/data/social";
 import { mockBrands } from "@/data/mockBrands";
-import { mockProducts } from "@/data/mockProducts";
+import { mockProducts, type Product } from "@/data/mockProducts";
 import { useListSocial } from "@/hooks/useListSocial";
 import { useSavedPostGroups } from "@/hooks/useSavedPostGroups";
 import { useSocialGraph } from "@/hooks/useSocialGraph";
+import { useSocialStore } from "@/hooks/useSocialStore";
+import { useVideoReviews } from "@/hooks/useVideoReviews";
 import { getProductById } from "@/lib/data";
+import { toSocialUser } from "@/lib/social";
+
+const DISCOVERY_CATEGORY_ORDER = ["Apparel", "Accessories", "Home & Living", "Beauty", "Wellness", "Outdoors", "Food & Drink", "Pet", "Kids"];
+
+function interleaveProducts(products: Product[]) {
+  const buckets = new Map(DISCOVERY_CATEGORY_ORDER.map((category) => [category, products.filter((product) => product.category === category)]));
+  const remainingCategories = products
+    .map((product) => product.category)
+    .filter((category, index, all) => all.indexOf(category) === index && !DISCOVERY_CATEGORY_ORDER.includes(category));
+  const orderedCategories = [...DISCOVERY_CATEGORY_ORDER, ...remainingCategories];
+  const mixedProducts: Product[] = [];
+  let remaining = products.length;
+
+  while (remaining > 0) {
+    for (const category of orderedCategories) {
+      const bucket = buckets.get(category);
+      const product = bucket?.shift();
+      if (!product) continue;
+      mixedProducts.push(product);
+      remaining -= 1;
+    }
+  }
+
+  return mixedProducts;
+}
 
 export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }) {
   const [scope, setScope] = useState<"discover" | "inner">("discover");
@@ -26,16 +55,31 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
   const { isLiked, toggleLike } = useListSocial();
   const { groups, saveToDefault } = useSavedPostGroups();
   const { followedBrands, followBrand, unfollowBrand } = useSocialGraph();
+  const { state } = useSocialStore();
+  const { publishedMoments } = useVideoReviews();
+  const currentUser = toSocialUser("me", state);
   const videos = useMemo(() => buildSpotlightRows(16), []);
   const innerIds = new Set(contacts.filter((contact) => contact.circle === "inner").map((contact) => contact.id));
-  const visibleLists = communityLists.filter((list) => scope === "discover" || innerIds.has(list.authorId));
+  const visibleLists = discoverGuidePosts(communityLists).filter((list) => scope === "discover" || innerIds.has(list.authorId));
   const visibleVideos = scope === "discover" ? videos : videos.slice(0, 2);
-  const products = scope === "discover" ? mockProducts : mockProducts.slice(0, 24);
-  const mixed = useMemo(() => [
-    ...visibleVideos.map((row, index) => ({ kind: "video" as const, id: row.id, index, data: row })),
-    ...visibleLists.map((list, index) => ({ kind: "list" as const, id: list.id, index, data: list })),
-    ...products.map((product, index) => ({ kind: "product" as const, id: product.id, index, data: product })),
-  ].sort((a, b) => (a.index * 7 + a.id.length) % 13 - (b.index * 7 + b.id.length) % 13), [products, visibleLists, visibleVideos]);
+  const products = useMemo(() => scope === "discover" ? mockProducts : mockProducts.slice(0, 24), [scope]);
+  const mixed = useMemo(() => {
+    const productItems = interleaveProducts(products).map((product, index) => ({ kind: "product" as const, id: product.id, index, data: product }));
+    const postItems = [
+      ...publishedMoments.map((moment, index) => ({ kind: "moment" as const, id: moment.id, index, data: moment })),
+      ...visibleVideos.map((row, index) => ({ kind: "video" as const, id: row.id, index, data: row })),
+      ...visibleLists.map((list, index) => ({ kind: "list" as const, id: list.id, index, data: list })),
+    ];
+    const result: Array<(typeof productItems)[number] | (typeof postItems)[number]> = [];
+    let postIndex = 0;
+
+    productItems.forEach((product, index) => {
+      if (index > 0 && index % 4 === 0 && postIndex < postItems.length) result.push(postItems[postIndex++]);
+      result.push(product);
+    });
+
+    return [...result, ...postItems.slice(postIndex)];
+  }, [products, publishedMoments, visibleLists, visibleVideos]);
   const [visibleCount, setVisibleCount] = useState(24);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const hasMore = visibleCount < mixed.length;
@@ -92,6 +136,10 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
       <div className="columns-2 gap-3 md:columns-3 lg:columns-4">
         {mixed.slice(0, visibleCount).map((item) => {
           if (item.kind === "product") return <div key={`product-${item.id}`} className="mb-5 w-full break-inside-avoid"><ProductCard product={item.data} onShare={onToast} imageAspect={item.index % 3 === 0 ? "tall" : item.index % 3 === 1 ? "portrait" : "square"} /></div>;
+          if (item.kind === "moment") {
+            const author = item.data.authorId === "me" ? currentUser : toSocialUser(item.data.authorId, state);
+            return <div key={`moment-${item.id}`} className="mb-5 w-full break-inside-avoid"><VideoReviewCard review={item.data} author={author} /></div>;
+          }
           if (item.kind === "video") {
             const author = contacts[item.index % contacts.length];
             const videoPost: DiscoverPost = { kind: "video", id: item.id, data: item.data, author };

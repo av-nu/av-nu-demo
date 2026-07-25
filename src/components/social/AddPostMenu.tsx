@@ -24,14 +24,14 @@ export function AddPostMenu({
   const [mode, setMode] = useState<Mode>("choose");
 
   if (mode === "video") {
-    return <VideoReviewUploadDialog onClose={onClose} onToast={onToast} />;
+    return <VideoReviewUploadDialog onClose={onClose} onToast={onToast} onPublished={() => router.push("/moments")} />;
   }
   const options = [
     {
       key: "video" as const,
       icon: Camera,
       title: "Moment",
-      description: "Review or share how you use a product",
+      description: "Share an image, video, or thought",
     },
     {
       key: "list" as const,

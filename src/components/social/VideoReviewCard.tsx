@@ -26,19 +26,21 @@ export function VideoReviewCard({
   const { isLiked, toggleLike, isSaved, markSaved, getLocalComments, addComment } = useListSocial();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(true);
-  const [src, setSrc] = useState(review.videoUrl);
+  const mediaType = review.mediaType ?? "video";
+  const [src, setSrc] = useState(review.mediaUrl ?? review.videoUrl ?? "");
   const [saveOpen, setSaveOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [commentOpen, setCommentOpen] = useState(false);
   const [commentDraft, setCommentDraft] = useState("");
 
-  const product = getProductById(review.productId);
+  const product = review.productId ? getProductById(review.productId) : undefined;
   const liked = isLiked(review.id);
   const saved = isSaved(review.id);
   const likeCount = review.likes + (liked ? 1 : 0);
   const commentCount = review.comments.length + getLocalComments(review.id).length;
 
   const togglePlay = () => {
+    if (mediaType === "image") return;
     const v = videoRef.current;
     if (!v) return;
     if (v.paused) {
@@ -63,14 +65,14 @@ export function VideoReviewCard({
               ))}
             </span>
           ) : (
-            <p className="truncate text-xs text-text/50">Video review</p>
+            <p className="truncate text-xs text-text/50">Moment</p>
           )}
         </div>
         {onDelete && (
           <button
             type="button"
             onClick={() => onDelete(review.id)}
-            aria-label="Delete review"
+            aria-label="Delete moment"
             className="flex h-8 w-8 items-center justify-center rounded-full text-text/40 transition-colors hover:bg-surface hover:text-pink"
           >
             <Trash2 className="h-4 w-4" />
@@ -79,23 +81,29 @@ export function VideoReviewCard({
       </div>
 
       <div className="relative aspect-[4/5] bg-surface" onClick={togglePlay}>
-        <video
-          ref={videoRef}
-          src={src}
-          className="h-full w-full object-cover"
-          playsInline
-          loop
-          muted
-          onError={() => {
-            if (src !== SAMPLE_REVIEW_VIDEO) setSrc(SAMPLE_REVIEW_VIDEO);
-          }}
-        />
-        {paused && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/15">
-            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/85 text-burgundy">
-              <Play className="ml-0.5 h-5 w-5 fill-burgundy" />
-            </span>
-          </div>
+        {mediaType === "image" ? (
+          <Image src={src} alt={`${author.name}'s moment`} fill unoptimized className="object-cover" />
+        ) : (
+          <>
+            <video
+              ref={videoRef}
+              src={src}
+              className="h-full w-full object-cover"
+              playsInline
+              loop
+              muted
+              onError={() => {
+                if (src !== SAMPLE_REVIEW_VIDEO) setSrc(SAMPLE_REVIEW_VIDEO);
+              }}
+            />
+            {paused && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/15">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/85 text-burgundy">
+                  <Play className="ml-0.5 h-5 w-5 fill-burgundy" />
+                </span>
+              </div>
+            )}
+          </>
         )}
       </div>
 

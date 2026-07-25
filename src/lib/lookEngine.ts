@@ -46,7 +46,7 @@ export type SavedLook = {
 };
 
 export function normalizeSavedLook(look: SavedLook): SavedLook {
-  const layout = look.layout ?? "editorial";
+  const layout = look.layout === "layflat" ? "grid" : look.layout ?? "editorial";
   const sourcePages = look.pages?.length ? look.pages : [{ id: `page-${look.id}`, productIds: look.selectedProductIds ?? [] }];
   const pages = sourcePages.map((page) => {
     const productIds = Array.from(new Set((page.productIds ?? []).filter((id): id is string => typeof id === "string"))).slice(0, 8);
@@ -181,8 +181,8 @@ function buildRails(prompt: string, budget?: number) {
 }
 
 function selectedProducts(rails: LookRail[], lockedProductIds: string[]) {
-  const available = new Set(rails.flatMap((rail) => rail.productIds));
-  const locks = lockedProductIds.filter((id) => available.has(id));
+  const validProductIds = new Set(mockProducts.map((product) => product.id));
+  const locks = lockedProductIds.filter((id) => validProductIds.has(id));
   const selected = [...locks];
 
   for (const rail of rails) {

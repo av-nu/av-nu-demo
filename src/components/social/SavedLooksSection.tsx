@@ -1,14 +1,20 @@
 "use client";
 
+import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 
+import { curatedGuideLooks } from "@/data/curatedGuides";
 import { useSavedLooks } from "@/hooks/useSavedLooks";
 import { getProductById } from "@/lib/data";
 
 export function SavedLooksSection() {
-  const { looks, isHydrated } = useSavedLooks();
+  const { looks, isHydrated, seedLookbook } = useSavedLooks();
+
+  useEffect(() => {
+    if (isHydrated) seedLookbook(curatedGuideLooks);
+  }, [isHydrated, seedLookbook]);
 
   if (!isHydrated) {
     return <div className="h-36 animate-pulse rounded-2xl bg-surface/50" />;

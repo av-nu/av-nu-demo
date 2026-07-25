@@ -178,7 +178,7 @@ function WindowGallery({
 
   let content: React.ReactNode;
 
-  if (n >= 5) {
+  if (n >= 4) {
     // Standard: 2 stacked left · brand-hero 4:5 center · 2 stacked right.
     content = (
       <div className="grid h-full grid-cols-4 grid-rows-2 gap-2">

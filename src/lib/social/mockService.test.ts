@@ -98,15 +98,17 @@ describe("MockSocialService relationship transitions", () => {
     expect(conn.iFollow).toBe(true);
   });
 
-  it("adds and deletes a video review", async () => {
+  it("adds and deletes a moment", async () => {
     const svc = await freshService();
     const id = await svc.addVideoReview({
       productId: "p-1",
-      videoUrl: "blob:test",
+      mediaUrl: "blob:test",
+      mediaType: "image",
       caption: "great",
       visibility: "public",
     });
     expect(svc.getSnapshot().videoReviews).toHaveLength(1);
+    expect(svc.getSnapshot().videoReviews[0]).toMatchObject({ mediaUrl: "blob:test", mediaType: "image" });
     await svc.deleteVideoReview(id);
     expect(svc.getSnapshot().videoReviews).toHaveLength(0);
   });

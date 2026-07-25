@@ -118,7 +118,7 @@ export function ProfilePostGrid({
               isMe
                 ? (id) => {
                     deleteVideoReview(id);
-                    onToast?.("Video review deleted");
+                    onToast?.("Moment deleted");
                   }
                 : undefined
             }

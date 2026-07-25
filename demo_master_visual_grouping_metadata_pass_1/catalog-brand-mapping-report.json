@@ -1,0 +1,68 @@
+{
+  "generated_at": "2026-07-25T19:19:31.361Z",
+  "product_count": 358,
+  "merchant_count": 7,
+  "merchant_counts": {
+    "Maris & Vale": 45,
+    "Atelier Row": 85,
+    "Solenne Beauty": 7,
+    "Forma Studio": 44,
+    "Hearthline Apparel": 101,
+    "Cedar & Coast": 10,
+    "Northline Movement": 66
+  },
+  "mapping": {
+    "Maris & Vale": {
+      "brandId": "wildflower-studio",
+      "reason": "Apparel merchant mapped to an existing apparel-focused brand."
+    },
+    "Atelier Row": {
+      "brandId": "loam-and-linen",
+      "reason": "Apparel merchant mapped to an existing apparel and natural-texture brand."
+    },
+    "Solenne Beauty": {
+      "brandId": "velvet-fern",
+      "reason": "Beauty merchant mapped to an existing beauty-focused brand."
+    },
+    "Forma Studio": {
+      "brandId": "moonstone-mercantile",
+      "reason": "Jewelry merchant mapped to an existing accessories and jewelry-oriented brand."
+    },
+    "Hearthline Apparel": {
+      "brandId": "coastal-knitworks",
+      "reason": "Apparel merchant mapped to an existing apparel-focused brand."
+    },
+    "Cedar & Coast": {
+      "brandId": "dusklight-leather",
+      "reason": "Shoe merchant mapped to an existing accessories and leather-goods brand."
+    },
+    "Northline Movement": {
+      "brandId": "juniper-and-tide",
+      "reason": "Movement-oriented apparel merchant mapped to an existing outdoors and wellness brand."
+    }
+  },
+  "valid_existing_brand_ids": [
+    "ashwood-atelier",
+    "aurelith",
+    "juniper-and-tide",
+    "parchment-provisions",
+    "velvet-fern",
+    "loam-and-linen",
+    "embertrail",
+    "little-sparrow-co",
+    "pinecone-pet-co",
+    "moonstone-mercantile",
+    "citrus-and-clay",
+    "wildflower-studio",
+    "northwood-pantry",
+    "coastal-knitworks",
+    "sagewell-apothecary",
+    "terra-playroom",
+    "summit-and-stream",
+    "dusklight-leather",
+    "orchard-and-oat"
+  ],
+  "unmapped_merchants": [],
+  "invalid_brand_ids": [],
+  "status": "ready_for_review"
+}

@@ -45,9 +45,11 @@ export type Notification = {
 export type VideoReview = {
   id: string;
   authorId: string;
-  productId: string;
-  /** Object URL (ephemeral) or a hosted/sample clip. */
-  videoUrl: string;
+  productId?: string;
+  /** Object URL (ephemeral) or a hosted/sample media file. */
+  videoUrl?: string;
+  mediaUrl?: string;
+  mediaType?: "image" | "video";
   caption: string;
   rating?: number;
   visibility: FaveVisibility;
@@ -57,8 +59,10 @@ export type VideoReview = {
 };
 
 export type NewVideoReview = {
-  productId: string;
-  videoUrl: string;
+  productId?: string;
+  videoUrl?: string;
+  mediaUrl?: string;
+  mediaType?: "image" | "video";
   caption: string;
   rating?: number;
   visibility: FaveVisibility;

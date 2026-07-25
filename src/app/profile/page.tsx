@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Plus, Pencil, Settings as SettingsIcon, Users, UserPlus, Sparkles, Store } from "lucide-react";
+import { Plus, Pencil, Settings as SettingsIcon, Users, UserPlus, Store } from "lucide-react";
 
 import { useToast } from "@/components/ui/Toast";
 import { mockBrands } from "@/data/mockBrands";
@@ -17,7 +17,6 @@ import { EditProfileDialog } from "@/components/social/EditProfileDialog";
 import { AddPostMenu } from "@/components/social/AddPostMenu";
 import { FindPeopleDialog } from "@/components/social/FindPeopleDialog";
 import { SavedLooksSection } from "@/components/social/SavedLooksSection";
-import { InterestPicker } from "@/components/personalize/InterestPicker";
 
 export default function ProfilePage() {
   const { state, isHydrated } = useSocialStore();
@@ -142,18 +141,6 @@ export default function ProfilePage() {
           <Link href="/window-shopping" className="text-sm font-medium text-accent hover:underline">Browse brands</Link>
         </div>
         {followedBrands.length === 0 ? <p className="rounded-xl border border-dashed border-divider/60 px-4 py-6 text-center text-sm text-text/50">Follow brands from Discover or Brands to see them here.</p> : <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{followedBrands.map((brandId) => { const brand = mockBrands.find((item) => item.id === brandId); if (!brand) return null; return <div key={brand.id} className="rounded-2xl border border-divider/60 bg-surface/30 p-3"><Link href={`/brand/${brand.id}`} className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white p-1"><Image src={brand.logoMark} alt={brand.name} width={32} height={32} className="h-full w-full object-contain" /></span><span className="truncate text-sm font-semibold text-text">{brand.name}</span></Link><button type="button" onClick={() => unfollowBrand(brand.id)} className="mt-3 text-xs font-medium text-text/50 hover:text-text">Following · remove</button></div>; })}</div>}
-      </section>
-
-      {/* Personalize */}
-      <section className="rounded-2xl border border-divider/50 bg-surface/30 p-5 sm:p-6">
-        <div className="mb-1 flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-pink" />
-          <h2 className="font-headline text-lg tracking-tight text-text">Personalize your experience</h2>
-        </div>
-        <p className="mb-4 text-sm text-text/50">
-          Tell us what you&apos;re into and we&apos;ll tailor your feed.
-        </p>
-        <InterestPicker />
       </section>
 
       {/* Posts */}

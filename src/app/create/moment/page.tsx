@@ -6,5 +6,5 @@ import { VideoReviewUploadDialog } from "@/components/social/VideoReviewUploadDi
 
 export default function MomentPage() {
   const router = useRouter();
-  return <VideoReviewUploadDialog onClose={() => router.push("/create")} />;
+  return <VideoReviewUploadDialog onClose={() => router.push("/create")} onPublished={() => router.push("/moments")} />;
 }

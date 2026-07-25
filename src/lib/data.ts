@@ -18,6 +18,29 @@ function includesText(haystack: string, needle: string) {
   return normalize(haystack).includes(normalize(needle));
 }
 
+const BRAND_WINDOW_PRODUCT_LIMIT = 6;
+
+const brandWindowProductMap = (() => {
+  const assignments = new Map<string, Product[]>();
+  const claimedProductIds = new Set<string>();
+  const directBrands = mockBrands.filter((brand) => mockProducts.some((product) => product.brandId === brand.id));
+  const fallbackBrands = mockBrands.filter((brand) => !directBrands.some((directBrand) => directBrand.id === brand.id));
+
+  for (const brand of [...directBrands, ...fallbackBrands]) {
+    const directProducts = mockProducts.filter((product) => product.brandId === brand.id);
+    const preferredCategory = brand.categories.includes("Apparel") ? "Apparel" : brand.categories[0];
+    const categoryProducts = mockProducts.filter((product) => product.category === preferredCategory);
+    const candidatePool = directProducts.length > 0 ? directProducts : [...categoryProducts, ...mockProducts];
+    const availableProducts = Array.from(new Map(candidatePool.map((product) => [product.id, product])).values()).filter((product) => !claimedProductIds.has(product.id));
+    const selectedProducts = availableProducts.slice(0, BRAND_WINDOW_PRODUCT_LIMIT);
+
+    assignments.set(brand.id, selectedProducts);
+    selectedProducts.forEach((product) => claimedProductIds.add(product.id));
+  }
+
+  return assignments;
+})();
+
 export function getBrandById(brandId: string): Brand | undefined {
   return mockBrands.find((b) => b.id === brandId);
 }
@@ -32,14 +55,7 @@ export function getProductsByBrandId(brandId: string): Product[] {
 }
 
 function getBrandWindowProducts(brandId: string): Product[] {
-  const brand = getBrandById(brandId);
-  if (!brand) return [];
-  const preferredCategory = brand.categories.includes("Apparel") ? "Apparel" : "Beauty";
-  const eligible = mockProducts.filter((product) => product.category === preferredCategory);
-  if (eligible.length === 0) return mockProducts.slice(0, 6);
-
-  const offset = Array.from(brandId).reduce((sum, character) => sum + character.charCodeAt(0), 0) % eligible.length;
-  return Array.from({ length: Math.min(6, eligible.length) }, (_, index) => eligible[(offset + index * 5) % eligible.length]);
+  return brandWindowProductMap.get(brandId) ?? [];
 }
 
 export function getBrandAverageRating(brandId: string): {
@@ -103,8 +119,8 @@ export function getBrandWindowImages(brandId: string): {
     .filter((p) => Boolean(p.images[0]))
     .map((p) => ({ id: p.id, image: p.images[0] }));
 
-  const heroImage = brand?.heroImage ?? productPhotos[0]?.image ?? "";
-  return { heroImage, products: productPhotos };
+  const heroImage = productPhotos[0]?.image ?? brand?.heroImage ?? "";
+  return { heroImage, products: productPhotos.slice(1) };
 }
 
 export function getProductsPage(page: number, pageSize: number) {

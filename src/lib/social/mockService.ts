@@ -236,6 +236,8 @@ class MockSocialService implements SocialService {
       authorId: "me",
       productId: input.productId,
       videoUrl: input.videoUrl,
+      mediaUrl: input.mediaUrl,
+      mediaType: input.mediaType,
       caption: input.caption,
       rating: input.rating,
       visibility: input.visibility,

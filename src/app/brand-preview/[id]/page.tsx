@@ -20,8 +20,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/ProductCard";
-import { getBrandById } from "@/lib/data";
-import { mockProducts } from "@/data/mockProducts";
+import { getBrandById, getProductsByBrandId } from "@/lib/data";
 import { useToast } from "@/components/ui/Toast";
 
 const ITEMS_PER_PAGE = 12;
@@ -59,13 +58,13 @@ export default function BrandPreviewPage({
     }
   };
 
-  const brandProducts = mockProducts.filter((p) => p.brandId === brand.id);
+  const brandProducts = getProductsByBrandId(brand.id);
   const visibleProducts = brandProducts.slice(0, visibleCount);
   const hasMore = visibleCount < brandProducts.length;
 
   const hasVideo = !!brand.reelUrl;
   const hasStory = !!brand.story;
-  const mediaImage = brand.storyImage || brand.heroImage;
+  const mediaImage = brandProducts[0]?.images[0] ?? brand.storyImage ?? brand.heroImage;
 
   useEffect(() => {
     document.title = `${brand.name} | av | nu`;
@@ -103,16 +102,7 @@ export default function BrandPreviewPage({
     });
   }
 
-  // Use brand-specific carousel images if available, otherwise fall back to product images
-  if (brand.carouselImages && brand.carouselImages.length > 0) {
-    brand.carouselImages.forEach((img, idx) => {
-      carouselItems.push({
-        type: "image",
-        src: img,
-        alt: `${brand.name} carousel ${idx + 1}`,
-      });
-    });
-  } else {
+  if (featuredProducts.length > 0) {
     featuredProducts.forEach((product) => {
       if (product.images?.[0]) {
         carouselItems.push({
@@ -121,6 +111,14 @@ export default function BrandPreviewPage({
           alt: product.name,
         });
       }
+    });
+  } else if (brand.carouselImages && brand.carouselImages.length > 0) {
+    brand.carouselImages.forEach((img, idx) => {
+      carouselItems.push({
+        type: "image",
+        src: img,
+        alt: `${brand.name} carousel ${idx + 1}`,
+      });
     });
   }
 

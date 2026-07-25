@@ -57,7 +57,7 @@ export default function BrandPage({ params }: { params: { id: string } }) {
 
   const hasVideo = !!brand.reelUrl;
   const hasStory = !!brand.story;
-  const mediaImage = brand.storyImage || brand.heroImage;
+  const mediaImage = brandProducts[0]?.images[0] ?? brand.storyImage ?? brand.heroImage;
 
   useEffect(() => {
     document.title = `${brand.name} | av | nu`;
@@ -95,16 +95,7 @@ export default function BrandPage({ params }: { params: { id: string } }) {
     });
   }
 
-  // Use brand-specific carousel images if available, otherwise fall back to product images
-  if (brand.carouselImages && brand.carouselImages.length > 0) {
-    brand.carouselImages.forEach((img, idx) => {
-      carouselItems.push({
-        type: "image",
-        src: img,
-        alt: `${brand.name} carousel ${idx + 1}`,
-      });
-    });
-  } else {
+  if (featuredProducts.length > 0) {
     featuredProducts.forEach((product) => {
       if (product.images?.[0]) {
         carouselItems.push({
@@ -113,6 +104,14 @@ export default function BrandPage({ params }: { params: { id: string } }) {
           alt: product.name,
         });
       }
+    });
+  } else if (brand.carouselImages && brand.carouselImages.length > 0) {
+    brand.carouselImages.forEach((img, idx) => {
+      carouselItems.push({
+        type: "image",
+        src: img,
+        alt: `${brand.name} carousel ${idx + 1}`,
+      });
     });
   }
 

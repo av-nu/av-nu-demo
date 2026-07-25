@@ -4,7 +4,7 @@ import { useCallback, useMemo } from "react";
 
 import { socialService } from "@/lib/social";
 import type { NewVideoReview, VideoReview } from "@/lib/social";
-import { getCommunityVideoReviewsByAuthor } from "@/data/videoReviews";
+import { getCommunityVideoReviewsByAuthor, getPublicVideoReviews } from "@/data/videoReviews";
 import { useSocialStore } from "./useSocialStore";
 
 /**
@@ -17,6 +17,12 @@ export function useVideoReviews() {
   const myReviews = useMemo<VideoReview[]>(
     () => [...state.videoReviews].sort((a, b) => b.createdAt - a.createdAt),
     [state.videoReviews],
+  );
+
+  const publishedMoments = useMemo<VideoReview[]>(
+    () => [...getPublicVideoReviews(), ...myReviews.filter((review) => review.visibility === "public")]
+      .sort((a, b) => b.createdAt - a.createdAt),
+    [myReviews],
   );
 
   const reviewsByAuthor = useCallback(
@@ -44,6 +50,7 @@ export function useVideoReviews() {
   return {
     isHydrated,
     myReviews,
+    publishedMoments,
     reviewsByAuthor,
     addVideoReview,
     updateVideoReview,

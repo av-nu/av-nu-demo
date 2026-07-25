@@ -6,6 +6,7 @@ import { MapPin, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 import type { Brand } from "@/data/mockBrands";
+import { getBrandWindowImages } from "@/lib/data";
 
 interface BrandCardProps {
   brand: Brand;
@@ -13,7 +14,8 @@ interface BrandCardProps {
 }
 
 export function BrandCard({ brand, priority = false }: BrandCardProps) {
-  const isHeroSvg = brand.heroImage.includes(".svg");
+  const { heroImage } = getBrandWindowImages(brand.id);
+  const isHeroSvg = heroImage.includes(".svg");
   const isLogoSvg = brand.logoMark.includes(".svg");
 
   return (
@@ -31,7 +33,7 @@ export function BrandCard({ brand, priority = false }: BrandCardProps) {
         <div className="relative aspect-[16/9] w-full overflow-hidden bg-bg">
           {isHeroSvg ? (
             <img
-              src={brand.heroImage}
+              src={heroImage}
               alt={brand.name}
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
               loading={priority ? "eager" : "lazy"}
@@ -39,7 +41,7 @@ export function BrandCard({ brand, priority = false }: BrandCardProps) {
             />
           ) : (
             <Image
-              src={brand.heroImage}
+              src={heroImage}
               alt={brand.name}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"

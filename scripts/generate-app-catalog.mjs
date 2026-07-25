@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SOURCE_DIR = path.join(ROOT, "demo_master_visual_grouping_metadata_pass_1");
-const PRODUCTS_PATH = path.join(SOURCE_DIR, "demo_master_products_visual_pass_2.json");
+const PRODUCTS_PATH = path.join(SOURCE_DIR, "demo_master_products_content_audited_pass_3.json");
 const LINKED_ASSETS_PATH = path.join(SOURCE_DIR, "demo_master_assets_cloudinary-linked.json");
 const MAPPING_PATH = path.join(ROOT, "scripts/merchant-brand-map.json");
 const OUTPUT_PATH = path.join(ROOT, "src/data/seedProducts.ts");

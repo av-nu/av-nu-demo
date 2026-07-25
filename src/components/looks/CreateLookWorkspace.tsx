@@ -16,6 +16,7 @@ import { SaveLookDialog } from "@/components/looks/SaveLookDialog";
 import { ShareLookbookDialog } from "@/components/looks/ShareLookbookDialog";
 import { useToast } from "@/components/ui/Toast";
 import { mockProducts } from "@/data/mockProducts";
+import { curatedGuideLooks } from "@/data/curatedGuides";
 import { useAuth } from "@/hooks/useAuth";
 import { DEFAULT_PRODUCT_LIST_NAME, useFaveLists } from "@/hooks/useFaveLists";
 import { useSavedLooks } from "@/hooks/useSavedLooks";
@@ -26,9 +27,8 @@ import { generateLook, refineLook, type LayflatStyle, type LookbookLayout, type 
 
 const promptChips = ["Summer dinner", "Wedding guest", "Vacation outfit", "Work look", "First date", "Brunch", "Minimalist", "Coastal", "Under $150"];
 const refinementChips = ["More casual", "Dressier", "Lower price", "More colorful", "More neutral", "More minimalist", "Swap shoes", "Add accessories"];
-const demoLookPrompts = ["A coastal dinner look", "Wedding guest under $200", "Easy Saturday brunch", "Polished work outfit", "Weekend city getaway", "Minimalist date night", "Garden party in spring", "Everyday neutrals"];
 const GUIDE_DRAFT_KEY = "avnu-create-guide-draft";
-const layoutOptions: Array<{ value: LookbookLayout; label: string }> = [{ value: "editorial", label: "Editorial" }, { value: "layflat", label: "Layflat" }, { value: "grid", label: "Grid" }, { value: "featured", label: "Featured" }];
+const layoutOptions: Array<{ value: LookbookLayout; label: string }> = [{ value: "editorial", label: "Editorial" }, { value: "grid", label: "Grid" }, { value: "featured", label: "Featured" }];
 const layflatOptions: Array<{ value: LayflatStyle; label: string; description: string }> = [{ value: "classic", label: "Tailored", description: "Two hero pieces with smaller accessories" }, { value: "diagonal", label: "Weekend", description: "Relaxed separates with shoes below" }, { value: "stacked", label: "Tonal", description: "Large close-cropped pieces on a clean surface" }, { value: "orbit", label: "Styled", description: "A centered statement piece framed by the look" }];
 
 type CreateLookWorkspaceProps = {
@@ -107,7 +107,7 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
 
   useEffect(() => {
     if (!isHydrated) return;
-    seedLookbook(demoLookPrompts.map((demoPrompt) => generateLook(demoPrompt)));
+    seedLookbook(curatedGuideLooks);
   }, [isHydrated, seedLookbook]);
 
   const generate = () => {
