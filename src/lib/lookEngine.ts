@@ -31,6 +31,7 @@ export type SavedLook = {
   title: string;
   description: string;
   prompt: string;
+  recommendations?: string[];
   sourceImage?: string;
   backgroundImage?: string;
   backgroundColor?: string;
@@ -69,6 +70,7 @@ type GenerateOptions = {
   budget?: number;
   sourceImage?: string;
   lockedProductIds?: string[];
+  recommendations?: string[];
 };
 
 const fashionTerms = [
@@ -84,22 +86,81 @@ const fashionTerms = [
   "coastal",
   "minimalist",
   "summer",
+  "accessories",
+  "shoes",
+  "colorful",
+  "neutral",
 ];
 
-const promptCategoryHints: Array<{ terms: string[]; categories: string[] }> = [
-  { terms: ["vacation", "beach", "travel", "coastal"], categories: ["Apparel", "Accessories", "Outdoors"] },
-  { terms: ["work", "office", "polished"], categories: ["Apparel", "Accessories", "Home & Living"] },
-  { terms: ["wedding", "dinner", "date", "dressy", "brunch"], categories: ["Apparel", "Accessories", "Beauty"] },
-  { terms: ["home", "hosting", "table", "living room"], categories: ["Home & Living", "Accessories", "Food"] },
-  { terms: ["wellness", "reset", "self care"], categories: ["Beauty", "Wellness", "Home & Living"] },
+const stopWords = new Set([
+  "a",
+  "an",
+  "and",
+  "for",
+  "from",
+  "in",
+  "it",
+  "look",
+  "make",
+  "me",
+  "more",
+  "my",
+  "of",
+  "on",
+  "or",
+  "outfit",
+  "please",
+  "something",
+  "than",
+  "the",
+  "this",
+  "to",
+  "under",
+  "below",
+  "less",
+  "lower",
+  "price",
+  "with",
+]);
+
+const promptAliases: Array<{ terms: string[]; signals: string[]; categories?: string[] }> = [
+  { terms: ["summer"], signals: ["warm weather", "resort", "vacation"] },
+  { terms: ["wedding", "wedding guest"], signals: ["celebration", "event", "occasion wear", "elegant"], categories: ["Apparel", "Accessories", "Beauty"] },
+  { terms: ["vacation", "travel", "beach", "coastal", "seaside"], signals: ["vacation", "resort", "relaxed", "warm weather"], categories: ["Apparel", "Accessories", "Beauty"] },
+  { terms: ["work", "office", "professional"], signals: ["work", "workwear", "polished", "tailored"], categories: ["Apparel", "Accessories", "Beauty"] },
+  { terms: ["first date", "date night", "date"], signals: ["dinner", "elevated", "elegant", "event ready"], categories: ["Apparel", "Accessories", "Beauty"] },
+  { terms: ["brunch"], signals: ["weekend", "elevated", "relaxed", "warm weather"], categories: ["Apparel", "Accessories", "Beauty"] },
+  { terms: ["minimalist", "minimal", "simple"], signals: ["modern", "polished", "contemporary", "cream", "taupe"] },
+  { terms: ["casual"], signals: ["casual wear", "everyday", "relaxed", "weekend"] },
+  { terms: ["dressier", "dressy", "formal"], signals: ["evening apparel", "occasion wear", "elegant", "event ready", "celebration"] },
+  { terms: ["colorful", "colourful", "bright"], signals: ["coral", "rose", "peach", "blue", "mustard", "burgundy"] },
+  { terms: ["neutral", "neutrals", "tonal"], signals: ["cream", "taupe", "camel", "charcoal", "olive"] },
+  { terms: ["shoes", "shoe", "footwear", "swap shoes"], signals: ["footwear", "shoes", "women's shoes"], categories: ["Accessories", "Apparel", "Beauty"] },
+  { terms: ["accessory", "accessories", "jewelry", "add accessories"], signals: ["accessories", "jewelry", "necklaces", "earrings", "bracelets & rings"], categories: ["Accessories", "Apparel", "Beauty"] },
+  { terms: ["self care", "skincare", "beauty"], signals: ["beauty", "self care", "skincare & fragrance"], categories: ["Beauty", "Accessories", "Apparel"] },
 ];
+
+const availableCategories = Array.from(new Set(mockProducts.map((product) => product.category)));
+
+function normalizeSearchText(value: string) {
+  return value.toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+}
 
 function makeId() {
   return `look-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function matchedAliases(prompt: string) {
+  const normalized = normalizeSearchText(prompt);
+  return promptAliases.filter((alias) => alias.terms.some((term) => normalized.includes(normalizeSearchText(term))));
+}
+
 function termsFor(prompt: string) {
-  return prompt.toLowerCase().match(/[a-z0-9]+/g) ?? [];
+  const normalized = normalizeSearchText(prompt);
+  const tokens = normalized.split(" ").filter((term) => term.length > 1 && !stopWords.has(term) && !/^\d+$/.test(term));
+  const phrases = tokens.slice(0, -1).map((term, index) => `${term} ${tokens[index + 1]}`);
+  const aliases = matchedAliases(prompt).flatMap((alias) => alias.signals);
+  return Array.from(new Set([...tokens, ...phrases, ...aliases].map(normalizeSearchText).filter(Boolean)));
 }
 
 function getBudget(prompt: string, budget?: number) {
@@ -109,17 +170,54 @@ function getBudget(prompt: string, budget?: number) {
 }
 
 function relevantCategories(prompt: string) {
-  const normalized = prompt.toLowerCase();
-  const match = promptCategoryHints.find((hint) => hint.terms.some((term) => normalized.includes(term)));
-  return match?.categories ?? ["Apparel", "Accessories", "Beauty"];
+  const hinted = matchedAliases(prompt).flatMap((alias) => alias.categories ?? []);
+  return Array.from(new Set([...hinted, ...availableCategories]));
+}
+
+function values(value?: string | string[]) {
+  if (!value) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
+function productSearchFields(product: Product): Array<{ values: string[]; weight: number }> {
+  return [
+    { values: values(product.productType), weight: 30 },
+    { values: values(product.name), weight: 28 },
+    { values: values(product.occasionTags), weight: 26 },
+    { values: values(product.moodTags), weight: 24 },
+    { values: values(product.recommendationTags), weight: 22 },
+    { values: values(product.searchTags), weight: 20 },
+    { values: values(product.styleTags), weight: 18 },
+    { values: values(product.leaf), weight: 18 },
+    { values: values(product.subcategory), weight: 16 },
+    { values: values(product.collection), weight: 14 },
+    { values: values(product.colors), weight: 14 },
+    { values: values(product.materials), weight: 14 },
+    { values: values(product.category), weight: 10 },
+    { values: values(product.merchant), weight: 6 },
+    { values: values(product.description), weight: 4 },
+  ];
+}
+
+function fieldMatches(fieldValue: string, term: string) {
+  const normalizedField = normalizeSearchText(fieldValue);
+  return normalizedField === term || normalizedField.includes(term) || term.includes(normalizedField);
+}
+
+function matchingTermCount(product: Product, terms: string[]) {
+  return terms.filter((term) => productSearchFields(product).some((field) => field.values.some((value) => fieldMatches(value, term)))).length;
 }
 
 function scoreProduct(product: Product, terms: string[], categories: string[], budget?: number) {
-  const text = `${product.name} ${product.description} ${product.category} ${product.subcategory} ${product.leaf ?? ""}`.toLowerCase();
-  const termScore = terms.reduce((score, term) => score + (text.includes(term) ? 14 : 0), 0);
-  const categoryScore = categories.includes(product.category) ? 70 : 0;
-  const budgetScore = budget ? (product.price <= budget ? 20 : Math.max(-35, (budget - product.price) / 4)) : 0;
-  return categoryScore + termScore + budgetScore + product.rating * 7 + Math.min(product.ratingCount / 100, 8) + (product.isNew ? 2 : 0);
+  const categoryIndex = categories.indexOf(product.category);
+  const categoryScore = categoryIndex >= 0 ? Math.max(20, 65 - categoryIndex * 12) : -30;
+  const attributeScore = productSearchFields(product).reduce((total, field) => {
+    const matches = terms.filter((term) => field.values.some((value) => fieldMatches(value, term))).length;
+    return total + Math.min(matches, 4) * field.weight;
+  }, 0);
+  const budgetScore = budget ? (product.price <= budget ? 35 : -100) : 0;
+  const qualityScore = product.rating * 3 + Math.min(product.ratingCount / 250, 4) + (product.isNew ? 2 : 0);
+  return categoryScore + attributeScore + budgetScore + qualityScore;
 }
 
 function createTitle(prompt: string) {
@@ -135,22 +233,22 @@ function createDescription(prompt: string, categories: string[], sourceImage?: s
     : normalized.includes("vacation") || normalized.includes("beach")
       ? "an easy, travel-ready direction"
       : "an effortless, everyday direction";
-  const imageNote = sourceImage ? " I used your image as a visual starting point." : "";
-  return `I interpreted this as ${tone} with pieces across ${categories.slice(0, 2).join(" and ")}.${imageNote}`;
+  const imageNote = sourceImage ? " Your image is included as visual inspiration while the product matches come from your written preferences." : "";
+  return `I interpreted this as ${tone} with products ranked from the catalog across ${categories.slice(0, 2).join(" and ")}.${imageNote}`;
 }
 
 function buildRails(prompt: string, budget?: number) {
   const categories = relevantCategories(prompt);
   const terms = termsFor(prompt);
   const scored = mockProducts
-    .map((product) => ({ product, score: scoreProduct(product, terms, categories, budget) }))
-    .sort((a, b) => b.score - a.score || b.product.rating - a.product.rating);
-  const usable = scored.filter(({ product }) => categories.includes(product.category));
-  const fallback = scored.filter(({ product }) => !categories.includes(product.category));
-  const source = [...usable, ...fallback];
+    .map((product) => ({ product, score: scoreProduct(product, terms, categories, budget), matchCount: matchingTermCount(product, terms) }))
+    .sort((a, b) => b.score - a.score || b.matchCount - a.matchCount || b.product.rating - a.product.rating || a.product.price - b.product.price);
+  const withinBudget = budget ? scored.filter(({ product }) => product.price <= budget) : scored;
+  const ranked = withinBudget.length >= 10 ? withinBudget : scored;
+  const matchedProductIds = new Set(ranked.filter(({ matchCount }) => matchCount > 0).map(({ product }) => product.id));
   const groups = new Map<string, Product[]>();
 
-  for (const { product } of source) {
+  for (const { product } of ranked) {
     const title = product.subcategory || product.category;
     const group = groups.get(title) ?? [];
     if (!group.some((item) => item.id === product.id)) group.push(product);
@@ -160,20 +258,24 @@ function buildRails(prompt: string, budget?: number) {
   const rails = Array.from(groups.entries())
     .filter(([, products]) => products.length >= 2)
     .slice(0, 5)
-    .map(([title, products]) => ({
-      id: title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
-      title,
-      productIds: products.slice(0, 10).map((product) => product.id),
-    }));
+    .map(([title, products]) => {
+      const matchedProducts = products.filter((product) => matchedProductIds.has(product.id));
+      const railProducts = matchedProducts.length >= 2 ? matchedProducts : products;
+      return {
+        id: title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        title,
+        productIds: railProducts.slice(0, 10).map((product) => product.id),
+      };
+    });
 
   if (rails.length >= 3) return rails;
 
-  const fallbackRails = Array.from(new Set(mockProducts.map((product) => product.category)))
+  const fallbackRails = availableCategories
     .filter((category) => !rails.some((rail) => rail.title === category))
     .map((category) => ({
       id: category.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
       title: category,
-      productIds: scored.filter(({ product }) => product.category === category).slice(0, 10).map(({ product }) => product.id),
+      productIds: ranked.filter(({ product }) => product.category === category).slice(0, 10).map(({ product }) => product.id),
     }))
     .filter((rail) => rail.productIds.length > 0);
 
@@ -195,18 +297,21 @@ function selectedProducts(rails: LookRail[], lockedProductIds: string[]) {
 }
 
 export function generateLook(prompt: string, options: GenerateOptions = {}): SavedLook {
-  const normalizedPrompt = prompt.trim() || "an easy everyday look";
-  const budget = getBudget(normalizedPrompt, options.budget);
-  const rails = buildRails(normalizedPrompt, budget);
-  const categories = relevantCategories(normalizedPrompt);
+  const writtenPrompt = prompt.trim();
+  const recommendations = Array.from(new Set((options.recommendations ?? []).map((item) => item.trim()).filter(Boolean)));
+  const searchPrompt = [writtenPrompt, ...recommendations].filter(Boolean).join(" ") || "an easy everyday look";
+  const budget = getBudget(searchPrompt, options.budget);
+  const rails = buildRails(searchPrompt, budget);
+  const categories = relevantCategories(searchPrompt);
   const lockedProductIds = options.lockedProductIds ?? [];
   const now = Date.now();
 
   return {
     id: makeId(),
-    title: createTitle(normalizedPrompt),
-    description: createDescription(normalizedPrompt, categories, options.sourceImage),
-    prompt: normalizedPrompt,
+    title: createTitle(writtenPrompt || recommendations.find((item) => !/\bunder\b/i.test(item)) || searchPrompt),
+    description: createDescription(searchPrompt, categories, options.sourceImage),
+    prompt: writtenPrompt,
+    recommendations,
     sourceImage: options.sourceImage,
     layout: "editorial",
     selectedProductIds: selectedProducts(rails, lockedProductIds),
@@ -225,8 +330,9 @@ export function refineLook(look: SavedLook, refinement: string): SavedLook {
     budget,
     sourceImage: look.sourceImage,
     lockedProductIds: look.lockedProductIds,
+    recommendations: look.recommendations,
   });
-  const rails = lowered.includes("cheaper") || lowered.includes("lower price") || lowered.includes("under $")
+  let rails = lowered.includes("cheaper") || lowered.includes("lower price") || lowered.includes("under $")
     ? raw.rails.map((rail) => ({
       ...rail,
       productIds: [...rail.productIds].sort((a, b) => {
@@ -236,6 +342,19 @@ export function refineLook(look: SavedLook, refinement: string): SavedLook {
       }),
     }))
     : raw.rails;
+
+  const priorityTitles = lowered.includes("shoe")
+    ? ["Footwear"]
+    : lowered.includes("accessor")
+      ? ["Jewelry", "Footwear"]
+      : [];
+  if (priorityTitles.length > 0) {
+    rails = [...rails].sort((a, b) => {
+      const aIndex = priorityTitles.indexOf(a.title);
+      const bIndex = priorityTitles.indexOf(b.title);
+      return (aIndex < 0 ? priorityTitles.length : aIndex) - (bIndex < 0 ? priorityTitles.length : bIndex);
+    });
+  }
 
   return {
     ...look,

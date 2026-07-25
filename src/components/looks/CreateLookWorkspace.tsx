@@ -48,6 +48,7 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
   const [look, setLook] = useState<SavedLook | null>(null);
   const [sourceImage, setSourceImage] = useState<string>();
   const [budget, setBudget] = useState("");
+  const [selectedRecommendations, setSelectedRecommendations] = useState<string[]>([]);
   const [refinement, setRefinement] = useState("");
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -70,6 +71,7 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
     if (!saved) return;
     setLook(saved);
     setPrompt(saved.prompt);
+    setSelectedRecommendations(saved.recommendations ?? []);
     setSourceImage(saved.sourceImage);
   }, [getLook, look, savedLookId]);
 
@@ -78,11 +80,12 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
     const serialized = window.sessionStorage.getItem(GUIDE_DRAFT_KEY);
     if (!serialized) return;
     try {
-      const draft = JSON.parse(serialized) as { look?: SavedLook; prompt?: string; sourceImage?: string; activePageIndex?: number; railVisibleCounts?: Record<string, number> };
+      const draft = JSON.parse(serialized) as { look?: SavedLook; prompt?: string; recommendations?: string[]; sourceImage?: string; activePageIndex?: number; railVisibleCounts?: Record<string, number> };
       if (!draft.look) return;
       draftRestorationRef.current = true;
       setLook(draft.look);
       setPrompt(draft.prompt ?? draft.look.prompt);
+      setSelectedRecommendations(draft.recommendations ?? draft.look.recommendations ?? []);
       setSourceImage(draft.sourceImage);
       setActivePageIndex(draft.activePageIndex ?? 0);
       setRailVisibleCounts(draft.railVisibleCounts ?? {});
@@ -99,25 +102,31 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
       return;
     }
     try {
-      window.sessionStorage.setItem(GUIDE_DRAFT_KEY, JSON.stringify({ look, prompt, sourceImage, activePageIndex, railVisibleCounts }));
+      window.sessionStorage.setItem(GUIDE_DRAFT_KEY, JSON.stringify({ look, prompt, recommendations: selectedRecommendations, sourceImage, activePageIndex, railVisibleCounts }));
     } catch {
       return;
     }
-  }, [activePageIndex, look, prompt, railVisibleCounts, savedLookId, sourceImage]);
+  }, [activePageIndex, look, prompt, railVisibleCounts, savedLookId, selectedRecommendations, sourceImage]);
 
   useEffect(() => {
     if (!isHydrated) return;
     seedLookbook(curatedGuideLooks);
   }, [isHydrated, seedLookbook]);
 
+  const toggleRecommendation = (recommendation: string) => {
+    setSelectedRecommendations((current) => current.includes(recommendation)
+      ? current.filter((item) => item !== recommendation)
+      : [...current, recommendation]);
+  };
+
   const generate = () => {
-    if (!prompt.trim() && !sourceImage) {
-      showToast("Add a vibe or inspiration image to begin", "error");
+    if (!prompt.trim() && selectedRecommendations.length === 0 && !sourceImage) {
+      showToast("Add a vibe, product consideration, or inspiration image to begin", "error");
       return;
     }
     setGenerating(true);
     window.setTimeout(() => {
-      const next = generateLook(prompt, { budget: Number(budget) || undefined, sourceImage });
+      const next = generateLook(prompt, { budget: Number(budget) || undefined, sourceImage, recommendations: selectedRecommendations });
       const editorialPage = { id: `page-${next.id}`, productIds: [], editorial: createEditorialPage([], next.title, "collection-story") };
       setLook({ ...next, selectedProductIds: [], pages: [editorialPage] });
       setActivePageIndex(0);
@@ -377,6 +386,7 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
   const loadSavedLook = (savedLook: SavedLook) => {
     setLook(savedLook);
     setPrompt(savedLook.prompt);
+    setSelectedRecommendations(savedLook.recommendations ?? []);
     setSourceImage(savedLook.sourceImage);
     setActivePageIndex(0);
     setRailVisibleCounts({});
@@ -556,8 +566,14 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
             </button>
           </div>
         </div>
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-          {promptChips.map((chip) => <button key={chip} type="button" onClick={() => setPrompt(chip)} className="shrink-0 rounded-full border border-divider/60 bg-bg px-3 py-1.5 text-xs font-medium text-text/60 transition-colors hover:border-accent/40 hover:text-accent">{chip}</button>)}
+        <div className="mt-3">
+          <p className="mb-2 text-xs font-medium text-text/50">Product considerations</p>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {promptChips.map((chip) => {
+              const selected = selectedRecommendations.includes(chip);
+              return <button key={chip} type="button" onClick={() => toggleRecommendation(chip)} aria-pressed={selected} className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${selected ? "border-accent bg-accent/10 text-accent" : "border-divider/60 bg-bg text-text/60 hover:border-accent/40 hover:text-accent"}`}>{chip}</button>;
+            })}
+          </div>
         </div>
       </section>}
 
