@@ -1,14 +1,6 @@
 import { mockProducts, type Product } from "@/data/mockProducts";
 
-// Curated, reliably-available video sources for the shoppable feed.
-// Reuses the local Ashwood reel + Aurelith clip plus two dependable sample
-// reels. (The 164MB ashwood .MOV is intentionally skipped for performance.)
-const videoPool = [
-  "/videos/ashwood-atelier-reel-compressed.mp4",
-  "/products/Aurelith/Carousel video.mp4",
-  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-];
+const videoPool = mockProducts.flatMap((product) => product.videos ?? []);
 
 export type SpotlightRow = {
   id: string;

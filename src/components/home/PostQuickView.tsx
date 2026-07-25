@@ -132,9 +132,9 @@ export function PostQuickView({ post, onClose }: { post: DiscoverPost; onClose: 
               </div>
 
               <div className="px-5 py-5 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-contain"> <div className="space-y-5">
-                <div className="flex items-center gap-4 border-y border-divider/60 py-3">
-                  <button type="button" onClick={() => setLiked((current) => !current)} className={`inline-flex items-center gap-1.5 text-sm font-semibold ${liked ? "text-pink" : "text-text/60"}`}><Heart className={`h-5 w-5 ${liked ? "fill-current" : ""}`} />{liked ? "Liked" : "Like"}</button>
-                  <button type="button" onClick={() => setSaveOpen(true)} className={`inline-flex items-center gap-1.5 text-sm font-semibold ${isSaved ? "text-accent" : "text-text/60"}`}><Bookmark className={`h-5 w-5 ${isSaved ? "fill-current" : ""}`} />{isSaved ? "Saved" : "Save"}</button>
+                <div className="flex items-center gap-7 border-y border-divider/60 py-3">
+                  <button type="button" onClick={() => setLiked((current) => !current)} className={`inline-flex items-center gap-3 text-sm font-semibold ${liked ? "text-pink" : "text-text/60"}`}><Heart className={`h-5 w-5 ${liked ? "fill-current" : ""}`} />{liked ? "Liked" : "Like"}</button>
+                  <button type="button" onClick={() => setSaveOpen(true)} className={`inline-flex items-center gap-3 text-sm font-semibold ${isSaved ? "text-accent" : "text-text/60"}`}><Bookmark className={`h-5 w-5 ${isSaved ? "fill-current" : ""}`} />{isSaved ? "Saved" : "Save"}</button>
                   <button type="button" onClick={() => setShareOpen(true)} className="ml-auto text-text/50 hover:text-text" aria-label="Share post"><Send className="h-5 w-5" /></button>
                 </div>
 

@@ -144,7 +144,7 @@ export function FeedListPost({
       </div>
 
       {/* Action bar */}
-      <div className="flex items-center gap-4 px-3 pt-3">
+      <div className="flex items-center gap-7 px-3 pt-4">
         <button type="button" onClick={() => toggleLike(post.id)} aria-label={liked ? "Unlike" : "Like"} className={cn("transition-colors", liked ? "text-pink" : "text-white/70 hover:text-pink")}>
           <Heart className={cn("h-6 w-6", liked && "fill-pink")} />
         </button>

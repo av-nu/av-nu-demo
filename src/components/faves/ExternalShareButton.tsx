@@ -1,4 +1,4 @@
-import { Share2 } from "lucide-react";
+import { Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import type { FaveList } from "@/data/faves";
@@ -22,5 +22,5 @@ export function ExternalShareButton({ list, onToast }: { list: FaveList; onToast
     }
   };
 
-  return <Button variant="surface" onClick={share} className="gap-2"><Share2 className="h-4 w-4" />Share shopping link</Button>;
+  return <Button variant="surface" onClick={share} className="gap-2"><Send className="h-4 w-4" />Share shopping link</Button>;
 }

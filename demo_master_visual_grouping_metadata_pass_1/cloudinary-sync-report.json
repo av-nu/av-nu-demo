@@ -1,0 +1,946 @@
+{
+  "generated_at": "2026-07-25T15:41:20.356Z",
+  "dry_run": true,
+  "cloudinary_resource_counts": {
+    "image": 875,
+    "video": 25
+  },
+  "source": {
+    "source_assets": 751,
+    "source_products": 358,
+    "source_asset_types": {
+      "image": 735,
+      "video": 16
+    },
+    "source_public_ids_present": 751,
+    "source_asset_ids_referenced": 751,
+    "source_asset_references_missing": 0
+  },
+  "sync_status_counts": {
+    "matched": 751
+  },
+  "unmatched": [],
+  "ambiguous": [],
+  "unused_cloudinary_resources": [
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854845335_8f756be9_a1cssd",
+      "asset_id": "68bf3cf7e4774e363d587a033abf033c",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858885/openart-gpt-image-2-1_1784854845335_8f756be9_a1cssd.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854842922_12a2e6ba_j7ylh6",
+      "asset_id": "99acc4e9ea931c96e3beb5dfcd7793e2",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858884/openart-gpt-image-2-1_1784854842922_12a2e6ba_j7ylh6.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854843789_39b2fa48_upfzcy",
+      "asset_id": "541f5f20ffe7fba3a13f68f72ed0a5a9",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858883/openart-gpt-image-2-1_1784854843789_39b2fa48_upfzcy.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854776712_796fd784_ptooch",
+      "asset_id": "885a6e9088c152f92717374cd86126cd",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858883/openart-gpt-image-2-1_1784854776712_796fd784_ptooch.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854808965_b14eb2d7_kqmlug",
+      "asset_id": "05ff53721787108111525450fc8c5d10",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858882/openart-gpt-image-2-1_1784854808965_b14eb2d7_kqmlug.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854820254_536b8e3c_e54emw",
+      "asset_id": "ecb645654754a9a32db89129d8651b15",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858882/openart-gpt-image-2-1_1784854820254_536b8e3c_e54emw.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854805557_2eeb2797_frr2ta",
+      "asset_id": "4af6f71fdda71a7971f711d737267760",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858881/openart-gpt-image-2-1_1784854805557_2eeb2797_frr2ta.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854819512_51432acf_qvuab6",
+      "asset_id": "86e3651258eb7eb3276028937d0e627b",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858881/openart-gpt-image-2-1_1784854819512_51432acf_qvuab6.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854780935_77d5efeb_brlqkr",
+      "asset_id": "71ebd5739257d406ed9300c9fe1ac320",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858880/openart-gpt-image-2-1_1784854780935_77d5efeb_brlqkr.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854726348_36a49c27_ryv4ef",
+      "asset_id": "da88d7e14756419b857cdaf1516da86e",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858878/openart-gpt-image-2-1_1784854726348_36a49c27_ryv4ef.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854732752_03672eb7_o1ljvu",
+      "asset_id": "a63d953a6d80139096661b98bc633306",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858876/openart-gpt-image-2-1_1784854732752_03672eb7_o1ljvu.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854746615_41feb130_c6drv0",
+      "asset_id": "9d015f38917e52130351c5fe6c22286e",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858876/openart-gpt-image-2-1_1784854746615_41feb130_c6drv0.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854708510_d4b6ad37_w7bk6g",
+      "asset_id": "7a2438afae276d5a7157c83a24d19dc1",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858876/openart-gpt-image-2-1_1784854708510_d4b6ad37_w7bk6g.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854681127_9b959d75_tezode",
+      "asset_id": "cdbb8f230a83da56c339ed4987d5966e",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858875/openart-gpt-image-2-1_1784854681127_9b959d75_tezode.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854635385_c043e8d9_tkxcwl",
+      "asset_id": "379fd0506b6d170ccf0d6aeee90378cc",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858874/openart-gpt-image-2-1_1784854635385_c043e8d9_tkxcwl.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854696955_0c10c80d_f0lx9d",
+      "asset_id": "bb1e968361bab21c154b53f13b5e0a4a",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858873/openart-gpt-image-2-1_1784854696955_0c10c80d_f0lx9d.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854685386_0b281f20_wnsoml",
+      "asset_id": "251e3c52592494be1723ab2cd49eb014",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858873/openart-gpt-image-2-1_1784854685386_0b281f20_wnsoml.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854646272_bc868fa9_h43yjr",
+      "asset_id": "e5319f1f445e70f366aa19e7f0862905",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858873/openart-gpt-image-2-1_1784854646272_bc868fa9_h43yjr.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854461596_03e91567_gjbzmi",
+      "asset_id": "9c8d83b52151012a1000cb0ec0ea6a12",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858870/openart-gpt-image-2-1_1784854461596_03e91567_gjbzmi.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854663680_847674a4_s2dyan",
+      "asset_id": "4b51a7ad3f758230dd0c78782c6d13ae",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858870/openart-gpt-image-2-1_1784854663680_847674a4_s2dyan.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854427170_f32ac777_l9oki3",
+      "asset_id": "aaa42d479aa122def135a86c8e2265bb",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858869/openart-gpt-image-2-1_1784854427170_f32ac777_l9oki3.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854418416_df099ca1_sx9s3x",
+      "asset_id": "76ce7191c9a7ca9668e52a7a451e8a0b",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858867/openart-gpt-image-2-1_1784854418416_df099ca1_sx9s3x.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854402209_c43fee6b_kb4to6",
+      "asset_id": "41c0e998deacbbb25175a43e292c957d",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858867/openart-gpt-image-2-1_1784854402209_c43fee6b_kb4to6.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854438960_7cdfd471_bhvxxr",
+      "asset_id": "ddfc45864123b768e0a98c59fa38c5c1",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858867/openart-gpt-image-2-1_1784854438960_7cdfd471_bhvxxr.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854183825_0d18b668_a88hec",
+      "asset_id": "b6ab9ebe62aa7156bcb2285d2d409fa8",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858865/openart-gpt-image-2-1_1784854183825_0d18b668_a88hec.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854280182_82ba7bf4_zkyb7w",
+      "asset_id": "3a811dfe047771914cfeeb2e0dc7c781",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858864/openart-gpt-image-2-1_1784854280182_82ba7bf4_zkyb7w.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854391831_8ce20f3e_aslpqg",
+      "asset_id": "0b576ff4b5f460e5b71b3881ec828379",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858864/openart-gpt-image-2-1_1784854391831_8ce20f3e_aslpqg.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854363836_deaac6f0_ungkoh",
+      "asset_id": "23d75e7b07293aab8ade5e8b3961ec7f",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858864/openart-gpt-image-2-1_1784854363836_deaac6f0_ungkoh.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854368914_256246ed_kel2ay",
+      "asset_id": "f051bbee54e345aad2e59fe1af371c0c",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858863/openart-gpt-image-2-1_1784854368914_256246ed_kel2ay.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854217608_9867cbd6_evuy7s",
+      "asset_id": "17a2e2c0f199972eb9636b5b30f513a3",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858862/openart-gpt-image-2-1_1784854217608_9867cbd6_evuy7s.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854354315_f6db6082_iaczdk",
+      "asset_id": "29e6678f86e0caed1226e6df9ec1ee08",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858861/openart-gpt-image-2-1_1784854354315_f6db6082_iaczdk.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854196597_a042c5ca_stzgal",
+      "asset_id": "94e7f7920825216bc14efd9465d6253d",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858860/openart-gpt-image-2-1_1784854196597_a042c5ca_stzgal.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854157948_8369c1bc_e1iorn",
+      "asset_id": "20b56345a7860a9f18016104a6cf4fd0",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858859/openart-gpt-image-2-1_1784854157948_8369c1bc_e1iorn.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854169217_de3f52d3_z43uie",
+      "asset_id": "8a45bd5ecf8bcc1c9ce9e0c9cf5c0162",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858858/openart-gpt-image-2-1_1784854169217_de3f52d3_z43uie.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854125297_7de27169_u4x1ro",
+      "asset_id": "2534729c923248bff8510f702b32c6e7",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858858/openart-gpt-image-2-1_1784854125297_7de27169_u4x1ro.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854131615_eb66d1dc_zc8gyn",
+      "asset_id": "f82beca08f44d128caa6446f6fb00d36",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858858/openart-gpt-image-2-1_1784854131615_eb66d1dc_zc8gyn.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854143437_3f613ffb_lg0qud",
+      "asset_id": "9be9e143fc1b76dac131b90ab1248c14",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858856/openart-gpt-image-2-1_1784854143437_3f613ffb_lg0qud.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784853945416_1f4d5677_xywiuf",
+      "asset_id": "ddabdf022fe2e51ab50d7414cecc657a",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858856/openart-gpt-image-2-1_1784853945416_1f4d5677_xywiuf.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854121629_bad6db60_mpbmnw",
+      "asset_id": "dd4c9d6c188d3b0b15e38a3736425ba0",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858854/openart-gpt-image-2-1_1784854121629_bad6db60_mpbmnw.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784853986082_f7515ea4_lyyo4p",
+      "asset_id": "df1fcdecc8073c33520a4c7bb7571891",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858853/openart-gpt-image-2-1_1784853986082_f7515ea4_lyyo4p.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854099513_3ba14b6e_ibfcqq",
+      "asset_id": "a12fd5b41310cf299da86c522bdf5312",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858853/openart-gpt-image-2-1_1784854099513_3ba14b6e_ibfcqq.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784853958545_4396372e_twzfhh",
+      "asset_id": "8ea0e740827dfaaa811cbe144d829add",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858852/openart-gpt-image-2-1_1784853958545_4396372e_twzfhh.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784853963927_d3ef9a56_luxocx",
+      "asset_id": "ebc19150f692db38ecf9df1a6ed4654d",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858851/openart-gpt-image-2-1_1784853963927_d3ef9a56_luxocx.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784853821498_a848c84c_iadomu",
+      "asset_id": "d5d16990a51dd9bb8c53eae57805d158",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858850/openart-gpt-image-2-1_1784853821498_a848c84c_iadomu.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784853911805_077ab8a6_upt1x2",
+      "asset_id": "4838e4f7723c870d0528d57608506ba6",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858850/openart-gpt-image-2-1_1784853911805_077ab8a6_upt1x2.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784853934418_cccb01ed_tp41eh",
+      "asset_id": "0d6f136028b365c177ed6dee2ed7e1a6",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858848/openart-gpt-image-2-1_1784853934418_cccb01ed_tp41eh.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784853902375_45383df6_iv7xz0",
+      "asset_id": "de62c5810f2a38a68fff2cb0b93251aa",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858848/openart-gpt-image-2-1_1784853902375_45383df6_iv7xz0.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784853792036_ab3ba8e8_vnt73a",
+      "asset_id": "c69a873a064cf8ae085a368ebaed5fa0",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858846/openart-gpt-image-2-1_1784853792036_ab3ba8e8_vnt73a.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784849881804_fd5bb6a4_mc9tjt",
+      "asset_id": "50e09ffb98ab2151dae672e7dff423bc",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858845/openart-gpt-image-2-1_1784849881804_fd5bb6a4_mc9tjt.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784853821401_2f43fbe7_mbedu3",
+      "asset_id": "2b02b2a593e3ff65cc495b8063917046",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858845/openart-gpt-image-2-1_1784853821401_2f43fbe7_mbedu3.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784849844583_e0b60d88_brqkkg",
+      "asset_id": "c378222261a442233460584eade71e7d",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858844/openart-gpt-image-2-1_1784849844583_e0b60d88_brqkkg.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784849905402_4062a3a3_pwufo0",
+      "asset_id": "f11d48b867358fe0e6fce29d0c07d7e8",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858844/openart-gpt-image-2-1_1784849905402_4062a3a3_pwufo0.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784850178157_44de0639_zciwcg",
+      "asset_id": "e362f12382fd510fc0fc3ad688592748",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858844/openart-gpt-image-2-1_1784850178157_44de0639_zciwcg.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784849881801_547835c3_jg8iao",
+      "asset_id": "2a6801b96728396e7b718c656072ef4a",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858842/openart-gpt-image-2-1_1784849881801_547835c3_jg8iao.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784849841583_4bed7425_ksxncf",
+      "asset_id": "6085a9b189ce3de051d77682c367fa29",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858841/openart-gpt-image-2-1_1784849841583_4bed7425_ksxncf.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784849811408_4d6b271f_veold3",
+      "asset_id": "b706136c2f44a8112e8f9d9e14d11f60",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858840/openart-gpt-image-2-1_1784849811408_4d6b271f_veold3.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784849800202_052d772c_xf8wca",
+      "asset_id": "eabd686e51ec1bd44fc4e68a235526eb",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858839/openart-gpt-image-2-1_1784849800202_052d772c_xf8wca.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781511394_a6ff79f1_k7epq3",
+      "asset_id": "d3cf05f30ea36f2610757fa159f3c2f5",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858839/openart-gpt-image-2-1_1784781511394_a6ff79f1_k7epq3.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781569341_3b40b250_kfylsw",
+      "asset_id": "14d5bbd1f0390410321c71e0eb0265e8",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858838/openart-gpt-image-2-1_1784781569341_3b40b250_kfylsw.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781595621_7a1e2a42_r08enx",
+      "asset_id": "cec56f6f681df06087fa18a4380534ba",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858837/openart-gpt-image-2-1_1784781595621_7a1e2a42_r08enx.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781554048_a891666c_eurr8r",
+      "asset_id": "76ac479bc126510a33d210d046425e3d",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858837/openart-gpt-image-2-1_1784781554048_a891666c_eurr8r.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781540155_1a348122_yrsjas",
+      "asset_id": "ef2ebd0c6d3b277011577464da2dd777",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858837/openart-gpt-image-2-1_1784781540155_1a348122_yrsjas.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781412791_69e27bb8_jnxlex",
+      "asset_id": "e13aef8126f2695c7bbbeac8e7f8c4e6",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858835/openart-gpt-image-2-1_1784781412791_69e27bb8_jnxlex.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781521043_27852f28_wbgsqs",
+      "asset_id": "8083964ef08c015a09ee60259e524b47",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858834/openart-gpt-image-2-1_1784781521043_27852f28_wbgsqs.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781533253_a24cbd77_ogd8oa",
+      "asset_id": "617a8f4a10960688fe353e69062c2d0b",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858834/openart-gpt-image-2-1_1784781533253_a24cbd77_ogd8oa.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781494075_0ac2bc55_uxunxs",
+      "asset_id": "b68f25a71ee4ebaca4d818ce08993f8c",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858833/openart-gpt-image-2-1_1784781494075_0ac2bc55_uxunxs.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781476444_8ca90a78_camf19",
+      "asset_id": "1b73aa2604c24a14a7146504b6c5be33",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858833/openart-gpt-image-2-1_1784781476444_8ca90a78_camf19.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781504249_ebba5980_degwur",
+      "asset_id": "06e671138dea7840fdb10fc9cbb6055e",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858831/openart-gpt-image-2-1_1784781504249_ebba5980_degwur.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781400369_c9042d19_yeshvz",
+      "asset_id": "b1d39b48e82541f0e0057661716712ee",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858831/openart-gpt-image-2-1_1784781400369_c9042d19_yeshvz.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781371692_75e6f84e_izfuqg",
+      "asset_id": "6c4f097dbc4fe84c05bdc1f90b3a6ac2",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858829/openart-gpt-image-2-1_1784781371692_75e6f84e_izfuqg.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781395066_0b4e42b9_jsntdt",
+      "asset_id": "c9c41c092f41a5113e1f507784614fff",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858829/openart-gpt-image-2-1_1784781395066_0b4e42b9_jsntdt.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781361551_b121f94b_wqaukw",
+      "asset_id": "5d4c03d26adab15bfbea79e0f31ec1ef",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858828/openart-gpt-image-2-1_1784781361551_b121f94b_wqaukw.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781318587_dfe5767e_paiaim",
+      "asset_id": "bebe33e858b39b390de2fe1306adef82",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858827/openart-gpt-image-2-1_1784781318587_dfe5767e_paiaim.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781300012_3aa54e60_qrc9ih",
+      "asset_id": "607e1bd4ca7f122731aa03c1a8e2c950",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858827/openart-gpt-image-2-1_1784781300012_3aa54e60_qrc9ih.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781304262_508909d1_hn3tzb",
+      "asset_id": "f89b85ff8a494c9280b65811635f0ffe",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858826/openart-gpt-image-2-1_1784781304262_508909d1_hn3tzb.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781351967_8b937b0c_mtapaf",
+      "asset_id": "1b3df22e9eee7222f19460631ab03974",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858823/openart-gpt-image-2-1_1784781351967_8b937b0c_mtapaf.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781330471_470bda0e_lnpisu",
+      "asset_id": "c1b1bf6c94a69d0f40c1703f38b5092d",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858823/openart-gpt-image-2-1_1784781330471_470bda0e_lnpisu.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781195528_e7c1ece9_meqgbm",
+      "asset_id": "e29ea01d0ed29f728c9546e0b82c374f",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858823/openart-gpt-image-2-1_1784781195528_e7c1ece9_meqgbm.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784854874415_a5060a72_nyg39z",
+      "asset_id": "ecd3d1c2a823456544915e147c3bf5f9",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858823/openart-gpt-image-2-1_1784854874415_a5060a72_nyg39z.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "openart-gpt-image-2-1_1784781221043_8a4a4ba0_rdsngg",
+      "asset_id": "7f10ac817f44dceb7eb2d8a0f1017c86",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858822/openart-gpt-image-2-1_1784781221043_8a4a4ba0_rdsngg.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "main-sample",
+      "asset_id": "41af8dfa3784e0b1918695041c8e006b",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858313/main-sample.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "cld-sample-5",
+      "asset_id": "ffcc3a80f8c354de42bd7b814b7c8704",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858312/cld-sample-5.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "cld-sample-3",
+      "asset_id": "1377452cc66394e80c9b60ccdd5223e4",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858312/cld-sample-3.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "cld-sample-4",
+      "asset_id": "235b54e686b6481484a4c6f8b9a9231b",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858312/cld-sample-4.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "cld-sample-2",
+      "asset_id": "09637e8ea3604892c0e5dea8a83d308b",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858312/cld-sample-2.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "cld-sample",
+      "asset_id": "b1e8211b2ae2a21edd050535e0cbc122",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858312/cld-sample.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/radial_02",
+      "asset_id": "ef8193551889cf4cfe361a4546e40b7e",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858312/samples/radial_02.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/waves",
+      "asset_id": "368152a7e4276a692587cd97e9edfea7",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858311/samples/waves.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/paper",
+      "asset_id": "2bc2143ce708d7df703ecd2da093bb19",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858311/samples/paper.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/zoom",
+      "asset_id": "0253cacb609ec368d026d7c2cb595e1f",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858311/samples/zoom.avif"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/canvas",
+      "asset_id": "388a9b7b330139ec892c58e174b862ce",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858311/samples/canvas.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/radial",
+      "asset_id": "bd7912fc609d325e63facb4b777156be",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858311/samples/radial.avif"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/logo",
+      "asset_id": "0ea93fd7264caa06d46a5474f9742bdd",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858311/samples/logo.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/upscale-face-1",
+      "asset_id": "03b77aba6a2b483589c337e29c475499",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858310/samples/upscale-face-1.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/woman-on-a-football-field",
+      "asset_id": "2ef0212791a8c652d7caf7afe774439b",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858310/samples/woman-on-a-football-field.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/dessert-on-a-plate",
+      "asset_id": "112fb775b1543a18747c99ce254192e0",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858310/samples/dessert-on-a-plate.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/cup-on-a-table",
+      "asset_id": "a2e60003c7cb1a8f439fc68a875751df",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858310/samples/cup-on-a-table.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/coffee",
+      "asset_id": "7ccb7231b66c5742170c2e8cd45681ee",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858310/samples/coffee.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/chair",
+      "asset_id": "70a5e0f1e15b6f376b27821c461164bb",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858310/samples/chair.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/chair-and-coffee-table",
+      "asset_id": "e4d61ed2c60350b30aa7ae305d657099",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858309/samples/chair-and-coffee-table.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/man-portrait",
+      "asset_id": "61a17c755e5cd835481374e2066119ba",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858309/samples/man-portrait.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/man-on-a-street",
+      "asset_id": "e6bf609dac225a29a9a837a49d88a0eb",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858309/samples/man-on-a-street.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/man-on-a-escalator",
+      "asset_id": "f9deec40df04dfd9fa621963a5126be4",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858309/samples/man-on-a-escalator.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/outdoor-woman",
+      "asset_id": "afca3b30e292eea641982b61b5af9108",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858309/samples/outdoor-woman.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/look-up",
+      "asset_id": "ed8c1bbb3fb8472e29d28c41cc4841b2",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858308/samples/look-up.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/breakfast",
+      "asset_id": "d8e36d728b9244cbaa330231e0e84e3d",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858308/samples/breakfast.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/smile",
+      "asset_id": "66c3a64a1fcd76fb96db43a814b50821",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858307/samples/smile.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/balloons",
+      "asset_id": "30bc4f557d8488a241742b6e0b2c99dd",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858307/samples/balloons.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/shoe",
+      "asset_id": "b6fda0788754fd4cdef15996d7faf4bc",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858306/samples/shoe.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/two-ladies",
+      "asset_id": "2f7e8be6f95f7dda0375fb73e27a148d",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858306/samples/two-ladies.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/landscapes/landscape-panorama",
+      "asset_id": "cba41aaf4938d4de5df94d2f644063ba",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858304/samples/landscapes/landscape-panorama.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/animals/kitten-playing",
+      "asset_id": "8b30ae20b13d160ddf67d793c5aa4f84",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858304/samples/animals/kitten-playing.gif"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/landscapes/nature-mountains",
+      "asset_id": "155f64cc179a6719d769e311beaa6706",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858304/samples/landscapes/nature-mountains.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/cloudinary-group",
+      "asset_id": "3e502da8f15d0511d95b189ed8a59d09",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858304/samples/cloudinary-group.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/food/spices",
+      "asset_id": "ccfd938ece9f41d6ef4a76a1167f548a",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858304/samples/food/spices.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/imagecon-group",
+      "asset_id": "0367a854fef391e9ec6bf233736f4dd4",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858303/samples/imagecon-group.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/ecommerce/accessories-bag",
+      "asset_id": "99dd90c0a6b67cc95b04305b98875bd8",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858303/samples/ecommerce/accessories-bag.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/ecommerce/leather-bag-gray",
+      "asset_id": "18cc71ec52ef0ed1686f64162b54cd40",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858303/samples/ecommerce/leather-bag-gray.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/ecommerce/car-interior-design",
+      "asset_id": "6a54c1fe35dfc7b6742af82097fb1ffe",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858303/samples/ecommerce/car-interior-design.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/landscapes/beach-boat",
+      "asset_id": "cadeb286ef5902979f6fdebc8996c634",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858303/samples/landscapes/beach-boat.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/landscapes/architecture-signs",
+      "asset_id": "3588ed046c640a54803c8b506c2cab79",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858302/samples/landscapes/architecture-signs.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/people/bicycle",
+      "asset_id": "b789d1c614757d1cd63abc64fedd401d",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858303/samples/people/bicycle.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/animals/three-dogs",
+      "asset_id": "584cf841a9ab0834f91c247815f01358",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858302/samples/animals/three-dogs.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/people/jazz",
+      "asset_id": "60a66c36071fe5156d08dff64728fe60",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858302/samples/people/jazz.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/people/boy-snow-hoodie",
+      "asset_id": "f6391d1e47f8ff4d2d19f59bc4d9e2b6",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858302/samples/people/boy-snow-hoodie.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/bike",
+      "asset_id": "20e839daac2fa1aee3005dacff8a12f1",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858302/samples/bike.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/ecommerce/shoes",
+      "asset_id": "5b06db3778bf6f0f02c24836fc0423b7",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858302/samples/ecommerce/shoes.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/landscapes/girl-urban-view",
+      "asset_id": "39924fb53d9a181720f438c48d29713d",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858301/samples/landscapes/girl-urban-view.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/people/smiling-man",
+      "asset_id": "56cdca328722a4fb81510c48b05a2899",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858301/samples/people/smiling-man.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/sheep",
+      "asset_id": "12a31596df4c644bb64b1189c1a13a13",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858301/samples/sheep.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/food/pot-mussels",
+      "asset_id": "518fac4a6645de26379ad0f17d5f2f23",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858301/samples/food/pot-mussels.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/animals/reindeer",
+      "asset_id": "7406207c44820e7e2e3e790d580701df",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858301/samples/animals/reindeer.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/food/fish-vegetables",
+      "asset_id": "d3d68de4670c09c4607e913dbc5d6209",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858301/samples/food/fish-vegetables.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/people/kitchen-bar",
+      "asset_id": "b907c6e305e72b3bb118a9ae1887f9ab",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858301/samples/people/kitchen-bar.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/cloudinary-logo-vector",
+      "asset_id": "7acc8aa9caaf9284c9a61996bd67692a",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858300/samples/cloudinary-logo-vector.svg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/food/dessert",
+      "asset_id": "e7afe91a0dfe068e0d29f029f584f209",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858300/samples/food/dessert.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/animals/cat",
+      "asset_id": "f1c0f0343b70760615e71135f5533447",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858300/samples/animals/cat.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/ecommerce/analog-classic",
+      "asset_id": "711cfdb18bc11415d94bb80af4b982f7",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858300/samples/ecommerce/analog-classic.jpg"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "samples/cloudinary-icon",
+      "asset_id": "2335d8cb87e6a547297164bde97c7c76",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858300/samples/cloudinary-icon.png"
+    },
+    {
+      "resource_type": "image",
+      "public_id": "sample",
+      "asset_id": "4671bbed8e77a5f02b1ac46bc7e105e3",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/image/upload/v1784858298/sample.jpg"
+    },
+    {
+      "resource_type": "video",
+      "public_id": "openart-video_1784855163215_f6c614c0_1784855163523_63bbe7f5_sa0x20",
+      "asset_id": "8c2c98c6f867409b3418b6d68b913fe5",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/video/upload/v1784861062/openart-video_1784855163215_f6c614c0_1784855163523_63bbe7f5_sa0x20.mp4"
+    },
+    {
+      "resource_type": "video",
+      "public_id": "openart-video_1784855184691_44bbaf72_1784855184780_442dc4d8_o1wswk",
+      "asset_id": "52bdc9b7a8bc288cb479a1e835e57bbf",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/video/upload/v1784861061/openart-video_1784855184691_44bbaf72_1784855184780_442dc4d8_o1wswk.mp4"
+    },
+    {
+      "resource_type": "video",
+      "public_id": "openart-video_1784855173561_caaba1af_1784855173669_4486da07_pei0g9",
+      "asset_id": "73e53a2cd6c059baa284f923acb5f6d6",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/video/upload/v1784861061/openart-video_1784855173561_caaba1af_1784855173669_4486da07_pei0g9.mp4"
+    },
+    {
+      "resource_type": "video",
+      "public_id": "openart-video_1784855204246_f1f96ce7_1784855204313_59b57404_wy2pb6",
+      "asset_id": "77b8656912dfc78b180186000e063f78",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/video/upload/v1784861061/openart-video_1784855204246_f1f96ce7_1784855204313_59b57404_wy2pb6.mp4"
+    },
+    {
+      "resource_type": "video",
+      "public_id": "openart-video_1784855143239_e3e012ad_1784855143398_4be56740_msc5en",
+      "asset_id": "9ce42290a98a1bd2016baca62ba563e6",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/video/upload/v1784861060/openart-video_1784855143239_e3e012ad_1784855143398_4be56740_msc5en.mp4"
+    },
+    {
+      "resource_type": "video",
+      "public_id": "samples/elephants",
+      "asset_id": "5c280d6f1a3b4419f28206d5be5627d5",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/video/upload/v1784858305/samples/elephants.mp4"
+    },
+    {
+      "resource_type": "video",
+      "public_id": "samples/cld-sample-video",
+      "asset_id": "003842b5a8a646325938e3336f9e2c22",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/video/upload/v1784858305/samples/cld-sample-video.mp4"
+    },
+    {
+      "resource_type": "video",
+      "public_id": "samples/dance-2",
+      "asset_id": "8b15d4669582b4238cb5485f9a582c24",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/video/upload/v1784858306/samples/dance-2.mp4"
+    },
+    {
+      "resource_type": "video",
+      "public_id": "samples/sea-turtle",
+      "asset_id": "058caf3912122691cd731ad78a5a750d",
+      "secure_url": "https://res.cloudinary.com/hzafts3b/video/upload/v1784858305/samples/sea-turtle.mp4"
+    }
+  ],
+  "cloudinary_resource_samples": {
+    "image": [
+      "openart-gpt-image-2-1_1784606300377_adb47751_ecii69",
+      "openart-gpt-image-2-1_1784606342842_c271a72f_nqmmkj",
+      "openart-gpt-image-2-1_1784606331508_cf0452c4_f3rcgt",
+      "openart-gpt-image-2-1_1784606292429_98a7197a_zrdcbu",
+      "openart-gpt-image-2-1_1784606287190_7e3d3ba5_rvpsxh",
+      "openart-gpt-image-2-1_1784606261928_c702321b_egwsqf",
+      "openart-gpt-image-2-1_1784606285124_ae4fecf8_cjaacz",
+      "openart-gpt-image-2-1_1784606265077_2e3d13fc_x82vk8",
+      "openart-gpt-image-2-1_1784606258863_d286dfeb_qycyzo",
+      "openart-gpt-image-2-1_1784606240752_6a0d1602_licydz"
+    ],
+    "video": [
+      "openart-video_1784779822925_c27181b3_1784779823134_decec7b7_ydwam6",
+      "openart-video_1784780285055_9d4cd3f5_1784780285150_274eb4a7_tuffnj",
+      "openart-video_1784779125131_6805b4c5_1784779125204_cbf57c11_ucdvrv",
+      "openart-video_1784778755326_fce5b20c_1784778755385_89f07486_r2ezrp",
+      "openart-video_1784780178994_18d8dd8c_1784780179095_2c2c1e7c_cjtkbn",
+      "openart-video_1784780215854_8e456cab_1784780215935_16b45cfe_evivvk",
+      "openart-video_1784780118285_4eb2d6e4_1784780118525_a76a4e9c_lfbdcn",
+      "openart-video_1784780239988_75dd6281_1784780241057_be0f7b0d_uzcdyj",
+      "openart-video_1784778723655_9ae5c16c_1784778723717_04664c01_lq1dbi",
+      "openart-video_1784780252730_9afa0fae_1784780252975_e3e00b6b_c3holw"
+    ]
+  }
+}

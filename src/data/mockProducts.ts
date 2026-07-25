@@ -12,6 +12,24 @@ export type Product = {
   subcategory: string;
   leaf?: string;
   images: string[];
+  videos?: string[];
+  imageAssetIds?: string[];
+  videoAssetIds?: string[];
+  cloudinaryImagePublicIds?: string[];
+  cloudinaryVideoPublicIds?: string[];
+  merchant?: string;
+  handle?: string;
+  collection?: string;
+  productType?: string;
+  currency?: string;
+  colors?: string[];
+  materials?: string[];
+  sizes?: string[];
+  styleTags?: string[];
+  occasionTags?: string[];
+  moodTags?: string[];
+  searchTags?: string[];
+  recommendationTags?: string[];
   isNew: boolean;
   description: string;
 };
@@ -793,4 +811,4 @@ function buildProducts(): Product[] {
   return combined;
 }
 
-export const mockProducts: Product[] = [...seedProducts, ...ashwoodAtelierProducts, ...aurelithProducts];
+export const mockProducts: Product[] = seedProducts;

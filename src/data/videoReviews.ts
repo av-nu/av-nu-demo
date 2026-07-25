@@ -2,20 +2,17 @@ import { mockProducts } from "@/data/mockProducts";
 import type { ListComment } from "@/data/faves";
 import type { VideoReview } from "@/lib/social/types";
 
-// Reliable sample clips reused across the demo. Uploaded reviews use ephemeral
-// object URLs that don't survive a reload, so cards fall back to this clip.
-export const SAMPLE_REVIEW_VIDEO =
-  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4";
+const reviewVideoProducts = mockProducts.filter((product) => (product.videos?.length ?? 0) > 0);
+const reviewVideoPool = reviewVideoProducts.flatMap((product) => product.videos ?? []);
 
-const reviewVideoPool = [
-  "/videos/ashwood-atelier-reel-compressed.mp4",
-  "/products/Aurelith/Carousel video.mp4",
-  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
-  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-];
+export const SAMPLE_REVIEW_VIDEO = reviewVideoPool[0] ?? "";
 
 function productAt(index: number): string {
   return mockProducts[index % mockProducts.length]?.id ?? mockProducts[0].id;
+}
+
+function videoProductAt(index: number): string {
+  return reviewVideoProducts[index % reviewVideoProducts.length]?.id ?? productAt(index);
 }
 
 /**
@@ -26,7 +23,7 @@ export const communityVideoReviews: VideoReview[] = [
   {
     id: "vr-mara-1",
     authorId: "c-mara",
-    productId: productAt(3),
+    productId: videoProductAt(0),
     videoUrl: reviewVideoPool[0],
     caption: "Three weeks in and this is the piece I reach for every morning. Worth it.",
     rating: 5,
@@ -40,7 +37,7 @@ export const communityVideoReviews: VideoReview[] = [
   {
     id: "vr-jonah-1",
     authorId: "c-jonah",
-    productId: productAt(10),
+    productId: videoProductAt(1),
     videoUrl: reviewVideoPool[1],
     caption: "Honest review: the fit runs a touch large but the quality is unreal.",
     rating: 4,
@@ -52,7 +49,7 @@ export const communityVideoReviews: VideoReview[] = [
   {
     id: "vr-priya-1",
     authorId: "c-priya",
-    productId: productAt(23),
+    productId: videoProductAt(2),
     videoUrl: reviewVideoPool[2],
     caption: "My favorite housewarming gift this year — close-up of the details.",
     rating: 5,
@@ -66,7 +63,7 @@ export const communityVideoReviews: VideoReview[] = [
   {
     id: "vr-aria-1",
     authorId: "f-aria",
-    productId: productAt(11),
+    productId: videoProductAt(3),
     videoUrl: reviewVideoPool[3],
     caption: "Layering it three ways for the in-between weather.",
     rating: 4,

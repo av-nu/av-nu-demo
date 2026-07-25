@@ -3,7 +3,7 @@
 import { memo, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Share2 } from "lucide-react";
+import { Send } from "lucide-react";
 import { motion } from "framer-motion";
 
 import { cn } from "@/lib/utils";
@@ -117,7 +117,7 @@ export const ProductCardVertical = memo(function ProductCardVertical({
               whileTap={{ scale: 0.85 }}
               className="flex h-8 w-8 items-center justify-center rounded-full text-text/50 transition-colors hover:bg-surface hover:text-text"
             >
-              <Share2 className="h-4 w-4" />
+              <Send className="h-4 w-4" />
             </motion.button>
 
             <FaveButton product={product} onToast={onShare} variant="plain" />

@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Share2, ArrowLeft, Check } from "lucide-react";
+import { Send, ArrowLeft, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
@@ -87,11 +87,18 @@ export default function ProductPage({ params }: { params: { id: string } }) {
         </Button>
       </div>
 
+      <div className="mb-5 space-y-2 lg:hidden">
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="font-headline text-2xl leading-tight tracking-tight text-text">{product.name}</h1>
+          <div className="shrink-0 text-xl font-semibold text-text">${product.price}</div>
+        </div>
+      </div>
+
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Image Gallery */}
         <div className="space-y-4">
           {/* Main Image */}
-          <div className="relative aspect-square overflow-hidden rounded-2xl bg-surface">
+          <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-surface">
             <AnimatePresence mode="wait">
               <motion.div
                 key={selectedImageIndex}
@@ -106,7 +113,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                   alt={product.name}
                   fill
                   sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="object-cover"
+                  className="object-contain"
                   priority
                 />
               </motion.div>
@@ -127,7 +134,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                 whileTap={{ scale: 0.85 }}
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-bg/80 text-text/60 backdrop-blur-md transition-colors hover:bg-bg hover:text-text"
               >
-                <Share2 className="h-5 w-5" />
+                <Send className="h-5 w-5" />
               </motion.button>
             </div>
           </div>
@@ -143,7 +150,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className={cn(
-                    "relative aspect-square w-20 overflow-hidden rounded-lg border-2 transition-colors",
+                    "relative flex aspect-[4/5] w-20 items-center justify-center overflow-hidden rounded-lg border-2 bg-surface transition-colors",
                     selectedImageIndex === idx
                       ? "border-accent"
                       : "border-transparent hover:border-divider",
@@ -154,7 +161,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                     alt={`${product.name} thumbnail ${idx + 1}`}
                     fill
                     sizes="80px"
-                    className="object-cover"
+                    className="object-contain"
                   />
                 </motion.button>
               ))}
@@ -174,7 +181,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
             </Link>
 
             {/* Product name */}
-            <h1 className="font-headline text-3xl tracking-tight text-text lg:text-4xl">
+            <h1 className="hidden font-headline text-3xl tracking-tight text-text lg:block lg:text-4xl">
               {product.name}
             </h1>
 
@@ -192,7 +199,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
             </div>
 
             {/* Price */}
-            <div className="text-3xl font-semibold text-text">
+            <div className="hidden text-3xl font-semibold text-text lg:block">
               ${product.price}
             </div>
 

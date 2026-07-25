@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "sync:cloudinary": "node scripts/sync-cloudinary-assets.mjs",
+    "validate:catalog": "node scripts/validate-catalog-mapping.mjs",
+    "generate:catalog": "node scripts/generate-app-catalog.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -18,6 +21,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.544.0",
+    "next-cloudinary": "^6.17.5",
     "next": "14.2.18",
     "react": "18.2.0",
     "react-dom": "18.2.0",

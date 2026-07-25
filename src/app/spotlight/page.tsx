@@ -13,16 +13,17 @@ function productAt(index: number) {
   return { id: product.id, name: product.name, price: product.price, image: product.images[0] };
 }
 
-const spotlightReels = [
-  { id: "1", videoUrl: "/Spotlight/39e95057ed53db829cc7d82c80239d00.mp4", brandId: "ashwood-atelier", caption: "Morning rituals deserve beautiful objects", likes: 1243, comments: 89, products: [productAt(0), productAt(1)] },
-  { id: "3", videoUrl: "/Spotlight/bbce981aa900fff9b34cb9b4a2ffff19.mp4", brandId: "citrus-and-clay", caption: "Handcrafted with intention", likes: 2156, comments: 134, products: [productAt(2), productAt(3)] },
-  { id: "4", videoUrl: "/Spotlight/ce70a8b87a7f83ec5cf69ec54064aa01.mp4", brandId: "coastal-knitworks", caption: "Cozy textures for every season", likes: 1567, comments: 98, products: [productAt(4)] },
-  { id: "5", videoUrl: "/Spotlight/ec4ead950131f9e1e73e937e1260d371.mp4", brandId: "ember-and-bloom", caption: "Bringing warmth to your space", likes: 1834, comments: 112, products: [productAt(5), productAt(6)] },
-  { id: "2", videoUrl: "/Spotlight/993799343ac142ab7709ef951dd31fe1.mp4", brandId: "aurelith", caption: "Sound, refined to its essence", likes: 892, comments: 45, products: [productAt(7)] },
-  { id: "6", videoUrl: "/Spotlight/f06ada50637c635f0c800e0be78fb11a.mp4", brandId: "forma-studio", caption: "Form follows function", likes: 945, comments: 67, products: [productAt(8)] },
-  { id: "7", videoUrl: "/Spotlight/new1.mp4", brandId: "golden-grove", caption: "Natures finest ingredients", likes: 1102, comments: 73, products: [productAt(9), productAt(10)] },
-  { id: "8", videoUrl: "/Spotlight/new2.mp4", brandId: "hearth-and-hide", caption: "Crafted to last generations", likes: 1456, comments: 91, products: [productAt(11)] },
-];
+const spotlightReels = mockProducts.flatMap((product, productIndex) =>
+  (product.videos ?? []).map((videoUrl, videoIndex) => ({
+    id: `${product.id}-video-${videoIndex + 1}`,
+    videoUrl,
+    brandId: product.brandId,
+    caption: `${product.name} — a closer look at the details.`,
+    likes: 800 + productIndex * 17 + videoIndex * 11,
+    comments: 24 + videoIndex * 5,
+    products: [productAt(productIndex), productAt(productIndex + 1)],
+  })),
+);
 
 type ReelType = (typeof spotlightReels)[0];
 

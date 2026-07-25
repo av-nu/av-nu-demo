@@ -99,7 +99,7 @@ export function VideoReviewCard({
         )}
       </div>
 
-      <div className="flex items-center gap-4 px-3 pt-3">
+      <div className="flex items-center gap-7 px-3 pt-4">
         <button
           type="button"
           onClick={() => toggleLike(review.id)}

@@ -1,0 +1,30 @@
+{
+  "Maris & Vale": {
+    "brandId": "wildflower-studio",
+    "reason": "Apparel merchant mapped to an existing apparel-focused brand."
+  },
+  "Atelier Row": {
+    "brandId": "loam-and-linen",
+    "reason": "Apparel merchant mapped to an existing apparel and natural-texture brand."
+  },
+  "Solenne Beauty": {
+    "brandId": "velvet-fern",
+    "reason": "Beauty merchant mapped to an existing beauty-focused brand."
+  },
+  "Forma Studio": {
+    "brandId": "moonstone-mercantile",
+    "reason": "Jewelry merchant mapped to an existing accessories and jewelry-oriented brand."
+  },
+  "Hearthline Apparel": {
+    "brandId": "coastal-knitworks",
+    "reason": "Apparel merchant mapped to an existing apparel-focused brand."
+  },
+  "Cedar & Coast": {
+    "brandId": "dusklight-leather",
+    "reason": "Shoe merchant mapped to an existing accessories and leather-goods brand."
+  },
+  "Northline Movement": {
+    "brandId": "juniper-and-tide",
+    "reason": "Movement-oriented apparel merchant mapped to an existing outdoors and wellness brand."
+  }
+}
