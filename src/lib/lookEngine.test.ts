@@ -46,6 +46,18 @@ describe("look engine", () => {
     expect(matching.length).toBeGreaterThanOrEqual(4);
   });
 
+  it("prioritizes occasion pieces for a combined summer wedding prompt and keeps full rails", () => {
+    const look = generateLook("summer wedding");
+    const firstRail = look.rails[0];
+    const products = productsForLook(firstRail.productIds);
+    const occasionMatches = products.filter((product) => /celebration|event|occasion wear|elegant|event ready/.test(searchableMetadata(product)));
+
+    expect(firstRail.title).not.toMatch(/resort|swim/i);
+    expect(firstRail.displayTitle).toMatch(/Summer Wedding/);
+    expect(firstRail.productIds.length).toBeGreaterThan(10);
+    expect(occasionMatches.length).toBeGreaterThanOrEqual(Math.ceil(products.length * 0.8));
+  });
+
   it("uses predefined product considerations without requiring custom text", () => {
     const look = generateLook("", { recommendations: ["Wedding guest", "Under $150"] });
     const products = productsForLook(look.rails.flatMap((rail) => rail.productIds));

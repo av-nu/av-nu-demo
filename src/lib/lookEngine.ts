@@ -4,6 +4,7 @@ import { editorialProductIds, normalizeEditorialPage, type EditorialPageDesign }
 export type LookRail = {
   id: string;
   title: string;
+  displayTitle?: string;
   productIds: string[];
 };
 
@@ -39,6 +40,7 @@ export type SavedLook = {
   postListId?: string;
   pages?: LookbookPage[];
   selectedProductIds: string[];
+  availableProductIds?: string[];
   lockedProductIds: string[];
   rails: LookRail[];
   createdAt: number;
@@ -57,11 +59,14 @@ export function normalizeSavedLook(look: SavedLook): SavedLook {
     return { ...page, productIds: editorialProductIds(editorial), editorial };
   });
   const allProductIds = new Set(pages.flatMap((page) => page.productIds));
+  const validProductIds = new Set(mockProducts.map((product) => product.id));
+  const availableProductIds = Array.from(new Set(look.availableProductIds ?? look.selectedProductIds ?? [])).filter((id) => validProductIds.has(id));
   return {
     ...look,
     layout,
     pages,
     selectedProductIds: pages[0]?.productIds ?? [],
+    availableProductIds,
     lockedProductIds: (look.lockedProductIds ?? []).filter((id) => allProductIds.has(id)),
   };
 }
@@ -124,7 +129,7 @@ const stopWords = new Set([
 ]);
 
 const promptAliases: Array<{ terms: string[]; signals: string[]; categories?: string[] }> = [
-  { terms: ["summer"], signals: ["warm weather", "resort", "vacation"] },
+  { terms: ["summer"], signals: ["warm weather", "lightweight", "breathable", "linen"] },
   { terms: ["wedding", "wedding guest"], signals: ["celebration", "event", "occasion wear", "elegant"], categories: ["Apparel", "Accessories", "Beauty"] },
   { terms: ["vacation", "travel", "beach", "coastal", "seaside"], signals: ["vacation", "resort", "relaxed", "warm weather"], categories: ["Apparel", "Accessories", "Beauty"] },
   { terms: ["work", "office", "professional"], signals: ["work", "workwear", "polished", "tailored"], categories: ["Apparel", "Accessories", "Beauty"] },
@@ -141,6 +146,8 @@ const promptAliases: Array<{ terms: string[]; signals: string[]; categories?: st
 ];
 
 const availableCategories = Array.from(new Set(mockProducts.map((product) => product.category)));
+const occasionSignals = ["event", "celebration", "occasion wear", "evening apparel", "elegant", "event ready", "formal"];
+const warmWeatherSignals = ["warm weather", "summer", "lightweight", "breathable", "linen"];
 
 function normalizeSearchText(value: string) {
   return value.toLowerCase().replace(/&/g, " and ").replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
@@ -208,7 +215,24 @@ function matchingTermCount(product: Product, terms: string[]) {
   return terms.filter((term) => productSearchFields(product).some((field) => field.values.some((value) => fieldMatches(value, term)))).length;
 }
 
-function scoreProduct(product: Product, terms: string[], categories: string[], budget?: number) {
+function matchesAnySignal(product: Product, signals: string[]) {
+  return productSearchFields(product).some((field) => field.values.some((value) => signals.some((signal) => fieldMatches(value, normalizeSearchText(signal)))));
+}
+
+function intentScore(product: Product, prompt: string) {
+  const normalizedPrompt = normalizeSearchText(prompt);
+  const weddingIntent = normalizedPrompt.includes("wedding") || normalizedPrompt.includes("wedding guest");
+  const occasionMatch = matchesAnySignal(product, occasionSignals);
+  const warmWeatherMatch = matchesAnySignal(product, warmWeatherSignals);
+  let score = 0;
+
+  if (weddingIntent) score += occasionMatch ? 190 : -90;
+  if (weddingIntent && normalizedPrompt.includes("summer") && warmWeatherMatch) score += 28;
+
+  return score;
+}
+
+function scoreProduct(product: Product, prompt: string, terms: string[], categories: string[], budget?: number) {
   const categoryIndex = categories.indexOf(product.category);
   const categoryScore = categoryIndex >= 0 ? Math.max(20, 65 - categoryIndex * 12) : -30;
   const attributeScore = productSearchFields(product).reduce((total, field) => {
@@ -217,7 +241,7 @@ function scoreProduct(product: Product, terms: string[], categories: string[], b
   }, 0);
   const budgetScore = budget ? (product.price <= budget ? 35 : -100) : 0;
   const qualityScore = product.rating * 3 + Math.min(product.ratingCount / 250, 4) + (product.isNew ? 2 : 0);
-  return categoryScore + attributeScore + budgetScore + qualityScore;
+  return categoryScore + attributeScore + budgetScore + qualityScore + intentScore(product, prompt);
 }
 
 function createTitle(prompt: string) {
@@ -237,19 +261,55 @@ function createDescription(prompt: string, categories: string[], sourceImage?: s
   return `I interpreted this as ${tone} with products ranked from the catalog across ${categories.slice(0, 2).join(" and ")}.${imageNote}`;
 }
 
+function promptFocus(prompt: string) {
+  const normalized = normalizeSearchText(prompt);
+  if (normalized.includes("wedding") && normalized.includes("summer")) return "Summer Wedding";
+  if (normalized.includes("wedding")) return "Wedding Guest";
+  if (normalized.includes("vacation") || normalized.includes("beach") || normalized.includes("coastal")) return "Resort Ready";
+  if (normalized.includes("work") || normalized.includes("office") || normalized.includes("professional")) return "Polished Workday";
+  if (normalized.includes("date")) return "Date Night";
+  if (normalized.includes("brunch")) return "Weekend Brunch";
+  if (normalized.includes("summer")) return "Summer";
+  if (normalized.includes("minimal")) return "Minimalist";
+  if (normalized.includes("casual")) return "Everyday Ease";
+  const words = normalized.split(" ").filter((word) => word.length > 2 && !stopWords.has(word)).slice(0, 2);
+  return words.length > 0 ? words.map((word) => word[0].toUpperCase() + word.slice(1)).join(" ") : "Your Style";
+}
+
+function railRole(collection: string, prompt: string) {
+  const normalizedCollection = normalizeSearchText(collection);
+  const normalizedPrompt = normalizeSearchText(prompt);
+  if (normalizedCollection.includes("jewelry") || normalizedCollection.includes("accessor")) return "Finishing Touches";
+  if (normalizedCollection.includes("footwear") || normalizedCollection.includes("shoe")) return normalizedPrompt.includes("wedding") ? "Guest-Ready Shoes" : "The Right Shoes";
+  if (normalizedCollection.includes("workwear") && normalizedCollection.includes("occasion")) return "Tailored Occasion Layers";
+  if (normalizedCollection.includes("occasion") && normalizedCollection.includes("fall")) return "Polished Guest Looks";
+  if (normalizedCollection.includes("evening")) return "Statement Evening Looks";
+  if (normalizedCollection.includes("occasion")) return "Occasion Looks";
+  if (normalizedCollection.includes("workwear")) return "Polished Layers";
+  if (normalizedCollection.includes("resort") || normalizedCollection.includes("swim")) return "Warm-Weather Options";
+  if (normalizedCollection.includes("active")) return "Movement Pieces";
+  if (normalizedCollection.includes("contemporary")) return "Modern Silhouettes";
+  if (normalizedCollection.includes("beauty") || normalizedCollection.includes("skincare")) return "Beauty Finishing Touches";
+  if (normalizedCollection.includes("casual") || normalizedCollection.includes("everyday")) return "Easy Pieces";
+  return "Supporting Pieces";
+}
+
+function createRailDisplayTitle(prompt: string, collection: string) {
+  return `${promptFocus(prompt)} ${railRole(collection, prompt)}`;
+}
+
 function buildRails(prompt: string, budget?: number) {
   const categories = relevantCategories(prompt);
   const terms = termsFor(prompt);
   const scored = mockProducts
-    .map((product) => ({ product, score: scoreProduct(product, terms, categories, budget), matchCount: matchingTermCount(product, terms) }))
-    .sort((a, b) => b.score - a.score || b.matchCount - a.matchCount || b.product.rating - a.product.rating || a.product.price - b.product.price);
+    .map((product) => ({ product, score: scoreProduct(product, prompt, terms, categories, budget), matchCount: matchingTermCount(product, terms) }))    .sort((a, b) => b.score - a.score || b.matchCount - a.matchCount || b.product.rating - a.product.rating || a.product.price - b.product.price);
   const withinBudget = budget ? scored.filter(({ product }) => product.price <= budget) : scored;
   const ranked = withinBudget.length >= 10 ? withinBudget : scored;
   const matchedProductIds = new Set(ranked.filter(({ matchCount }) => matchCount > 0).map(({ product }) => product.id));
   const groups = new Map<string, Product[]>();
 
   for (const { product } of ranked) {
-    const title = product.subcategory || product.category;
+    const title = product.collection || product.subcategory || product.category;
     const group = groups.get(title) ?? [];
     if (!group.some((item) => item.id === product.id)) group.push(product);
     groups.set(title, group);
@@ -264,7 +324,8 @@ function buildRails(prompt: string, budget?: number) {
       return {
         id: title.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
         title,
-        productIds: railProducts.slice(0, 10).map((product) => product.id),
+        displayTitle: createRailDisplayTitle(prompt, title),
+        productIds: railProducts.map((product) => product.id),
       };
     });
 
@@ -275,8 +336,8 @@ function buildRails(prompt: string, budget?: number) {
     .map((category) => ({
       id: category.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
       title: category,
-      productIds: ranked.filter(({ product }) => product.category === category).slice(0, 10).map(({ product }) => product.id),
-    }))
+      displayTitle: createRailDisplayTitle(prompt, category),
+      productIds: ranked.filter(({ product }) => product.category === category).map(({ product }) => product.id),    }))
     .filter((rail) => rail.productIds.length > 0);
 
   return [...rails, ...fallbackRails].slice(0, 5);

@@ -1,31 +1,29 @@
 "use client";
 
-import { useEffect, useRef, useState, type UIEvent } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
-import { ArrowDown, BookOpen, BookPlus, Film, Heart, ImagePlus, LoaderCircle, PanelRightOpen, Save, Send, Sparkles, WandSparkles, X } from "lucide-react";
+import { ArrowDown, BookOpen, BookPlus, Film, GripVertical, ImagePlus, PanelRightOpen, Plus, Save, Send, X } from "lucide-react";
 
+import { GuideCreationFlow, type GuideCreationResult } from "@/components/looks/GuideCreationFlow";
 import { LayflatPostPreview } from "@/components/looks/LayflatPostPreview";
 import { LookbookSocialPostPreview } from "@/components/looks/LookbookSocialPostPreview";
 import { EditorialBuilder } from "@/components/looks/editorial/EditorialBuilder";
 import { EditorialColorPicker } from "@/components/looks/editorial/EditorialColorPicker";
 import { ProductPickerDialog } from "@/components/faves/ProductPickerDialog";
 import { GuideProductOrder } from "@/components/looks/GuideProductOrder";
-import { LookProductTile } from "@/components/looks/LookProductTile";
 import { SaveLookDialog } from "@/components/looks/SaveLookDialog";
 import { ShareLookbookDialog } from "@/components/looks/ShareLookbookDialog";
 import { useToast } from "@/components/ui/Toast";
 import { mockProducts } from "@/data/mockProducts";
 import { curatedGuideLooks } from "@/data/curatedGuides";
 import { useAuth } from "@/hooks/useAuth";
-import { DEFAULT_PRODUCT_LIST_NAME, useFaveLists } from "@/hooks/useFaveLists";
+import { useFaveLists } from "@/hooks/useFaveLists";
 import { useSavedLooks } from "@/hooks/useSavedLooks";
 import { socialService } from "@/lib/social";
 import { createEditorialPage, createProductElement, editorialProductIds, normalizeEditorialPage, type EditorialPageDesign } from "@/lib/editorial";
-import { flattenPages, type FaveVisibility } from "@/data/faves";
+import { type FaveVisibility } from "@/data/faves";
 import { generateLook, refineLook, type LayflatStyle, type LookbookLayout, type LookbookMedia, type SavedLook } from "@/lib/lookEngine";
 
-const promptChips = ["Summer dinner", "Wedding guest", "Vacation outfit", "Work look", "First date", "Brunch", "Minimalist", "Coastal", "Under $150"];
 const refinementChips = ["More casual", "Dressier", "Lower price", "More colorful", "More neutral", "More minimalist", "Swap shoes", "Add accessories"];
 const GUIDE_DRAFT_KEY = "avnu-create-guide-draft";
 const layoutOptions: Array<{ value: LookbookLayout; label: string }> = [{ value: "editorial", label: "Editorial" }, { value: "grid", label: "Grid" }, { value: "featured", label: "Featured" }];
@@ -47,7 +45,6 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
   const [prompt, setPrompt] = useState("");
   const [look, setLook] = useState<SavedLook | null>(null);
   const [sourceImage, setSourceImage] = useState<string>();
-  const [budget, setBudget] = useState("");
   const [selectedRecommendations, setSelectedRecommendations] = useState<string[]>([]);
   const [refinement, setRefinement] = useState("");
   const [generating, setGenerating] = useState(false);
@@ -59,8 +56,6 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
   const [showSocialPostPreview, setShowSocialPostPreview] = useState(false);
   const [favesPickerOpen, setFavesPickerOpen] = useState(false);
   const [activePageIndex, setActivePageIndex] = useState(0);
-  const [railVisibleCounts, setRailVisibleCounts] = useState<Record<string, number>>({});
-  const fileInput = useRef<HTMLInputElement>(null);
   const mediaInput = useRef<HTMLInputElement>(null);
   const backgroundInput = useRef<HTMLInputElement>(null);
   const draftRestorationRef = useRef(false);
@@ -80,7 +75,7 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
     const serialized = window.sessionStorage.getItem(GUIDE_DRAFT_KEY);
     if (!serialized) return;
     try {
-      const draft = JSON.parse(serialized) as { look?: SavedLook; prompt?: string; recommendations?: string[]; sourceImage?: string; activePageIndex?: number; railVisibleCounts?: Record<string, number> };
+      const draft = JSON.parse(serialized) as { look?: SavedLook; prompt?: string; recommendations?: string[]; sourceImage?: string; activePageIndex?: number };
       if (!draft.look) return;
       draftRestorationRef.current = true;
       setLook(draft.look);
@@ -88,7 +83,6 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
       setSelectedRecommendations(draft.recommendations ?? draft.look.recommendations ?? []);
       setSourceImage(draft.sourceImage);
       setActivePageIndex(draft.activePageIndex ?? 0);
-      setRailVisibleCounts(draft.railVisibleCounts ?? {});
       window.sessionStorage.removeItem(GUIDE_DRAFT_KEY);
     } catch {
       window.sessionStorage.removeItem(GUIDE_DRAFT_KEY);
@@ -102,36 +96,36 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
       return;
     }
     try {
-      window.sessionStorage.setItem(GUIDE_DRAFT_KEY, JSON.stringify({ look, prompt, recommendations: selectedRecommendations, sourceImage, activePageIndex, railVisibleCounts }));
+      window.sessionStorage.setItem(GUIDE_DRAFT_KEY, JSON.stringify({ look, prompt, recommendations: selectedRecommendations, sourceImage, activePageIndex }));
     } catch {
       return;
     }
-  }, [activePageIndex, look, prompt, railVisibleCounts, savedLookId, selectedRecommendations, sourceImage]);
+  }, [activePageIndex, look, prompt, savedLookId, selectedRecommendations, sourceImage]);
 
   useEffect(() => {
     if (!isHydrated) return;
     seedLookbook(curatedGuideLooks);
   }, [isHydrated, seedLookbook]);
 
-  const toggleRecommendation = (recommendation: string) => {
-    setSelectedRecommendations((current) => current.includes(recommendation)
-      ? current.filter((item) => item !== recommendation)
-      : [...current, recommendation]);
-  };
-
-  const generate = () => {
-    if (!prompt.trim() && selectedRecommendations.length === 0 && !sourceImage) {
-      showToast("Add a vibe, product consideration, or inspiration image to begin", "error");
-      return;
-    }
-    setGenerating(true);
-    window.setTimeout(() => {
-      const next = generateLook(prompt, { budget: Number(budget) || undefined, sourceImage, recommendations: selectedRecommendations });
-      const editorialPage = { id: `page-${next.id}`, productIds: [], editorial: createEditorialPage([], next.title, "collection-story") };
-      setLook({ ...next, selectedProductIds: [], pages: [editorialPage] });
-      setActivePageIndex(0);
-      setGenerating(false);
-    }, 650);
+  const startEditor = (result: GuideCreationResult) => {
+    const next = generateLook(result.prompt || "My favorite pieces", {
+      budget: result.budget,
+      sourceImage: result.sourceImage,
+      recommendations: result.recommendations,
+    });
+    const editorTitle = "Title";
+    const pageId = `page-${next.id}`;
+    const editorialTemplate = createEditorialPage([], editorTitle, "collection-story");
+    const blankEditorial = { ...editorialTemplate, elements: editorialTemplate.elements.filter((element) => element.type === "text" && element.name === "Headline") };
+    const page = result.layout === "editorial"
+      ? { id: pageId, productIds: [], editorial: blankEditorial }
+      : { id: pageId, productIds: result.productIds, gridItemCount: result.layout === "grid" ? Math.min(8, Math.max(4, result.productIds.length)) : 8 };
+    setPrompt(result.prompt);
+    setSelectedRecommendations(result.recommendations);
+    setSourceImage(result.sourceImage);
+    setLook({ ...next, title: editorTitle, description: "", layout: result.layout, selectedProductIds: result.layout === "editorial" ? [] : result.productIds, availableProductIds: result.productIds, lockedProductIds: [], rails: result.rails, pages: [page] });
+    setActivePageIndex(0);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const refine = (value: string) => {
@@ -188,17 +182,6 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
     showToast(visibility === "public" ? "Published to the home feed" : "Lookbook shared");
   };
 
-  const handleImage = (file?: File) => {
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      showToast("Choose an image file", "error");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => setSourceImage(typeof reader.result === "string" ? reader.result : undefined);
-    reader.readAsDataURL(file);
-  };
-
   const pages = look ? (look.pages?.length ? look.pages : [{ id: `page-${look.id}`, productIds: look.selectedProductIds }]) : [];
   const pageIndex = Math.min(activePageIndex, Math.max(pages.length - 1, 0));
   const activePage = pages[pageIndex];
@@ -209,34 +192,17 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
   const selected = activeProductIds
     .map(productFor)
     .filter((product): product is NonNullable<ReturnType<typeof productFor>> => Boolean(product));
-  const favoriteProductIds = lists.find((list) => list.name === DEFAULT_PRODUCT_LIST_NAME)?.productIds ?? [];
+  const availableProducts = Array.from(new Set(look?.availableProductIds ?? look?.selectedProductIds ?? []))
+    .map(productFor)
+    .filter((product): product is NonNullable<ReturnType<typeof productFor>> => Boolean(product));
+  const favoriteProductIds = lists.find((list) => list.name === "My Favorite Products")?.productIds ?? [];
   const favoriteProducts = Array.from(new Set([...favoriteProductIds, ...activeProductIds]))
     .map(productFor)
     .filter((product): product is NonNullable<ReturnType<typeof productFor>> => Boolean(product));
   const promptProducts = look ? Array.from(new Set(look.rails.flatMap((rail) => rail.productIds)))
     .map(productFor)
     .filter((product): product is NonNullable<ReturnType<typeof productFor>> => Boolean(product)) : [];
-  const savedProductIds = Array.from(new Set(lists.flatMap((list) => [...list.productIds, ...flattenPages(list.pages)])));
-  const savedProducts = savedProductIds
-    .map(productFor)
-    .filter((product): product is NonNullable<ReturnType<typeof productFor>> => Boolean(product));
-  const productReturnTo = savedLookId ? `/create/${savedLookId}` : "/create/guide?restoreDraft=1";
-  const browsePromptResults = () => document.getElementById("prompt-product-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  const browseSavedProducts = () => document.getElementById("saved-product-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  const loadMoreRailResults = (railId: string) => {
-    const rail = look?.rails.find((item) => item.id === railId);
-    if (!rail) return;
-    setRailVisibleCounts((current) => {
-      const visible = current[railId] ?? 5;
-      if (visible >= rail.productIds.length) return current;
-      return { ...current, [railId]: Math.min(visible + 5, rail.productIds.length) };
-    });
-  };
-  const handleRailScroll = (event: UIEvent<HTMLDivElement>, railId: string) => {
-    const target = event.currentTarget;
-    if (target.scrollLeft + target.clientWidth >= target.scrollWidth - 120) loadMoreRailResults(railId);
-  };
-
+  const browsePromptResults = () => undefined;
   const updateActivePageProducts = (productIds: string[], removeLocks = false) => {
     if (!look) return;
     const nextPages = pages.map((page, index) => index === pageIndex ? { ...page, productIds } : page);
@@ -318,6 +284,15 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
     updateActivePageProducts([...activeProductIds, productId]);
   };
 
+  const addProductAt = (productId: string, x: number, y: number) => {
+    if (!look || look.layout !== "editorial" || activeProductIds.includes(productId)) return;
+    const design = normalizeEditorialPage(activePage?.editorial, activeProductIds, look.title);
+    const maxZ = Math.max(0, ...design.elements.map((element) => element.zIndex));
+    const productIndex = design.elements.filter((element) => element.type === "product").length;
+    const element = { ...createProductElement(productId, productIndex), x, y, zIndex: maxZ + 1 };
+    updateEditorialPage({ ...design, elements: [...design.elements, element] });
+  };
+
   const addProducts = (productIds: string[]) => {
     if (!look) return;
     const availableIds = productIds.filter((id) => !activeProductIds.includes(id));
@@ -389,7 +364,6 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
     setSelectedRecommendations(savedLook.recommendations ?? []);
     setSourceImage(savedLook.sourceImage);
     setActivePageIndex(0);
-    setRailVisibleCounts({});
     window.history.replaceState(null, "", `/create/${savedLook.id}`);
     setLookbookOpen(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -439,6 +413,22 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
     );
   };
 
+  const renderSelectedProductSource = () => {
+    if (!look || look.layout !== "editorial" || availableProducts.length === 0) return null;
+    return <section className="rounded-2xl border border-accent/25 bg-accent/5 p-3 sm:p-4">
+      <div className="flex items-start gap-3"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent"><GripVertical className="h-4 w-4" /></span><div><p className="text-sm font-semibold text-text">Selected pieces</p><p className="mt-1 text-[11px] leading-relaxed text-text/55">Drag a piece onto the canvas, or tap + to place it automatically.</p></div></div>
+      <div className="mt-3 flex gap-3 overflow-x-auto pb-1">
+        {availableProducts.map((product) => {
+          const onCanvas = activeProductIds.includes(product.id);
+          return <button key={product.id} type="button" draggable={!onCanvas} disabled={onCanvas} onClick={() => addProduct(product.id)} onDragStart={(event) => { event.dataTransfer.effectAllowed = "copy"; event.dataTransfer.setData("application/x-avnu-product", product.id); }} className={`group relative w-28 shrink-0 overflow-hidden rounded-xl border bg-bg text-left transition-colors ${onCanvas ? "border-accent/40 opacity-60" : "border-divider/70 hover:border-accent/50"}`}>
+            <span className="relative block aspect-[4/5] overflow-hidden bg-surface"><Image src={product.images[0]} alt={product.name} fill sizes="112px" className="object-cover transition-transform duration-300 group-hover:scale-105" /><span className={`absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full ${onCanvas ? "bg-accent text-white" : "bg-bg/90 text-accent"}`}>{onCanvas ? <span className="text-xs font-bold">✓</span> : <Plus className="h-3.5 w-3.5" />}</span></span>
+            <span className="block truncate px-2 py-2 text-[10px] font-semibold text-text/75">{product.name}</span><span className="block px-2 pb-2 text-[9px] text-text/45">{onCanvas ? "On canvas" : "Drag or add"}</span>
+          </button>;
+        })}
+      </div>
+    </section>;
+  };
+
   const activeLookEditor = look ? (
     <section className="min-w-0 overflow-hidden rounded-3xl border border-accent/35 bg-bg p-4 shadow-sm sm:p-7">
       <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -466,7 +456,7 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
         <div className="mt-5 min-w-0 space-y-4">
           <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-text/45">Post layout</p><div className="mt-2 flex flex-wrap gap-2">{layoutOptions.map((option) => <button key={option.value} type="button" onClick={() => setLayout(option.value)} aria-pressed={(look.layout ?? "editorial") === option.value} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${((look.layout ?? "editorial") === option.value) ? "bg-text text-bg" : "border border-divider/70 text-text/60 hover:bg-surface"}`}>{option.label}</button>)}</div></div>
           <div className="flex flex-wrap gap-2"><button type="button" onClick={() => { setShowSocialPostPreview(false); setShowLayflatPreview(false); }} aria-pressed={!showLayflatPreview && !showSocialPostPreview} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${!showLayflatPreview && !showSocialPostPreview ? "bg-text text-bg" : "border border-divider/70 text-text/60"}`}>Edit canvas</button><button type="button" onClick={() => { setShowSocialPostPreview(false); setShowLayflatPreview(true); }} aria-pressed={!showSocialPostPreview && showLayflatPreview} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${!showSocialPostPreview && showLayflatPreview ? "bg-text text-bg" : "border border-divider/70 text-text/60"}`}>Preview design</button><button type="button" onClick={() => { setShowSocialPostPreview(true); setShowLayflatPreview(true); }} aria-pressed={showSocialPostPreview} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${showSocialPostPreview ? "bg-text text-bg" : "border border-divider/70 text-text/60"}`}>Preview social post</button></div>
-          {showSocialPostPreview ? <div className="mx-auto w-full max-w-lg"><LookbookSocialPostPreview title={look.title} description={look.description} products={selected} layout="editorial" editorialDesign={normalizeEditorialPage(activePage?.editorial, activeProductIds, look.title)} /></div> : showLayflatPreview ? <div className="mx-auto w-full max-w-2xl"><LayflatPostPreview products={selected} title={look.title} description={look.description} layout="editorial" editorialDesign={normalizeEditorialPage(activePage?.editorial, activeProductIds, look.title)} /></div> : <div className="space-y-3"><div className="rounded-xl border border-accent/25 bg-accent/5 px-3 py-3"><p className="text-xs font-semibold text-text">Start with your prompt results</p><p className="mt-1 text-[11px] leading-relaxed text-text/55">Your prompt matched products below. Browse them first, then add only the pieces that belong on this Guide page.</p><button type="button" onClick={browsePromptResults} className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-[10px] font-semibold text-white">Browse Product Results <ArrowDown className="h-3 w-3" /></button></div><EditorialBuilder key={activePage?.id} title={look.title} design={normalizeEditorialPage(activePage?.editorial, activeProductIds, look.title)} products={favoriteProducts} promptProducts={promptProducts} onChangeAction={updateEditorialPage} onAddPromptProduct={addProduct} onBrowsePromptResults={browsePromptResults} /></div>}
+          {showSocialPostPreview ? <div className="mx-auto w-full max-w-lg"><LookbookSocialPostPreview title={look.title} description={look.description} products={selected} layout="editorial" editorialDesign={normalizeEditorialPage(activePage?.editorial, activeProductIds, look.title)} /></div> : showLayflatPreview ? <div className="mx-auto w-full max-w-2xl"><LayflatPostPreview products={selected} title={look.title} description={look.description} layout="editorial" editorialDesign={normalizeEditorialPage(activePage?.editorial, activeProductIds, look.title)} /></div> : <div className="space-y-3"><div className="rounded-xl border border-accent/25 bg-accent/5 px-3 py-3"><p className="text-xs font-semibold text-text">Start with your prompt results</p><p className="mt-1 text-[11px] leading-relaxed text-text/55">Your prompt matched products below. Browse them first, then add only the pieces that belong on this Guide page.</p><button type="button" onClick={browsePromptResults} className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-[10px] font-semibold text-white">Browse Product Results <ArrowDown className="h-3 w-3" /></button></div>{renderSelectedProductSource()}<EditorialBuilder key={activePage?.id} title={look.title} design={normalizeEditorialPage(activePage?.editorial, activeProductIds, look.title)} products={favoriteProducts} promptProducts={promptProducts} onChangeAction={updateEditorialPage} onAddPromptProduct={addProduct} onDropProduct={addProductAt} onBrowsePromptResults={browsePromptResults} /></div>}
         </div>
       ) : (
       <div className="mt-5 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(360px,460px)] xl:items-start">
@@ -513,95 +503,7 @@ export function CreateLookWorkspace({ savedLookId }: CreateLookWorkspaceProps) {
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_320px]">
       <main className="min-w-0 space-y-10">
       {activeLookEditor}
-      {!look && <section className="overflow-hidden rounded-3xl border border-divider/60 bg-surface/30 p-5 sm:p-8">
-        <div className="grid gap-7 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-          <div>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-pink/10 px-3 py-1 text-xs font-semibold text-pink">
-              <Sparkles className="h-3.5 w-3.5" />
-              Your inspiration, shoppable
-            </span>
-            <h1 className="mt-4 font-headline text-4xl tracking-tight text-text sm:text-5xl">Create a Guide</h1>
-            <p className="mt-3 max-w-xl text-sm leading-relaxed text-text/60 sm:text-base">
-              Create a shoppable story from a vibe or inspiration image, then choose the layout that fits your point of view.
-            </p>
-          </div>
-          <div
-            onDragOver={(event) => event.preventDefault()}
-            onDrop={(event) => {
-              event.preventDefault();
-              handleImage(event.dataTransfer.files[0]);
-            }}
-            className="relative min-h-44 overflow-hidden rounded-2xl border border-dashed border-divider bg-bg/60 p-4"
-          >
-            {sourceImage ? (
-              <>
-                <Image src={sourceImage} alt="Your inspiration" fill sizes="(max-width: 1024px) 100vw, 40vw" className="object-cover" unoptimized />
-                <div className="absolute inset-0 bg-black/20" />
-                <button type="button" onClick={() => setSourceImage(undefined)} className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-bg/90 text-text shadow-sm">
-                  <X className="h-4 w-4" />
-                </button>
-                <p className="absolute bottom-3 left-3 rounded-full bg-bg/90 px-3 py-1.5 text-xs font-semibold text-text shadow-sm">Using your inspiration image</p>
-              </>
-            ) : (
-              <button type="button" onClick={() => fileInput.current?.click()} className="flex min-h-36 w-full flex-col items-center justify-center gap-2 text-center text-text/50 transition-colors hover:text-accent">
-                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-accent/10 text-accent"><ImagePlus className="h-5 w-5" /></span>
-                <span className="text-sm font-semibold text-text/70">Add an inspiration image</span>
-                <span className="text-xs">Drop it here or browse your device</span>
-              </button>
-            )}
-            <input ref={fileInput} type="file" accept="image/*" onChange={(event) => handleImage(event.target.files?.[0])} className="sr-only" />
-          </div>
-        </div>
-
-        <div className="mt-7 rounded-2xl border border-divider/60 bg-bg p-3 sm:p-4">
-          <textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} rows={3} placeholder="Try: a polished summer dinner look, under $150" className="w-full resize-none bg-transparent px-2 text-base text-text placeholder:text-text/35 focus:outline-none" />
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-divider/50 pt-3">
-            <div className="flex items-center gap-2">
-              <label className="text-xs font-medium text-text/50">Budget</label>
-              <input value={budget} onChange={(event) => setBudget(event.target.value.replace(/\D/g, ""))} inputMode="numeric" placeholder="Any" className="h-8 w-20 rounded-lg border border-divider/60 bg-surface px-2 text-xs text-text focus:border-accent/50 focus:outline-none" />
-            </div>
-            <button type="button" onClick={generate} disabled={generating} className="inline-flex items-center gap-2 rounded-xl bg-burgundy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-burgundy/90 disabled:opacity-50">
-              {generating ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <WandSparkles className="h-4 w-4" />}
-              {generating ? "Finding pieces..." : "Build my look"}
-            </button>
-          </div>
-        </div>
-        <div className="mt-3">
-          <p className="mb-2 text-xs font-medium text-text/50">Product considerations</p>
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {promptChips.map((chip) => {
-              const selected = selectedRecommendations.includes(chip);
-              return <button key={chip} type="button" onClick={() => toggleRecommendation(chip)} aria-pressed={selected} className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${selected ? "border-accent bg-accent/10 text-accent" : "border-divider/60 bg-bg text-text/60 hover:border-accent/40 hover:text-accent"}`}>{chip}</button>;
-            })}
-          </div>
-        </div>
-      </section>}
-
-      {look && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="min-w-0 space-y-9">
-          <section id="prompt-product-results" className="scroll-mt-6 space-y-6">
-            <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-text/45">Prompt product results</p><p className="mt-1 text-[11px] text-text/45">Products matched to your Guide prompt. Keep scrolling through each rail to load more results, then add only the pieces that fit your story.</p></div>
-            {look.rails.map((rail) => {
-              const visibleCount = railVisibleCounts[rail.id] ?? 5;
-              const visibleIds = rail.productIds.slice(0, visibleCount);
-              return <div key={rail.id}>
-                <div className="mb-3 flex items-center justify-between gap-3"><h2 className="font-headline text-xl tracking-tight text-text">{rail.title}</h2><div className="flex shrink-0 items-center gap-2"><button type="button" onClick={() => addProducts(visibleIds)} className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent hover:text-white"><BookPlus className="h-3.5 w-3.5" />Add shown</button>{visibleCount < rail.productIds.length && <span className="hidden text-[10px] font-medium text-text/40 sm:inline">Scroll for more</span>}</div></div>
-                <div className="flex gap-3 overflow-x-auto pb-2" onScroll={(event) => handleRailScroll(event, rail.id)} aria-label={`${rail.title} prompt results`}>
-                  {visibleIds.map((id) => {
-                    const product = productFor(id);
-                    if (!product) return null;
-                    const isSelected = activeProductIds.includes(id);
-                    return <LookProductTile key={id} product={product} selected={isSelected} onAdd={isSelected ? undefined : () => addProduct(id)} onRemove={isSelected ? () => removeProduct(id) : undefined} onToast={showToast} returnTo={productReturnTo} />;
-                  })}
-                  {visibleCount < rail.productIds.length && <span className="flex min-w-24 shrink-0 items-center justify-center rounded-xl border border-dashed border-divider/70 px-3 text-center text-[10px] font-semibold text-text/40">Keep scrolling</span>}
-                </div>
-              </div>;
-            })}
-            <div className="rounded-2xl border border-divider/60 bg-surface/35 px-4 py-4"><p className="text-sm font-semibold text-text">Looking for something you saved?</p><p className="mt-1 text-xs leading-relaxed text-text/55">Browse products from My Favorite Products and your other saved lists.</p><button type="button" onClick={browseSavedProducts} className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-accent/35 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent/5">Show Favorites &amp; Lists <ArrowDown className="h-3.5 w-3.5" /></button></div>
-          </section>
-          <section id="saved-product-results" className="scroll-mt-6 space-y-4"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-text/45">Favorites &amp; Lists</p><p className="mt-1 text-[11px] text-text/45">Products saved in My Favorite Products and your other lists.</p></div>{savedProducts.length > 0 ? <div className="flex gap-3 overflow-x-auto pb-2">{savedProducts.map((product) => { const isSelected = activeProductIds.includes(product.id); return <LookProductTile key={product.id} product={product} selected={isSelected} onAdd={isSelected ? undefined : () => addProduct(product.id)} onRemove={isSelected ? () => removeProduct(product.id) : undefined} onToast={showToast} returnTo={productReturnTo} />; })}</div> : <div className="rounded-xl border border-dashed border-divider/70 px-4 py-5 text-center text-xs text-text/45">Save products to My Favorite Products or another list to see them here.</div>}</section>
-        </motion.div>
-      )}
+      {!look && <GuideCreationFlow lists={lists} onComplete={startEditor} />}
       </main>
       {lookbook}
       </div>

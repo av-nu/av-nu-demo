@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type DragEvent as ReactDragEvent } from "react";
 import { AlignCenter, AlignHorizontalJustifyCenter, ArrowDown, ArrowUp, BringToFront, Copy, Eye, EyeOff, Film, ImagePlus, Layers3, Lock, LockOpen, MousePointer2, Redo2, RotateCw, SendToBack, Shapes, Trash2, Type, Undo2 } from "lucide-react";
 
 import { EditorialColorPicker } from "@/components/looks/editorial/EditorialColorPicker";
@@ -90,6 +90,7 @@ type EditorialBuilderProps = {
   promptProducts?: Product[];
   onChangeAction: (design: EditorialPageDesign) => void;
   onAddPromptProduct?: (productId: string) => void;
+  onDropProduct?: (productId: string, x: number, y: number) => void;
   onBrowsePromptResults?: () => void;
 };
 
@@ -120,7 +121,7 @@ function NumberField({ label, value, min, max, step = 1, onChange }: { label: st
   return <label className="min-w-0"><span className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.12em] text-text/40">{label}</span><input type="number" value={draft} min={min} max={max} step={step} onFocus={() => { focused.current = true; }} onChange={(event) => setDraft(event.target.value)} onBlur={commitDraft} onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); if (event.key === "Escape") { setDraft(formatted); event.currentTarget.blur(); } }} className="h-9 w-full rounded-lg border border-divider/70 bg-bg px-2 text-xs text-text focus:border-accent/50 focus:outline-none" /></label>;
 }
 
-export function EditorialBuilder({ title, design, products, promptProducts = [], onChangeAction, onAddPromptProduct = () => undefined, onBrowsePromptResults = () => undefined }: EditorialBuilderProps) {
+export function EditorialBuilder({ title, design, products, promptProducts = [], onChangeAction, onAddPromptProduct = () => undefined, onDropProduct, onBrowsePromptResults = () => undefined }: EditorialBuilderProps) {
   const [present, setPresent] = useState(design);
   const [past, setPast] = useState<EditorialPageDesign[]>([]);
   const [future, setFuture] = useState<EditorialPageDesign[]>([]);
@@ -301,6 +302,20 @@ export function EditorialBuilder({ title, design, products, promptProducts = [],
     commit({ ...present, elements: [...present.elements, nextElement] }, nextElement.id);
   };
 
+  const handleCanvasDragOver = (event: ReactDragEvent<HTMLDivElement>) => {
+    if (event.dataTransfer.types.includes("application/x-avnu-product")) event.preventDefault();
+  };
+
+  const handleCanvasDrop = (event: ReactDragEvent<HTMLDivElement>) => {
+    const productId = event.dataTransfer.getData("application/x-avnu-product");
+    if (!productId || !onDropProduct || !canvasRef.current) return;
+    event.preventDefault();
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * dimensions.width - 150;
+    const y = ((event.clientY - rect.top) / rect.height) * dimensions.height - 180;
+    onDropProduct(productId, Math.max(0, Math.min(dimensions.width - 300, x)), Math.max(0, Math.min(dimensions.height - 360, y)));
+  };
+
   const handleUpload = async (file?: File) => {
     if (!file) return;
     setUploadError(undefined);
@@ -421,7 +436,7 @@ export function EditorialBuilder({ title, design, products, promptProducts = [],
 
       <div className="grid min-w-0 lg:grid-cols-[minmax(0,1fr)_290px]">
         <div className="min-w-0 overflow-auto bg-sky/25 p-4 sm:p-7 lg:min-h-[680px]">
-          <div className="mx-auto origin-top transition-[width,max-width]" style={{ width: `${zoom * 100}%`, maxWidth: `${(present.format === "spread" ? 900 : 680) * zoom}px` }}>
+          <div className="mx-auto origin-top transition-[width,max-width]" style={{ width: `${zoom * 100}%`, maxWidth: `${(present.format === "spread" ? 900 : 680) * zoom}px` }} onDragOver={handleCanvasDragOver} onDrop={handleCanvasDrop}>
             <EditorialRenderer design={present} selectedId={selectedId} interactive guides={snapGuides} canvasRef={canvasRef} onCanvasPointerDown={(event) => { if (event.target === event.currentTarget) setSelectedId(undefined); }} onElementSelect={setSelectedId} onElementPointerDown={(event, elementId) => startInteraction(event, elementId, "drag")} onHandlePointerDown={(event, elementId, handle) => startInteraction(event, elementId, handle)} />
           </div>
         </div>
