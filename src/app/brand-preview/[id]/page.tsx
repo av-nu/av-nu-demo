@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/ProductCard";
 import { getBrandById, getProductsByBrandId } from "@/lib/data";
+import { getVideoPoster } from "@/lib/utils";
 import { useToast } from "@/components/ui/Toast";
 
 const ITEMS_PER_PAGE = 12;
@@ -235,6 +236,8 @@ export default function BrandPreviewPage({
                   <video
                     ref={idx === 0 ? videoRef : undefined}
                     src={item.src}
+                    poster={getVideoPoster(item.src)}
+                    preload="metadata"
                     className="h-full w-full object-cover"
                     playsInline
                     autoPlay
@@ -297,6 +300,8 @@ export default function BrandPreviewPage({
                   <video
                     ref={idx === 0 ? mobileVideoRef : undefined}
                     src={item.src}
+                    poster={getVideoPoster(item.src)}
+                    preload="metadata"
                     className="h-full w-full object-cover"
                     playsInline
                     autoPlay

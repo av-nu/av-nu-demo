@@ -14,6 +14,7 @@ import { buildSpotlightRows } from "@/data/spotlight";
 import { communityLists, flattenPages } from "@/data/faves";
 import { contacts, getContactById } from "@/data/social";
 import { getBrandById, getProductById } from "@/lib/data";
+import { getVideoPoster } from "@/lib/utils";
 
 const interestsByAuthor: Record<string, string[]> = {
   "c-mara": ["Slow living", "Ceramics", "Handmade"],
@@ -29,7 +30,7 @@ export default function SocialPostPage({ params }: { params: { type: string; id:
   const [liked, setLiked] = useState(false);
   const [comment, setComment] = useState("");
   const [localComments, setLocalComments] = useState<string[]>([]);
-  const videos = useMemo(() => buildSpotlightRows(4), []);
+  const videos = useMemo(() => buildSpotlightRows(16), []);
   const videoIndex = videos.findIndex((row) => row.id === params.id);
   const video = params.type === "video" ? videos[videoIndex] : undefined;
   const list = params.type === "list" ? communityLists.find((item) => item.id === params.id) : undefined;
@@ -37,7 +38,7 @@ export default function SocialPostPage({ params }: { params: { type: string; id:
   const products = video ? [video.featured, ...video.products] : list ? flattenPages(list.pages).map(getProductById).filter((product): product is NonNullable<typeof product> => Boolean(product)) : [];
   const interests = interestsByAuthor[author?.id ?? ""] ?? ["Independent brands", "Thoughtful finds", "Good design"];
   const followingAuthor = author ? getRelationship(author.id).iFollow : false;
-  const caption = list?.caption ?? (video ? `A closer look at ${video.featured.name}, how it moves, and the pieces I would style with it.` : "");
+  const caption = list?.caption ?? (video ? `${video.title} — a closer look at the scene, and the pieces I'd style it with.` : "");
   const seededComments = list?.comments.map((item) => ({ name: item.authorName, text: item.text })) ?? [{ name: "Mara Ellis", text: "Love how you styled this." }, { name: "Priya Nair", text: "Adding this to my list immediately." }];
 
   if (!video && !list) return <div className="py-20 text-center"><h1 className="font-headline text-3xl">Post not found</h1><Link href="/" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-accent"><ArrowLeft className="h-4 w-4" />Back to Discover</Link></div>;
@@ -54,7 +55,7 @@ export default function SocialPostPage({ params }: { params: { type: string; id:
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]">
         <div className="overflow-hidden rounded-3xl bg-[#2f292d]">
-          {video ? <video src={video.videoUrl} controls autoPlay playsInline className="max-h-[82vh] min-h-[520px] w-full bg-black object-contain" /> : list?.format === "featured" ? <div className="flex min-h-[520px] items-center justify-center bg-[#efe7eb] p-4 sm:p-8"><FeaturedGuideArtwork guide={list} productIds={products.map((product) => product.id)} author={author} className="w-full max-w-lg" /></div> : list ? <div className="bg-[#efe7eb] p-4 sm:p-8"><div className="mx-auto max-w-3xl overflow-hidden rounded-2xl bg-white shadow-xl"><ListTileGrid productIds={list.pages[0].productIds} template={list.pages[0].template} /></div></div> : null}
+          {video ? <video src={video.videoUrl} poster={getVideoPoster(video.videoUrl)} preload="metadata" controls autoPlay playsInline className="max-h-[82vh] min-h-[520px] w-full bg-black object-contain" /> : list?.format === "featured" ? <div className="flex min-h-[520px] items-center justify-center bg-[#efe7eb] p-4 sm:p-8"><FeaturedGuideArtwork guide={list} productIds={products.map((product) => product.id)} author={author} className="w-full max-w-lg" /></div> : list ? <div className="bg-[#efe7eb] p-4 sm:p-8"><div className="mx-auto max-w-3xl overflow-hidden rounded-2xl bg-white shadow-xl"><ListTileGrid productIds={list.pages[0].productIds} template={list.pages[0].template} /></div></div> : null}
         </div>
 
         <aside className="space-y-6">
@@ -64,7 +65,7 @@ export default function SocialPostPage({ params }: { params: { type: string; id:
             <div className="mt-4 flex flex-wrap gap-2">{interests.map((interest) => <span key={interest} className="rounded-full bg-[#efe3eb] px-3 py-1.5 text-[10px] font-semibold text-[#7d526c]">{interest}</span>)}</div>
           </section>
 
-          <section className="space-y-4 px-1"><h1 className="font-headline text-3xl leading-tight text-text">{list?.name ?? video?.featured.name}</h1><p className="text-sm leading-relaxed text-text/65">{caption}</p><div className="flex items-center gap-8 border-y border-divider/60 py-4"><button type="button" onClick={() => setLiked((value) => !value)} className={`flex items-center gap-3 text-sm font-semibold ${liked ? "text-pink" : "text-text/60"}`}><Heart className={`h-5 w-5 ${liked ? "fill-current" : ""}`} />{(list?.likes ?? 184) + Number(liked)}</button><span className="flex items-center gap-2 text-sm text-text/60"><MessageCircle className="h-5 w-5" />{seededComments.length + localComments.length}</span><button type="button" onClick={async () => { await navigator.clipboard.writeText(window.location.href); showToast("Post link copied"); }} className="ml-auto text-text/60"><Send className="h-5 w-5" /></button></div></section>
+          <section className="space-y-4 px-1"><h1 className="font-headline text-3xl leading-tight text-text">{list?.name ?? video?.title}</h1><p className="text-sm leading-relaxed text-text/65">{caption}</p><div className="flex items-center gap-8 border-y border-divider/60 py-4"><button type="button" onClick={() => setLiked((value) => !value)} className={`flex items-center gap-3 text-sm font-semibold ${liked ? "text-pink" : "text-text/60"}`}><Heart className={`h-5 w-5 ${liked ? "fill-current" : ""}`} />{(list?.likes ?? 184) + Number(liked)}</button><span className="flex items-center gap-2 text-sm text-text/60"><MessageCircle className="h-5 w-5" />{seededComments.length + localComments.length}</span><button type="button" onClick={async () => { await navigator.clipboard.writeText(window.location.href); showToast("Post link copied"); }} className="ml-auto text-text/60"><Send className="h-5 w-5" /></button></div></section>
 
           <section><h2 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-text/45"><ShoppingBag className="h-4 w-4" />Featured products</h2><div className="space-y-2">{products.slice(0, 6).map((product) => { const brand = getBrandById(product.brandId); return <article key={product.id} className="flex items-center gap-3 rounded-2xl border border-divider/55 bg-bg p-2"><Link href={`/product/${product.id}`} className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-surface"><Image src={product.images[0]} alt={product.name} fill sizes="80px" className="object-cover" /></Link><div className="min-w-0 flex-1"><div className="flex items-center gap-2">{brand && <span className="relative h-5 w-5 overflow-hidden rounded bg-surface"><Image src={brand.logoMark} alt="" fill sizes="20px" className="object-contain" /></span>}<span className="truncate text-[10px] uppercase tracking-wide text-text/40">{brand?.name}</span></div><Link href={`/product/${product.id}`} className="mt-1 block truncate text-sm font-semibold">{product.name}</Link><span className="text-xs text-text/55">${product.price}</span></div><FaveButton product={product} onToast={showToast} /></article>; })}</div></section>
         </aside>

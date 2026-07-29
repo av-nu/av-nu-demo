@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Bookmark, Heart, MessageCircle, Play, Send, Star, Trash2 } from "lucide-react";
 
-import { cn } from "@/lib/utils";
+import { cn, getVideoPoster } from "@/lib/utils";
 import { getProductById } from "@/lib/data";
 import { SAMPLE_REVIEW_VIDEO } from "@/data/videoReviews";
 import { useListSocial } from "@/hooks/useListSocial";
@@ -88,6 +88,8 @@ export function VideoReviewCard({
             <video
               ref={videoRef}
               src={src}
+              poster={getVideoPoster(src)}
+              preload="metadata"
               className="h-full w-full object-cover"
               playsInline
               loop

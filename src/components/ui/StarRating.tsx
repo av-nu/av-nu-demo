@@ -26,6 +26,9 @@ export const StarRating = memo(function StarRating({
 
   const displayRating = hoverRating ?? userRating ?? rating;
   const isInteractive = !!onRate;
+  // A product with no reviews yet (and not rated by the viewer): show empty
+  // stars outlined in the accent color rather than a "0.0" score.
+  const isUnrated = !userRating && rating <= 0;
 
   const handleClick = useCallback(
     (starIndex: number, isHalf: boolean) => {
@@ -103,7 +106,7 @@ export const StarRating = memo(function StarRating({
               )}
             >
               <Star
-                className={cn(starSize, "text-text/20")}
+                className={cn(starSize, isUnrated ? "text-accent" : "text-text/20")}
                 strokeWidth={1.5}
               />
 
@@ -124,12 +127,14 @@ export const StarRating = memo(function StarRating({
         })}
       </div>
 
-      <span className="text-xs text-text/50">
-        {rating.toFixed(1)}
-        {showUserRating && userRating && (
-          <span className="ml-1 text-accent">★ {userRating.toFixed(1)}</span>
-        )}
-      </span>
+      {(rating > 0 || userRating) && (
+        <span className="text-xs text-text/50">
+          {rating > 0 ? rating.toFixed(1) : null}
+          {showUserRating && userRating && (
+            <span className="ml-1 text-accent">★ {userRating.toFixed(1)}</span>
+          )}
+        </span>
+      )}
     </div>
   );
 });

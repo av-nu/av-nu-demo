@@ -194,7 +194,9 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                 size="md"
               />
               <span className="text-sm text-text/50">
-                ({product.ratingCount} reviews)
+                {product.ratingCount > 0
+                  ? `(${product.ratingCount} reviews)`
+                  : "No reviews yet"}
               </span>
             </div>
 

@@ -1,10 +1,16 @@
 import { mockProducts, type Product } from "@/data/mockProducts";
+import { getVideoTitle } from "@/data/videoTitles";
 
 const videoPool = mockProducts.flatMap((product) => product.videos ?? []);
 
 export type SpotlightRow = {
   id: string;
   videoUrl: string;
+  /**
+   * Accurate, content-based title for the reel (from a visual review of the
+   * footage). Falls back to the featured product name for unknown clips.
+   */
+  title: string;
   /** Product showcased alongside the video (card sits below it). */
   featured: Product;
   /** Four products shown in the 2x2 grid beside the video. */
@@ -32,9 +38,11 @@ export function buildSpotlightRows(rowCount = 4): SpotlightRow[] {
     if (slice.length < perRow) break;
 
     const [featured, ...products] = slice;
+    const videoUrl = videoPool[i % videoPool.length];
     rows.push({
       id: `spotlight-${i + 1}`,
-      videoUrl: videoPool[i % videoPool.length],
+      videoUrl,
+      title: getVideoTitle(videoUrl) ?? featured.name,
       featured,
       products,
     });

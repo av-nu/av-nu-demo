@@ -6,7 +6,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Play, Send, ShoppingBag, Star } from "lucide-react";
 
-import { cn } from "@/lib/utils";
+import { cn, getVideoPoster } from "@/lib/utils";
 import type { Product } from "@/data/mockProducts";
 import { getBrandById } from "@/lib/data";
 import { FaveButton } from "@/components/faves/FaveButton";
@@ -83,6 +83,8 @@ export function ShoppableVideoCard({
         <video
           ref={videoRef}
           src={videoUrl}
+          poster={getVideoPoster(videoUrl)}
+          preload="metadata"
           className="h-full w-full cursor-pointer object-cover"
           autoPlay
           muted
@@ -174,13 +176,22 @@ export function ShoppableVideoCard({
         {/* Reviews + price */}
         <div className="mt-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
-            <span className="flex items-center gap-1 text-xs text-text/70">
-              <Star className="h-3.5 w-3.5 fill-accent text-accent" />
-              {product.rating.toFixed(1)}
-            </span>
-            <span className="text-xs text-text/40">
-              ({product.ratingCount} reviews)
-            </span>
+            {product.ratingCount > 0 ? (
+              <>
+                <span className="flex items-center gap-1 text-xs text-text/70">
+                  <Star className="h-3.5 w-3.5 fill-accent text-accent" />
+                  {product.rating.toFixed(1)}
+                </span>
+                <span className="text-xs text-text/40">
+                  ({product.ratingCount} reviews)
+                </span>
+              </>
+            ) : (
+              <span className="flex items-center gap-1 text-xs text-text/40">
+                <Star className="h-3.5 w-3.5 text-accent" />
+                No reviews yet
+              </span>
+            )}
           </div>
           <span className="text-base font-semibold text-text">${product.price}</span>
         </div>

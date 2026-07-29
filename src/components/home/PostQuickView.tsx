@@ -14,6 +14,7 @@ import { useSavedPostGroups } from "@/hooks/useSavedPostGroups";
 import { useSocialGraph } from "@/hooks/useSocialGraph";
 import { getBrandById } from "@/lib/data";
 import { getProductById } from "@/lib/data";
+import { getVideoPoster } from "@/lib/utils";
 import type { CommunityList } from "@/data/faves";
 import type { Contact } from "@/data/social";
 import type { SpotlightRow } from "@/data/spotlight";
@@ -60,7 +61,7 @@ export function PostQuickView({ post, onClose }: { post: DiscoverPost; onClose: 
   };
 
   const caption = post.kind === "video"
-    ? `A closer look at ${post.data.featured.name}, how it moves, and the pieces I would style with it.`
+    ? `${post.data.title} — a closer look at the scene, and the pieces I'd style it with.`
     : post.data.caption;
 
   return (
@@ -87,7 +88,7 @@ export function PostQuickView({ post, onClose }: { post: DiscoverPost; onClose: 
             </div>
             <div className="relative flex h-[62dvh] max-h-[640px] w-full shrink-0 items-center justify-center overflow-hidden bg-text lg:h-full lg:max-h-none lg:min-h-0 lg:w-[56%] lg:shrink">
               {post.kind === "video" ? (
-                <video src={post.data.videoUrl} controls autoPlay playsInline className="h-full w-full object-contain" />
+                <video src={post.data.videoUrl} poster={getVideoPoster(post.data.videoUrl)} preload="metadata" controls autoPlay playsInline className="h-full w-full object-contain" />
               ) : post.data.format === "featured" ? (
                 <div className="flex h-full w-full items-center justify-center bg-surface lg:px-8">
                   <FeaturedGuideArtwork guide={post.data} productIds={products.map((product) => product.id)} author={author} className="h-full w-auto max-w-full" />

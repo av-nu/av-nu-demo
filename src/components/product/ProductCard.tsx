@@ -35,7 +35,6 @@ export const ProductCard = memo(function ProductCard({
   const brand = getBrandById(product.brandId);
   const { getUserRating, setUserRating } = useUserRatings();
   const { addToCart } = useCart();
-  const [imageLoaded, setImageLoaded] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
 
   const userRating = getUserRating(product.id);
@@ -88,11 +87,7 @@ export const ProductCard = memo(function ProductCard({
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             priority={priority}
-            onLoad={() => setImageLoaded(true)}
-            className={cn(
-              "object-cover transition-all duration-500 group-hover:scale-105",
-              imageLoaded ? "opacity-100" : "opacity-0",
-            )}
+            className="object-cover transition-all duration-500 group-hover:scale-105"
           />
 
           {product.isNew && (

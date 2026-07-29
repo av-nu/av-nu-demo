@@ -7,6 +7,8 @@ import { Heart, MessageCircle, Send, ShoppingBag, Volume2, VolumeX, ChevronUp, C
 import { Button } from "@/components/ui/button";
 import { mockBrands } from "@/data/mockBrands";
 import { mockProducts } from "@/data/mockProducts";
+import { getVideoTitle } from "@/data/videoTitles";
+import { getVideoPoster } from "@/lib/utils";
 
 function productAt(index: number) {
   const product = mockProducts[index % mockProducts.length];
@@ -18,7 +20,7 @@ const spotlightReels = mockProducts.flatMap((product, productIndex) =>
     id: `${product.id}-video-${videoIndex + 1}`,
     videoUrl,
     brandId: product.brandId,
-    caption: `${product.name} — a closer look at the details.`,
+    caption: getVideoTitle(videoUrl) ?? `${product.name} — a closer look at the details.`,
     likes: 800 + productIndex * 17 + videoIndex * 11,
     comments: 24 + videoIndex * 5,
     products: [productAt(productIndex), productAt(productIndex + 1)],
@@ -71,7 +73,7 @@ function ReelCard({ reel }: { reel: ReelType }) {
   return (
     <div ref={cardRef} className="group">
       <div className="relative aspect-[9/16] overflow-hidden rounded-xl bg-black">
-        <video ref={videoRef} src={reel.videoUrl} className="h-full w-full cursor-pointer object-cover" loop playsInline muted={isMuted} onClick={togglePlay} />
+        <video ref={videoRef} src={reel.videoUrl} poster={getVideoPoster(reel.videoUrl)} preload="metadata" className="h-full w-full cursor-pointer object-cover" loop playsInline muted={isMuted} onClick={togglePlay} />
         <button onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }} className="absolute right-3 top-3 rounded-full bg-black/40 p-2 backdrop-blur-sm opacity-0 transition-opacity group-hover:opacity-100">
           {isMuted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
         </button>

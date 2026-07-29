@@ -811,4 +811,37 @@ function buildProducts(): Product[] {
   return combined;
 }
 
-export const mockProducts: Product[] = seedProducts;
+// Deterministic string hash so ratings are stable between server and client
+// renders (avoids hydration mismatches) while still varying per product.
+function hashString(value: string) {
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+/**
+ * The seed catalog ships every product at a flat 4.5★. Reassign ratings into a
+ * more realistic spread, deterministically keyed on the product id:
+ *   ~30% have no reviews yet (rating 0), ~25% sit at 4.0–4.4, and the rest
+ *   land at 4.5–5.0.
+ */
+function assignRating(id: string): { rating: number; ratingCount: number } {
+  const seed = hashString(id);
+  const bucket = prng(seed);
+  const round1 = (n: number) => Math.round(n * 10) / 10;
+  const reviews = 12 + Math.floor(prng(seed + 17) * 780);
+
+  if (bucket < 0.3) return { rating: 0, ratingCount: 0 };
+  if (bucket < 0.55) {
+    return { rating: round1(4.0 + prng(seed + 41) * 0.4), ratingCount: reviews };
+  }
+  return { rating: round1(4.5 + prng(seed + 73) * 0.5), ratingCount: reviews };
+}
+
+export const mockProducts: Product[] = seedProducts.map((product) => ({
+  ...product,
+  ...assignRating(product.id),
+}));
