@@ -1,5 +1,6 @@
 import { mockBrands } from "@/data/mockBrands";
 import { seedProducts } from "@/data/seedProducts";
+import { cloudinaryCategoryProducts } from "@/data/cloudinaryCategoryProducts";
 
 export type Product = {
   id: string;
@@ -841,7 +842,12 @@ function assignRating(id: string): { rating: number; ratingCount: number } {
   return { rating: round1(4.5 + prng(seed + 73) * 0.5), ratingCount: reviews };
 }
 
-export const mockProducts: Product[] = seedProducts.map((product) => ({
+const seedCatalogProducts = seedProducts.map((product) => {
+  const isMisclassifiedJewelry = product.category === "Beauty" && /bracelet|bangle|cuff|necklace/i.test(product.name);
+  return isMisclassifiedJewelry ? { ...product, category: "Accessories", subcategory: "Jewelry" } : product;
+});
+
+export const mockProducts: Product[] = [...seedCatalogProducts, ...cloudinaryCategoryProducts].map((product) => ({
   ...product,
   ...assignRating(product.id),
 }));

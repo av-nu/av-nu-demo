@@ -23,6 +23,7 @@ const BRAND_WINDOW_PRODUCT_LIMIT = 6;
 const brandWindowProductMap = (() => {
   const assignments = new Map<string, Product[]>();
   const claimedProductIds = new Set<string>();
+  const claimedProductImages = new Set<string>();
   const directBrands = mockBrands.filter((brand) => mockProducts.some((product) => product.brandId === brand.id));
   const fallbackBrands = mockBrands.filter((brand) => !directBrands.some((directBrand) => directBrand.id === brand.id));
 
@@ -31,11 +32,16 @@ const brandWindowProductMap = (() => {
     const preferredCategory = brand.categories.includes("Apparel") ? "Apparel" : brand.categories[0];
     const categoryProducts = mockProducts.filter((product) => product.category === preferredCategory);
     const candidatePool = directProducts.length > 0 ? directProducts : [...categoryProducts, ...mockProducts];
-    const availableProducts = Array.from(new Map(candidatePool.map((product) => [product.id, product])).values()).filter((product) => !claimedProductIds.has(product.id));
+    const availableProducts = Array.from(new Map(candidatePool.map((product) => [product.id, product])).values()).filter(
+      (product) => !claimedProductIds.has(product.id) && !claimedProductImages.has(product.images[0]),
+    );
     const selectedProducts = availableProducts.slice(0, BRAND_WINDOW_PRODUCT_LIMIT);
 
     assignments.set(brand.id, selectedProducts);
-    selectedProducts.forEach((product) => claimedProductIds.add(product.id));
+    selectedProducts.forEach((product) => {
+      claimedProductIds.add(product.id);
+      claimedProductImages.add(product.images[0]);
+    });
   }
 
   return assignments;

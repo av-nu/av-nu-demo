@@ -1,0 +1,135 @@
+import type { Product } from "@/data/mockProducts";
+
+const CLOUDINARY_IMAGE_BASE = "https://res.cloudinary.com/hzafts3b/image/upload/";
+
+const decorAssets = [
+  "openart-gpt-image-2-1_1784854845335_8f756be9_a1cssd",
+  "openart-gpt-image-2-1_1784854842922_12a2e6ba_j7ylh6",
+  "openart-gpt-image-2-1_1784854843789_39b2fa48_upfzcy",
+  "openart-gpt-image-2-1_1784854776712_796fd784_ptooch",
+  "openart-gpt-image-2-1_1784854808965_b14eb2d7_kqmlug",
+  "openart-gpt-image-2-1_1784854820254_536b8e3c_e54emw",
+  "openart-gpt-image-2-1_1784854805557_2eeb2797_frr2ta",
+  "openart-gpt-image-2-1_1784854819512_51432acf_qvuab6",
+  "openart-gpt-image-2-1_1784854780935_77d5efeb_brlqkr",
+  "openart-gpt-image-2-1_1784854726348_36a49c27_ryv4ef",
+  "openart-gpt-image-2-1_1784854732752_03672eb7_o1ljvu",
+  "openart-gpt-image-2-1_1784854746615_41feb130_c6drv0",
+  "openart-gpt-image-2-1_1784854708510_d4b6ad37_w7bk6g",
+  "openart-gpt-image-2-1_1784854681127_9b959d75_tezode",
+  "openart-gpt-image-2-1_1784854635385_c043e8d9_tkxcwl",
+  "openart-gpt-image-2-1_1784854696955_0c10c80d_f0lx9d",
+  "openart-gpt-image-2-1_1784854685386_0b281f20_wnsoml",
+  "openart-gpt-image-2-1_1784854646272_bc868fa9_h43yjr",
+  "openart-gpt-image-2-1_1784854461596_03e91567_gjbzmi",
+  "openart-gpt-image-2-1_1784854663680_847674a4_s2dyan",
+  "openart-gpt-image-2-1_1784854427170_f32ac777_l9oki3",
+  "openart-gpt-image-2-1_1784854418416_df099ca1_sx9s3x",
+  "openart-gpt-image-2-1_1784854402209_c43fee6b_kb4to6",
+  "openart-gpt-image-2-1_1784854438960_7cdfd471_bhvxxr",
+  "openart-gpt-image-2-1_1784854183825_0d18b668_a88hec",
+  "openart-gpt-image-2-1_1784854280182_82ba7bf4_zkyb7w",
+  "openart-gpt-image-2-1_1784854391831_8ce20f3e_aslpqg",
+  "openart-gpt-image-2-1_1784854363836_deaac6f0_ungkoh",
+  "openart-gpt-image-2-1_1784854368914_256246ed_kel2ay",
+  "openart-gpt-image-2-1_1784854217608_9867cbd6_evuy7s",
+  "openart-gpt-image-2-1_1784854354315_f6db6082_iaczdk",
+  "openart-gpt-image-2-1_1784854196597_a042c5ca_stzgal",
+  "openart-gpt-image-2-1_1784854157948_8369c1bc_e1iorn",
+  "openart-gpt-image-2-1_1784854169217_de3f52d3_z43uie",
+  "openart-gpt-image-2-1_1784854125297_7de27169_u4x1ro",
+  "openart-gpt-image-2-1_1784854131615_eb66d1dc_zc8gyn",
+  "openart-gpt-image-2-1_1784854143437_3f613ffb_lg0qud",
+  "openart-gpt-image-2-1_1784853945416_1f4d5677_xywiuf",
+  "openart-gpt-image-2-1_1784854121629_bad6db60_mpbmnw",
+  "openart-gpt-image-2-1_1784853986082_f7515ea4_lyyo4p",
+  "openart-gpt-image-2-1_1784854099513_3ba14b6e_ibfcqq",
+  "openart-gpt-image-2-1_1784853958545_4396372e_twzfhh",
+  "openart-gpt-image-2-1_1784853963927_d3ef9a56_luxocx",
+  "openart-gpt-image-2-1_1784853821498_a848c84c_iadomu",
+  "openart-gpt-image-2-1_1784853911805_077ab8a6_upt1x2",
+  "openart-gpt-image-2-1_1784853934418_cccb01ed_tp41eh",
+  "openart-gpt-image-2-1_1784853902375_45383df6_iv7xz0",
+  "openart-gpt-image-2-1_1784853792036_ab3ba8e8_vnt73a",
+  "openart-gpt-image-2-1_1784849881804_fd5bb6a4_mc9tjt",
+  "openart-gpt-image-2-1_1784853821401_2f43fbe7_mbedu3",
+  "openart-gpt-image-2-1_1784849844583_e0b60d88_brqkkg",
+  "openart-gpt-image-2-1_1784849905402_4062a3a3_pwufo0",
+  "openart-gpt-image-2-1_1784850178157_44de0639_zciwcg",
+  "openart-gpt-image-2-1_1784849881801_547835c3_jg8iao",
+  "openart-gpt-image-2-1_1784849841583_4bed7425_ksxncf",
+  "openart-gpt-image-2-1_1784849811408_4d6b271f_veold3",
+  "openart-gpt-image-2-1_1784849800202_052d772c_xf8wca",
+  "openart-gpt-image-2-1_1784854874415_a5060a72_nyg39z",
+];
+
+const beautyAssets = [
+  "openart-gpt-image-2-1_1784781511394_a6ff79f1_k7epq3",
+  "openart-gpt-image-2-1_1784781569341_3b40b250_kfylsw",
+  "openart-gpt-image-2-1_1784781595621_7a1e2a42_r08enx",
+  "openart-gpt-image-2-1_1784781554048_a891666c_eurr8r",
+  "openart-gpt-image-2-1_1784781540155_1a348122_yrsjas",
+  "openart-gpt-image-2-1_1784781412791_69e27bb8_jnxlex",
+  "openart-gpt-image-2-1_1784781521043_27852f28_wbgsqs",
+  "openart-gpt-image-2-1_1784781533253_a24cbd77_ogd8oa",
+  "openart-gpt-image-2-1_1784781494075_0ac2bc55_uxunxs",
+  "openart-gpt-image-2-1_1784781476444_8ca90a78_camf19",
+  "openart-gpt-image-2-1_1784781504249_ebba5980_degwur",
+  "openart-gpt-image-2-1_1784781400369_c9042d19_yeshvz",
+  "openart-gpt-image-2-1_1784781371692_75e6f84e_izfuqg",
+  "openart-gpt-image-2-1_1784781395066_0b4e42b9_jsntdt",
+  "openart-gpt-image-2-1_1784781361551_b121f94b_wqaukw",
+  "openart-gpt-image-2-1_1784781318587_dfe5767e_paiaim",
+  "openart-gpt-image-2-1_1784781300012_3aa54e60_qrc9ih",
+  "openart-gpt-image-2-1_1784781304262_508909d1_hn3tzb",
+  "openart-gpt-image-2-1_1784781351967_8b937b0c_mtapaf",
+  "openart-gpt-image-2-1_1784781330471_470bda0e_lnpisu",
+  "openart-gpt-image-2-1_1784781195528_e7c1ece9_meqgbm",
+  "openart-gpt-image-2-1_1784781221043_8a4a4ba0_rdsngg",
+];
+
+const decorNames = [
+  "Walnut Charcuterie Board", "Ruby Red Glass Vase", "Textured Stone Table Lamp", "Burl Wood Storage Box", "Terracotta Wall Planter", "Olive Tufted Floor Cushion", "Brass Taper Candleholder Set", "Woven Geometric Wall Hanging", "Ribbed Glass Candle Lantern", "Stacked Stone Tabletop Fountain", "Walnut Floating Shelf", "Styled Living Room Shelf", "Ceramic Coffee Mug Set", "Quilted Linen Coverlet", "Stone Incense Holder", "Brass Outdoor Candle Lantern", "Marble Fruit Bowl", "Colored Glass Bud Vase Trio", "Curated Home Decor Set", "Canvas Kitchen Apron", "Walnut Wall Clock", "Ceramic Shell Catchall", "Sage Ceramic Soap Dispenser", "Linen Storage Box Set", "Sage Ceramic Dinnerware Set", "Stone Entryway Catchall Tray", "Wooden Wall Hook Rail", "Striped Linen Table Runner", "Ceramic Pantry Canister Set", "Walnut Console Table Decor", "Velora Reed Diffuser", "Velvet Throw Pillow Set", "Linen Storage Box Set", "Arched Wall Mirror", "Woven Raffia Wall Basket", "Abstract Ceramic Sculpture", "Gold Frame Abstract Print", "Marble Arch Bookends", "Amber Glass Candle Lantern", "Styled Console Table Decor", "Marble Arch Bookends", "Woven Storage Basket", "Gold Arch Mantel Clock", "Terra Cotta Candle Set", "Coral Linen Throw Pillow", "Mustard Ceramic Planter", "Walnut Breakfast Tray", "Forest Green Loop Vase", "Marble Serving Tray", "Blue Glass Wave Bowl", "Organic Abstract Framed Art", "Woven Storage Basket", "Walnut Pear Bowl", "Sculptural Cream Vase", "Textured Ceramic Table Lamp", "S.A.A.R. Stone Candle Vessel", "S.A.A.R. Candle and Mug Set", "Green Glass Sculptural Vase",
+];
+
+const beautyNames = [
+  "Sculpted Gold Lipstick Trio", "Cocoa Cosmetics Color Collection", "Perfume and Skincare Collection", "Lumiere Skincare Collection", "Botanical Haircare Collection", "Red Lipstick and Mascara Set", "Lumiere Face Cream Collection", "Petal Pink Makeup Collection", "Noir Fragrance Collection", "Complete Makeup Brush Set", "Lipstick and Fragrance Edit", "Ruby Lipstick Trio", "Emerald Lip Color Collection", "Colorful Skincare Collection", "Pastel Beauty Collection", "Citrus Skincare Collection", "Rose Body Care Collection", "Blue and Rose Fragrance Set", "Rose Lip and Nail Color Set", "Lumiere Luxury Skincare", "Cocoa Cosmetics Lip Collection", "Rich Barrier Face Cream",
+];
+
+const beautySubcategories = [
+  "Makeup", "Makeup", "Fragrance", "Skincare", "Hair", "Makeup", "Skincare", "Makeup", "Fragrance", "Makeup", "Makeup", "Makeup", "Makeup", "Skincare", "Skincare", "Skincare", "Body", "Fragrance", "Makeup", "Skincare", "Makeup", "Skincare",
+];
+
+function makeProduct(id: string, name: string, category: "Home & Living" | "Beauty", subcategory: string, index: number): Product {
+  return {
+    id: `cloudinary-${category === "Beauty" ? "beauty" : "decor"}-${String(index + 1).padStart(3, "0")}`,
+    brandId: category === "Beauty" ? "sagewell-apothecary" : "ashwood-atelier",
+    name,
+    price: category === "Beauty" ? 28 + (index % 8) * 12 : 42 + (index % 9) * 18,
+    rating: 0,
+    ratingCount: 0,
+    category,
+    subcategory,
+    images: [`${CLOUDINARY_IMAGE_BASE}${id}.png`],
+    isNew: true,
+    description: `${name}, selected from the Cloudinary ${category.toLowerCase()} collection for the avnu demo catalog.`,
+    merchant: category === "Beauty" ? "Sagewell Apothecary" : "Ashwood Atelier",
+    handle: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
+    collection: category === "Beauty" ? "Beauty Edit" : "Home Edit",
+    productType: name,
+    currency: "USD",
+    colors: [],
+    materials: [],
+    sizes: [],
+    styleTags: [category, "Curated"],
+    occasionTags: [],
+    moodTags: [],
+    searchTags: [category, subcategory, name.toLowerCase()],
+    recommendationTags: [category, subcategory],
+  };
+}
+
+export const cloudinaryCategoryProducts: Product[] = [
+  ...decorAssets.map((asset, index) => makeProduct(asset, decorNames[index], "Home & Living", "Decor", index)),
+  ...beautyAssets.map((asset, index) => makeProduct(asset, beautyNames[index], "Beauty", beautySubcategories[index], index)),
+];

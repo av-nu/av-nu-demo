@@ -145,7 +145,7 @@ const promptAliases: Array<{ terms: string[]; signals: string[]; categories?: st
   { terms: ["self care", "skincare", "beauty"], signals: ["beauty", "self care", "skincare & fragrance"], categories: ["Beauty", "Accessories", "Apparel"] },
 ];
 
-const availableCategories = Array.from(new Set(mockProducts.map((product) => product.category)));
+const availableCategories = ["Apparel", "Accessories", "Beauty"].filter((category) => mockProducts.some((product) => product.category === category));
 const occasionSignals = ["event", "celebration", "occasion wear", "evening apparel", "elegant", "event ready", "formal"];
 const warmWeatherSignals = ["warm weather", "summer", "lightweight", "breathable", "linen"];
 
