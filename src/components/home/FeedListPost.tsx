@@ -84,7 +84,7 @@ export function FeedListPost({
   };
 
   return (
-    <article className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#2f2f2d] shadow-sm ring-1 ring-black/5">
+    <article className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-text shadow-sm ring-1 ring-black/5">
       {/* Header */}
       <div className="flex items-center gap-3 px-3 py-3">
         {post.authorId && post.authorId !== "me" ? (

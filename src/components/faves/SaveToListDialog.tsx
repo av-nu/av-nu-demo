@@ -194,7 +194,7 @@ export function SaveToListDialog({ product, onClose, onToast }: SaveToListDialog
                     type="button"
                     onClick={handleCreate}
                     disabled={!newName.trim()}
-                    className="flex-1 rounded-xl bg-burgundy py-2.5 text-sm font-medium text-white transition-colors hover:bg-burgundy/90 disabled:opacity-40"
+                    className="flex-1 rounded-xl bg-navy py-2.5 text-sm font-medium text-white transition-colors hover:bg-navy/90 disabled:opacity-40"
                   >
                     Create
                   </button>

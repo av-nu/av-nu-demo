@@ -43,7 +43,7 @@ export function SaveLookDialog({ onClose, onCreatedAccount }: SaveLookDialogProp
             className="w-full rounded-t-3xl bg-bg p-5 shadow-2xl sm:max-w-md sm:rounded-3xl sm:p-6"
           >
             <div className="flex items-start justify-between gap-4">
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-pink/10 text-pink">
+              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-burgundy/10 text-burgundy">
                 <Sparkles className="h-5 w-5" />
               </span>
               <button
@@ -68,7 +68,7 @@ export function SaveLookDialog({ onClose, onCreatedAccount }: SaveLookDialogProp
                   onChange={(event) => setName(event.target.value)}
                   placeholder="Your name"
                   autoComplete="name"
-                  className="h-11 w-full rounded-xl border border-divider/60 bg-surface/50 px-4 text-sm text-text placeholder:text-text/40 focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20"
+                  className="h-11 w-full rounded-xl border border-divider/60 bg-surface/50 px-4 text-sm text-text placeholder:text-text/40 focus:border-ember/50 focus:outline-none focus:ring-2 focus:ring-ember/20"
                 />
               </label>
               <label className="block">
@@ -80,12 +80,12 @@ export function SaveLookDialog({ onClose, onCreatedAccount }: SaveLookDialogProp
                   onChange={(event) => setEmail(event.target.value)}
                   placeholder="you@example.com"
                   autoComplete="email"
-                  className="h-11 w-full rounded-xl border border-divider/60 bg-surface/50 px-4 text-sm text-text placeholder:text-text/40 focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20"
+                  className="h-11 w-full rounded-xl border border-divider/60 bg-surface/50 px-4 text-sm text-text placeholder:text-text/40 focus:border-ember/50 focus:outline-none focus:ring-2 focus:ring-ember/20"
                 />
               </label>
               <button
                 type="submit"
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-burgundy py-3 text-sm font-semibold text-white transition-colors hover:bg-burgundy/90"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-navy py-3 text-sm font-semibold text-white transition-colors hover:bg-navy/90"
               >
                 <Mail className="h-4 w-4" />
                 Create account & save look

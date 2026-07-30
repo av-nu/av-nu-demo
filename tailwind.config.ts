@@ -18,6 +18,9 @@ const config: Config = {
         sky: "rgb(var(--sky-rgb) / <alpha-value>)",
         sun: "rgb(var(--sun-rgb) / <alpha-value>)",
         burgundy: "rgb(var(--burgundy-rgb) / <alpha-value>)",
+        navy: "rgb(var(--navy-rgb) / <alpha-value>)",
+        ember: "rgb(var(--ember-rgb) / <alpha-value>)",
+        sand: "rgb(var(--sand-rgb) / <alpha-value>)",
         divider: "var(--divider)",
       },
       fontFamily: {

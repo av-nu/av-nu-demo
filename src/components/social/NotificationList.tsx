@@ -43,7 +43,7 @@ function NotificationItem({
       onClick={() => !n.read && markRead(n.id)}
       className={cn(
         "flex items-start gap-3 rounded-xl px-3 py-3 transition-colors",
-        n.read ? "bg-transparent" : "bg-accent/5",
+        n.read ? "bg-transparent" : "bg-surface/70",
       )}
     >
       <div className="relative">
@@ -75,7 +75,7 @@ function NotificationItem({
                 markRead(n.id);
                 onToast?.(`${n.actor.name} added to your inner circle`);
               }}
-              className="flex h-8 items-center gap-1.5 rounded-full bg-burgundy px-3 text-xs font-medium text-white hover:bg-burgundy/90"
+              className="flex h-8 items-center gap-1.5 rounded-full bg-navy px-3 text-xs font-medium text-white hover:bg-navy/90"
             >
               <Check className="h-3.5 w-3.5" />
               Accept

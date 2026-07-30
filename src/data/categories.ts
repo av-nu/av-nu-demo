@@ -156,6 +156,8 @@ export const categories: Category[] = [
   },
 ];
 
+export const shopCategories = categories.filter((category) => ["apparel", "home-living", "beauty"].includes(category.id));
+
 // Helper to get category path labels
 export function getCategoryPath(
   categoryId?: string,

@@ -22,15 +22,15 @@ export default function MomentsPage() {
         <div>
           <Link href="/" className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-text/55 hover:text-text"><ArrowLeft className="h-4 w-4" />Back to Discover</Link>
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-pink/20 text-burgundy"><Camera className="h-5 w-5" /></span>
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-ember/15 text-ember"><Camera className="h-5 w-5" /></span>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-burgundy/60">Community</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ember/80">Community</p>
               <h1 className="font-headline text-4xl tracking-tight text-text sm:text-5xl">Published moments</h1>
             </div>
           </div>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-text/60">Images, videos, and small points of view from the av | nu community.</p>
         </div>
-        <Link href="/create/moment" className="rounded-full bg-burgundy px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-burgundy/90">Create a moment</Link>
+        <Link href="/create/moment" className="rounded-full bg-ember px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-ember/90">Create a moment</Link>
       </header>
 
       {publishedMoments.length > 0 ? (

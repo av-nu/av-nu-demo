@@ -272,7 +272,7 @@ export function VideoReviewUploadDialog({
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-burgundy py-2.5 text-sm font-medium text-white transition-colors hover:bg-burgundy/90"
+                  className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-navy py-2.5 text-sm font-medium text-white transition-colors hover:bg-navy/90"
                 >
                   <Check className="h-4 w-4" />
                   Publish moment
@@ -285,7 +285,7 @@ export function VideoReviewUploadDialog({
                 type="button"
                 disabled={!canSubmit}
                 onClick={() => setPublishOptionsOpen(true)}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-burgundy py-2.5 text-sm font-medium text-white transition-colors hover:bg-burgundy/90 disabled:opacity-40"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-navy py-2.5 text-sm font-medium text-white transition-colors hover:bg-navy/90 disabled:opacity-40"
               >
                 <Check className="h-4 w-4" />
                 Publish

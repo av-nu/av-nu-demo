@@ -39,7 +39,7 @@ type LayflatPostPreviewProps = {
   gridItemCount?: number;
 };
 
-export function LayflatPostPreview({ products, title, description, layout = "layflat", backgroundColor = "#fffaf0", backgroundImage, editorialDesign, media = [], layflatStyle = "classic", gridItemCount = 4 }: LayflatPostPreviewProps) {
+export function LayflatPostPreview({ products, title, description, layout = "layflat", backgroundColor = "#fffdf9", backgroundImage, editorialDesign, media = [], layflatStyle = "classic", gridItemCount = 4 }: LayflatPostPreviewProps) {
   const label = layout === "grid" ? "Grid post preview" : layout === "featured" ? "Featured guide preview" : layout === "editorial" ? "Editorial post preview" : "Styled layflat preview";
   const itemLimit = layout === "grid" ? Math.min(8, Math.max(1, gridItemCount)) : 8;
   const items = [...products.map((product) => ({ id: product.id, type: "product" as const, src: product.images[0], name: product.name })), ...media].slice(0, itemLimit);

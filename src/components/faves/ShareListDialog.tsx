@@ -227,7 +227,7 @@ export function ShareListDialog({ list, onClose, onToast }: ShareListDialogProps
               type="button"
               onClick={handleSave}
               disabled={!canSave}
-              className="flex-1 rounded-xl bg-burgundy py-3 text-sm font-medium text-white transition-colors hover:bg-burgundy/90 disabled:opacity-40"
+              className="flex-1 rounded-xl bg-navy py-3 text-sm font-medium text-white transition-colors hover:bg-navy/90 disabled:opacity-40"
             >
               Save
             </button>

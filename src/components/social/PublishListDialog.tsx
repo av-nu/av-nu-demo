@@ -163,7 +163,7 @@ export function PublishListDialog({
                   type="button"
                   disabled={!selected}
                   onClick={handlePublish}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-burgundy py-3 text-sm font-medium text-white transition-colors hover:bg-burgundy/90 disabled:opacity-40"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-navy py-3 text-sm font-medium text-white transition-colors hover:bg-navy/90 disabled:opacity-40"
                 >
                   <Globe2 className="h-4 w-4" />
                   {selected?.visibility === "public" ? "Update caption" : "Publish to profile"}

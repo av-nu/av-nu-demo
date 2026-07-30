@@ -110,7 +110,7 @@ export default function CustomerOrderDetailPage() {
           </div>
           <a
             href={`mailto:${SUPPORT_EMAIL}?subject=Help with ${order.orderNumber}`}
-            className="rounded-lg bg-burgundy px-3 py-2 text-sm font-medium text-white"
+            className="rounded-lg bg-navy px-3 py-2 text-sm font-medium text-white"
           >
             Contact support
           </a>

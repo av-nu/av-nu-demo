@@ -59,7 +59,7 @@ export function ShareLookbookDialog({ title, onClose, onShare }: ShareLookbookDi
               {selected.length === 0 && <p className="mt-2 text-xs text-pink">Select at least one person.</p>}
             </div>}
           </div>
-          <div className="flex gap-2 border-t border-divider/60 p-3"><button type="button" onClick={() => navigator.clipboard.writeText(window.location.href)} className="inline-flex items-center gap-2 rounded-xl border border-divider/60 px-4 py-3 text-sm font-medium text-text/70"><Link2 className="h-4 w-4" />Copy link</button><button type="button" disabled={!canShare} onClick={submit} className="flex-1 rounded-xl bg-burgundy py-3 text-sm font-medium text-white disabled:opacity-40">{mode === "public" ? "Publish post" : "Share Lookbook"}</button></div>
+          <div className="flex gap-2 border-t border-divider/60 p-3"><button type="button" onClick={() => navigator.clipboard.writeText(window.location.href)} className="inline-flex items-center gap-2 rounded-xl border border-divider/60 px-4 py-3 text-sm font-medium text-text/70"><Link2 className="h-4 w-4" />Copy link</button><button type="button" disabled={!canShare} onClick={submit} className="flex-1 rounded-xl bg-navy py-3 text-sm font-medium text-white disabled:opacity-40">{mode === "public" ? "Publish post" : "Share Lookbook"}</button></div>
         </div>
       </div>
     </Portal>

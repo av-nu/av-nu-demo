@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { mockProducts, type Product } from "@/data/mockProducts";
 import { mockBrands } from "@/data/mockBrands";
-import { categories, getCategoryPath } from "@/data/categories";
+import { categories, getCategoryPath, shopCategories } from "@/data/categories";
 import { ProductCard } from "@/components/product/ProductCard";
 import { CategoryTree } from "@/components/search/CategoryTree";
 import { FilterChips, type FilterChip } from "@/components/search/FilterChips";
@@ -303,9 +303,9 @@ export default function SearchPage() {
             <button type="button" onClick={() => handleCategorySelect()} className="text-xs font-semibold text-accent hover:underline">View all</button>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {categories.map((category, index) => {
+            {shopCategories.map((category, index) => {
               const active = selectedCategory === category.id;
-              const colorClasses = ["bg-pink/20 text-burgundy", "bg-accent/15 text-accent", "bg-amber-100 text-amber-800", "bg-emerald-100 text-emerald-800", "bg-sky-100 text-sky-800", "bg-violet-100 text-violet-800", "bg-orange-100 text-orange-800", "bg-rose-100 text-rose-800", "bg-lime-100 text-lime-800"];
+              const colorClasses = ["bg-pink/20 text-burgundy", "bg-accent/15 text-accent", "bg-sky/15 text-sky"];
               return <button key={category.id} type="button" onClick={() => handleCategorySelect(category.id)} className={cn("shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-all", colorClasses[index % colorClasses.length], active && "ring-2 ring-text/25 ring-offset-2 ring-offset-bg")}>{category.name}</button>;
             })}
           </div>

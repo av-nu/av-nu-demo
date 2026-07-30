@@ -197,7 +197,7 @@ function StepIndicator({ step }: { step: Step }) {
             className={cn(
               "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-medium",
               i < activeIndex && "bg-accent text-white",
-              i === activeIndex && "bg-burgundy text-white",
+              i === activeIndex && "bg-navy text-white",
               i > activeIndex && "bg-surface text-text/40",
             )}
           >
@@ -366,7 +366,7 @@ function ReasonStep({
               <span
                 className={cn(
                   "mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border",
-                  active ? "border-burgundy bg-burgundy" : "border-text/30",
+                  active ? "border-navy bg-navy" : "border-text/30",
                 )}
               >
                 {active && <span className="h-1.5 w-1.5 rounded-full bg-white" />}

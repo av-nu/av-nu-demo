@@ -11,21 +11,27 @@ const creationCards = [
     title: "Moment",
     description: "Share how you use a product, a review, or a moment worth remembering.",
     icon: Camera,
-    className: "bg-[#edf5eb]",
+    className: "bg-gradient-to-br from-navy/20 via-sky/15 to-text/10",
+    iconClassName: "text-navy/55",
+    actionClassName: "border-navy/35 text-navy/70 group-hover:border-navy group-hover:text-navy",
   },
   {
     href: "/create/guide",
     title: "Guide",
     description: "Build a shoppable story with a point of view and the pieces people need.",
     icon: BookOpen,
-    className: "bg-[#f4e9fa]",
+    className: "bg-gradient-to-br from-pink/20 via-burgundy/10 to-accent/15",
+    iconClassName: "text-burgundy/55",
+    actionClassName: "border-burgundy/35 text-burgundy/70 group-hover:border-burgundy group-hover:text-burgundy",
   },
   {
     href: "/create/list",
     title: "List",
     description: "Create a private list or share a thoughtful collection with a friend.",
     icon: ListChecks,
-    className: "bg-[#fff7df]",
+    className: "bg-gradient-to-br from-ember/20 via-sun/15 to-sand/30",
+    iconClassName: "text-ember/55",
+    actionClassName: "border-ember/35 text-ember/70 group-hover:border-ember group-hover:text-ember",
   },
 ];
 
@@ -38,7 +44,7 @@ export function CreateLanding() {
   return (
     <div className="mx-auto max-w-6xl pb-12">
       <header className="mx-auto max-w-2xl py-8 text-center sm:py-12">
-        <span className="inline-flex items-center gap-2 rounded-full bg-pink/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-burgundy">
+        <span className="inline-flex items-center gap-2 rounded-full bg-ember/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-ember">
           <Sparkles className="h-3.5 w-3.5" /> Your point of view
         </span>
         <h1 className="mt-4 font-headline text-4xl tracking-tight text-text sm:text-5xl">Let&apos;s get creative</h1>
@@ -57,12 +63,12 @@ export function CreateLanding() {
               href={card.href}
               className={`group flex min-h-64 flex-col items-center justify-between rounded-[2rem] border border-divider/70 p-6 text-center transition-all duration-200 hover:-translate-y-1 hover:shadow-lg ${card.className}`}
             >
-              <Icon className="h-12 w-12 text-text/25" strokeWidth={1.2} />
+              <Icon className={`h-12 w-12 ${card.iconClassName}`} strokeWidth={1.2} />
               <span>
                 <span className="block font-headline text-3xl tracking-tight text-text">{card.title}</span>
                 <span className="mt-2 block text-sm leading-relaxed text-text/65">{card.description}</span>
               </span>
-              <span className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-text/25 text-text/60 transition-colors group-hover:border-burgundy group-hover:text-burgundy">
+              <span className={`flex h-11 w-11 items-center justify-center rounded-full border-2 transition-colors ${card.actionClassName}`}>
                 <Plus className="h-6 w-6" />
               </span>
             </Link>

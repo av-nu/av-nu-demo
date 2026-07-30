@@ -31,7 +31,7 @@ export function InvitationInbox({ onToast }: { onToast?: (m: string) => void }) 
                   onToast?.(`${user.name} added to your inner circle`);
                 }}
                 aria-label="Accept"
-                className="flex h-9 items-center gap-1.5 rounded-full bg-burgundy px-3 text-sm font-medium text-white transition-colors hover:bg-burgundy/90"
+                className="flex h-9 items-center gap-1.5 rounded-full bg-navy px-3 text-sm font-medium text-white transition-colors hover:bg-navy/90"
               >
                 <Check className="h-4 w-4" />
                 Accept

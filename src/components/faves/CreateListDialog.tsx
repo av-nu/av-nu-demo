@@ -81,7 +81,7 @@ export function CreateListDialog({ onClose, onCreated }: CreateListDialogProps) 
               type="button"
               onClick={handleCreate}
               disabled={!name.trim()}
-              className="w-full rounded-xl bg-burgundy py-3 text-sm font-medium text-white transition-colors hover:bg-burgundy/90 disabled:opacity-40"
+              className="w-full rounded-xl bg-navy py-3 text-sm font-medium text-white transition-colors hover:bg-navy/90 disabled:opacity-40"
             >
               Create list
             </button>

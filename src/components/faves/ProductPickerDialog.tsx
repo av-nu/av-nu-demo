@@ -174,7 +174,7 @@ export function ProductPickerDialog({
                     if (onConfirm) onConfirm(pendingIds);
                     onClose();
                   }}
-                  className="w-full rounded-xl bg-burgundy py-3 text-sm font-medium text-white transition-colors hover:bg-burgundy/90 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="w-full rounded-xl bg-navy py-3 text-sm font-medium text-white transition-colors hover:bg-navy/90 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {onConfirm ? `Add ${pendingIds.length} product${pendingIds.length === 1 ? "" : "s"}` : "Done"}
                 </button>

@@ -2,24 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * av | nu palette
+ * ---------------
+ * Sunset ramp: #00202E #003F5C #2C4875 #8A508F #BC5090 #FF6361 #FF8531 #FFA600 #FFD380
+ * `bg` and `surface` are softened neutrals so the saturated ramp can carry
+ * the interface without making the canvas feel yellow or highlighted.
+ *
+ * PRIMARY ACTIONS: opaque primary buttons and active controls use navy
+ * #003F5C. Magenta #BC5090 remains the strong brand accent, including the
+ * italic "nu" in the headline, expressive labels, borders, and tinted surfaces.
+ * To audition another primary later, swap the --navy lines below:
+ *   Deep blue (current): #003F5C / 0 63 92
+ *   Magenta:              #BC5090 / 188 80 144
+ *   Purple:               #8A508F / 138 80 143
+ */
 :root {
-  --bg: #fffdf9;
-  --bg-rgb: 255 253 249;
-  --surface: #edf7f8;
-  --surface-rgb: 237 247 248;
-  --text: #2d4058;
-  --text-rgb: 45 64 88;
-  --accent: #edb09a;
-  --accent-rgb: 237 176 154;
-  --pink: #eab9cf;
-  --pink-rgb: 234 185 207;
-  --sky: #b9dfea;
-  --sky-rgb: 185 223 234;
-  --sun: #f8dda0;
-  --sun-rgb: 248 221 160;
-  --burgundy: #29445f;
-  --burgundy-rgb: 41 68 95;
-  --divider: rgba(45, 64, 88, 0.14);
+  --bg: #fcfbf8;
+  --bg-rgb: 252 251 248;
+  --surface: #f3f4f2;
+  --surface-rgb: 243 244 242;
+  --text: #00202e;
+  --text-rgb: 0 32 46;
+  --accent: #ff6361;
+  --accent-rgb: 255 99 97;
+  --pink: #8a508f;
+  --pink-rgb: 138 80 143;
+  --sky: #2c4875;
+  --sky-rgb: 44 72 117;
+  --sun: #ffa600;
+  --sun-rgb: 255 166 0;
+  --burgundy: #bc5090;
+  --burgundy-rgb: 188 80 144;
+  --navy: #003f5c;
+  --navy-rgb: 0 63 92;
+  --ember: #ff8531;
+  --ember-rgb: 255 133 49;
+  --sand: #ffd380;
+  --sand-rgb: 255 211 128;
+  --divider: rgba(0, 32, 46, 0.14);
 }
 
 html,

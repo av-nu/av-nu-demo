@@ -93,7 +93,7 @@ export function FollowButton({
             requestInnerCircle(userId);
             onToast?.(`Inner-circle request sent to ${name}`);
           }}
-          className={cn(pill, "bg-burgundy text-white hover:bg-burgundy/90")}
+          className={cn(pill, "bg-navy text-white hover:bg-navy/90")}
         >
           <UserPlus className="h-4 w-4" />
           Add to inner circle
@@ -110,7 +110,7 @@ export function FollowButton({
         follow(userId);
         onToast?.(`Following ${name}`);
       }}
-      className={cn(pill, "bg-burgundy text-white hover:bg-burgundy/90", className)}
+      className={cn(pill, "bg-navy text-white hover:bg-navy/90", className)}
     >
       <UserPlus className="h-4 w-4" />
       Follow

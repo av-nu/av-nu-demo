@@ -62,9 +62,9 @@ export function getBrandAverageRating(brandId: string): {
   average: number;
   productCount: number;
 } {
-  const products = getBrandWindowProducts(brandId);
+  const products = getBrandWindowProducts(brandId).filter((product) => product.ratingCount > 0 && product.rating > 0);
   if (products.length === 0) return { average: 0, productCount: 0 };
-  const sum = products.reduce((acc, p) => acc + p.rating, 0);
+  const sum = products.reduce((acc, product) => acc + product.rating, 0);
   return { average: sum / products.length, productCount: products.length };
 }
 

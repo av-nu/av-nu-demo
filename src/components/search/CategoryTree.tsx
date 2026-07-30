@@ -5,7 +5,7 @@ import { ChevronRight, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { cn } from "@/lib/utils";
-import { categories, type Category, type Subcategory } from "@/data/categories";
+import { shopCategories, type Category, type Subcategory } from "@/data/categories";
 
 interface CategoryTreeProps {
   selectedCategory?: string;
@@ -94,7 +94,7 @@ export const CategoryTree = memo(function CategoryTree({
         All Products
       </button>
 
-      {categories.map((category) => {
+      {shopCategories.map((category) => {
         const isExpanded = expandedCategories.has(category.id);
         const isSelected = selectedCategory === category.id;
 

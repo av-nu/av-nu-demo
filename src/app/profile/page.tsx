@@ -61,7 +61,7 @@ export default function ProfilePage() {
         <button
           type="button"
           onClick={() => setUploading(true)}
-          className="inline-flex items-center gap-1.5 rounded-full bg-burgundy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-burgundy/90"
+          className="inline-flex items-center gap-1.5 rounded-full bg-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-navy/90"
         >
           <Plus className="h-4 w-4" />
           Add post

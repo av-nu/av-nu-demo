@@ -139,7 +139,7 @@ function ReturnsLanding() {
         {error && <p className="text-xs text-pink">{error}</p>}
         <button
           type="submit"
-          className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-burgundy text-sm font-medium text-white"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-navy text-sm font-medium text-white"
         >
           <Search className="h-4 w-4" />
           Find your purchase

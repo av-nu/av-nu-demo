@@ -55,7 +55,7 @@ export default function ReturnFlowPage() {
         </p>
         <Link
           href="/returns"
-          className="mt-6 inline-block rounded-lg bg-burgundy px-4 py-2 text-sm font-medium text-white"
+          className="mt-6 inline-block rounded-lg bg-navy px-4 py-2 text-sm font-medium text-white"
         >
           Find your purchase
         </Link>

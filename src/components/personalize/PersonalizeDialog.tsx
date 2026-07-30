@@ -154,7 +154,7 @@ export function PersonalizeDialog({ onClose, onToast }: PersonalizeDialogProps) 
                     type="button"
                     onClick={() => setStep(2)}
                     disabled={!canContinue}
-                    className="flex items-center gap-2 rounded-full bg-burgundy px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-burgundy/90 disabled:opacity-40"
+                    className="flex items-center gap-2 rounded-full bg-navy px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-navy/90 disabled:opacity-40"
                   >
                     Next
                     <ArrowRight className="h-4 w-4" />
@@ -224,7 +224,7 @@ export function PersonalizeDialog({ onClose, onToast }: PersonalizeDialogProps) 
                       type="button"
                       onClick={finish}
                       disabled={!username.trim()}
-                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-burgundy py-3 text-sm font-semibold text-white transition-colors hover:bg-burgundy/90 disabled:opacity-40"
+                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-navy py-3 text-sm font-semibold text-white transition-colors hover:bg-navy/90 disabled:opacity-40"
                     >
                       <Mail className="h-4 w-4" />
                       Create account

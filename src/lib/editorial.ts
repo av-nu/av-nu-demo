@@ -238,7 +238,7 @@ export function createTextElement(content = "Add your story", preset: "title" | 
     lineHeight: 1.05,
     letterSpacing: preset === "subtitle" ? 3 : 0,
     align: "left",
-    color: "#29445f",
+    color: "#00202e",
     backgroundColor: "transparent",
     padding: 0,
   };
@@ -250,7 +250,7 @@ export function createShapeElement(shape: EditorialShapeKind = "rectangle"): Edi
     ...baseElement("shape", shape === "rectangle" ? "Color block" : label, { x: 180, y: 200, width: 360, height: shape === "line" ? 8 : 300, zIndex: 0 }),
     type: "shape",
     shape,
-    fill: shape === "line" ? "#29445f" : "#b9dfea",
+    fill: shape === "line" ? "#00202e" : "#ffd380",
     stroke: "transparent",
     strokeWidth: 0,
     borderRadius: shape === "ellipse" ? 999 : 0,
@@ -296,7 +296,7 @@ export function applyEditorialTemplate(productIds: string[], title: string, temp
   return {
     version: 1,
     format,
-    backgroundColor: "#fffaf0",
+    backgroundColor: "#fffdf9",
     backgroundOpacity: 1,
     showGuides: true,
     elements: elements.map((element, index) => ({ ...element, zIndex: index })),
@@ -324,7 +324,7 @@ export function normalizeEditorialPage(value: EditorialPageDesign | undefined, p
     return element;
   });
   if (elements.length !== value.elements.length) changed = true;
-  const backgroundColor = value.backgroundColor || "#fffaf0";
+  const backgroundColor = value.backgroundColor || "#fffdf9";
   const backgroundOpacity = Number.isFinite(value.backgroundOpacity) ? value.backgroundOpacity : 1;
   const showGuides = value.showGuides ?? true;
   if (backgroundColor !== value.backgroundColor || backgroundOpacity !== value.backgroundOpacity || showGuides !== value.showGuides) changed = true;

@@ -104,11 +104,11 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
   return (
     <div className="mx-auto max-w-[1500px] pb-12">
       <header className="py-7 text-center sm:py-10">
-        <p className="mx-auto max-w-none whitespace-nowrap px-0 text-xs uppercase tracking-[0.24em] text-burgundy/55">Shop Small, Together</p>
+        <p className="mx-auto max-w-none whitespace-nowrap px-0 text-xs uppercase tracking-[0.24em] text-text/70">Shop Small, Together</p>
         <h1 className="mt-2 font-headline text-4xl tracking-tight text-text sm:text-5xl">Discover something <span className="italic text-burgundy">nu</span></h1>
         <div className="mx-auto mt-5 flex w-fit rounded-full border border-divider bg-white p-1 shadow-sm">
-          <button type="button" onClick={() => setScope("discover")} className={`rounded-full px-5 py-2 text-xs font-semibold transition-colors ${scope === "discover" ? "bg-burgundy text-white" : "text-text/60"}`}>Discover</button>
-          <button type="button" onClick={() => setScope("inner")} className={`rounded-full px-5 py-2 text-xs font-semibold transition-colors ${scope === "inner" ? "bg-burgundy text-white" : "text-text/60"}`}>Inner Circle</button>
+          <button type="button" onClick={() => setScope("discover")} className={`rounded-full px-5 py-2 text-xs font-semibold transition-colors ${scope === "discover" ? "bg-navy text-white" : "text-text/60"}`}>Discover</button>
+          <button type="button" onClick={() => setScope("inner")} className={`rounded-full px-5 py-2 text-xs font-semibold transition-colors ${scope === "inner" ? "bg-navy text-white" : "text-text/60"}`}>Inner Circle</button>
         </div>
       </header>
 
@@ -127,9 +127,9 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
           </section>
         )}
 
-        <button type="button" onClick={() => setCreating(true)} className={`flex min-h-28 items-center justify-between gap-4 rounded-3xl border border-divider bg-white px-5 text-left transition-colors hover:bg-pink/10 ${scope === "discover" ? "w-full" : ""}`}>
-          <div><span className="inline-flex items-center gap-1 rounded-full bg-burgundy px-2.5 py-1 text-[10px] font-semibold text-white"><Plus className="h-3 w-3" />Create</span><p className="mt-3 text-sm text-text/60">Post a guide, review, or moment</p></div>
-          <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-pink/20 text-burgundy"><ImagePlus className="h-7 w-7" /></span>
+        <button type="button" onClick={() => setCreating(true)} className={`flex min-h-28 items-center justify-between gap-4 rounded-3xl border border-divider bg-white px-5 text-left transition-colors hover:bg-accent/10 ${scope === "discover" ? "w-full" : ""}`}>
+          <div><span className="inline-flex items-center gap-1 rounded-full bg-accent px-2.5 py-1 text-[10px] font-semibold text-white"><Plus className="h-3 w-3" />Create</span><p className="mt-3 text-sm text-text/60">Post a guide, review, or moment</p></div>
+          <span className="flex h-20 w-20 items-center justify-center rounded-2xl bg-accent/15 text-accent"><ImagePlus className="h-7 w-7" /></span>
         </button>
       </div>
 

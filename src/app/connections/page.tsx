@@ -79,7 +79,7 @@ export default function ConnectionsPage() {
             {t.label}
             {t.count > 0 && <span className="ml-1.5 text-xs text-text/40">{t.count}</span>}
             {tab === t.id && (
-              <motion.div layoutId="conn-tab" className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-burgundy" />
+              <motion.div layoutId="conn-tab" className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-navy" />
             )}
           </button>
         ))}
@@ -167,7 +167,7 @@ export default function ConnectionsPage() {
                               follow(user.id);
                               showToast(`Following ${user.name}`);
                             }}
-                            className="inline-flex items-center gap-1.5 rounded-full bg-burgundy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-burgundy/90"
+                            className="inline-flex items-center gap-1.5 rounded-full bg-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-navy/90"
                           >
                             <UserPlus className="h-4 w-4" />
                             Follow

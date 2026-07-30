@@ -10,7 +10,7 @@ import { socialService } from "@/lib/social";
 import type { MyProfile } from "@/lib/social";
 
 const COLORS = ["bg-burgundy", "bg-accent", "bg-pink"];
-const THEMES = ["bg-pink/5", "bg-accent/5", "bg-amber-50", "bg-emerald-50"];
+const THEMES = ["bg-pink/5", "bg-accent/5", "bg-sand/25", "bg-sky/10"];
 
 export function EditProfileDialog({
   profile,
@@ -138,7 +138,7 @@ export function EditProfileDialog({
               <button
                 type="button"
                 onClick={handleSave}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-burgundy py-3 text-sm font-medium text-white transition-colors hover:bg-burgundy/90"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-navy py-3 text-sm font-medium text-white transition-colors hover:bg-navy/90"
               >
                 <Check className="h-4 w-4" />
                 Save profile

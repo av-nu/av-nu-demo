@@ -9,12 +9,13 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-burgundy text-bg hover:bg-burgundy/90",
+        default: "bg-navy text-bg hover:bg-navy/90",
         surface: "bg-surface text-text hover:bg-surface/80",
         ghost: "text-text hover:text-burgundy hover:italic hover:bg-transparent",
         pink: "bg-pink text-bg hover:bg-pink/90",
-        plum:
-          "bg-[#5A4A4D] text-white hover:bg-[#5A4A4D]/90 active:bg-[#5A4A4D]/85",
+        // Commerce CTAs (add to cart, checkout). Deep navy keeps them distinct
+        // from the magenta brand actions above.
+        plum: "bg-navy text-white hover:bg-navy/90 active:bg-navy/85",
       },
       size: {
         default: "h-10 px-4 py-2",

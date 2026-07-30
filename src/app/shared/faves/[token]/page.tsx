@@ -20,11 +20,11 @@ export default function SharedFavesPage({ params }: { params: { token: string } 
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 py-6">
-      <section className="overflow-hidden rounded-3xl bg-[#efe3ee] px-5 py-8 text-center sm:px-10">
-        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/75 text-[#72435f]"><Gift className="h-5 w-5" /></span>
-        <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-[#72435f]/60">Shared with you</p>
-        <h1 className="mt-2 font-headline text-3xl text-[#30282d] sm:text-4xl">{payload.name}</h1>
-        <p className="mx-auto mt-2 max-w-lg text-sm text-[#30282d]/60">Shop directly from this list. You do not need an av | nu account.</p>
+      <section className="overflow-hidden rounded-3xl bg-pink/10 px-5 py-8 text-center sm:px-10">
+        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/75 text-burgundy"><Gift className="h-5 w-5" /></span>
+        <p className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-burgundy/60">Shared with you</p>
+        <h1 className="mt-2 font-headline text-3xl text-text sm:text-4xl">{payload.name}</h1>
+        <p className="mx-auto mt-2 max-w-lg text-sm text-text/60">Shop directly from this list. You do not need an av | nu account.</p>
       </section>
 
       {products.length === 0 ? <p className="rounded-2xl border border-divider/60 py-12 text-center text-sm text-text/50">This list does not have any available products yet.</p> : (
@@ -36,7 +36,7 @@ export default function SharedFavesPage({ params }: { params: { token: string } 
         </div>
       )}
 
-      <div className="flex justify-center"><Link href="/" className="inline-flex items-center gap-2 rounded-full bg-[#30282d] px-5 py-3 text-sm font-semibold text-white"><ShoppingBag className="h-4 w-4" />Keep discovering</Link></div>
+      <div className="flex justify-center"><Link href="/" className="inline-flex items-center gap-2 rounded-full bg-text px-5 py-3 text-sm font-semibold text-white"><ShoppingBag className="h-4 w-4" />Keep discovering</Link></div>
       <ToastContainer />
     </div>
   );
