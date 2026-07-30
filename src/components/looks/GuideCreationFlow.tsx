@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { ArrowLeft, ArrowRight, Check, Heart, ImagePlus, ListFilter, LoaderCircle, MoreHorizontal, Plus, Sparkles, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Grid2X2, Heart, ImagePlus, LayoutTemplate, ListFilter, LoaderCircle, MoreHorizontal, Plus, Sparkles, Star, X } from "lucide-react";
 
 import type { FaveList } from "@/data/faves";
 import { flattenPages } from "@/data/faves";
@@ -181,10 +181,16 @@ export function GuideCreationFlow({ lists, onComplete }: GuideCreationFlowProps)
         <p className="mt-2 text-sm leading-relaxed text-text/55">You can change the format later in the editor, so choose the starting canvas that feels right.</p>
       </div>
       <div className="mt-7 grid gap-3">
-        {formatOptions.map((option) => <button key={option.value} type="button" onClick={() => chooseFormat(option.value)} className={`group flex items-start gap-4 rounded-2xl border p-4 text-left transition-colors hover:border-ember/50 hover:bg-ember/5 sm:p-5 ${layout === option.value ? "border-ember bg-ember/5" : "border-divider/70 bg-bg"}`}>
-          <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border ${option.value === "editorial" ? "border-burgundy/30 bg-burgundy/10" : option.value === "grid" ? "border-ember/30 bg-ember/10" : "border-burgundy/25 bg-burgundy/10"}`}><span className={`grid ${option.value === "editorial" ? "grid-cols-2" : option.value === "grid" ? "grid-cols-3" : "grid-cols-2"} gap-1`}>{Array.from({ length: option.value === "featured" ? 3 : 6 }, (_, index) => <span key={index} className={`rounded-sm ${option.value === "featured" && index === 0 ? "col-span-2 row-span-2 h-8 bg-burgundy/55" : "h-3 bg-text/20"}`} />)}</span></span>
-          <span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-2"><span className="font-headline text-xl text-text">{option.label}</span><ArrowRight className="h-4 w-4 shrink-0 text-text/35 transition-transform group-hover:translate-x-1" /></span><span className="mt-1 block text-xs leading-relaxed text-text/55">{option.description}</span></span>
-        </button>)}
+        {formatOptions.map((option) => {
+          const FormatIcon = option.value === "editorial" ? LayoutTemplate : option.value === "grid" ? Grid2X2 : Star;
+          const iconClass = option.value === "editorial" ? "text-burgundy" : option.value === "grid" ? "text-ember" : "text-burgundy";
+          return <button key={option.value} type="button" onClick={() => chooseFormat(option.value)} className={`group flex items-start gap-4 rounded-2xl border p-4 text-left transition-colors hover:border-ember/50 hover:bg-ember/5 sm:p-5 ${layout === option.value ? "border-ember bg-ember/5" : "border-divider/70 bg-bg"}`}>
+            <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border ${option.value === "editorial" ? "border-burgundy/30 bg-burgundy/10" : option.value === "grid" ? "border-ember/30 bg-ember/10" : "border-burgundy/25 bg-burgundy/10"}`}>
+              <FormatIcon className={`h-7 w-7 ${iconClass}`} strokeWidth={1.5} />
+            </span>
+            <span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-2"><span className="font-headline text-xl text-text">{option.label}</span><ArrowRight className="h-4 w-4 shrink-0 text-text/35 transition-transform group-hover:translate-x-1" /></span><span className="mt-1 block text-xs leading-relaxed text-text/55">{option.description}</span></span>
+          </button>;
+        })}
       </div>
     </div>
   );
