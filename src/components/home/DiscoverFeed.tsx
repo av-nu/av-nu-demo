@@ -160,8 +160,8 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
             </Link>
           ))}
           <Link href="/profile" aria-label="Your profile" className="flex min-w-0 items-center justify-center gap-1.5 border-l border-white/60 bg-burgundy px-1.5 py-3 text-[10px] font-semibold text-white transition-colors hover:opacity-90 sm:gap-2 sm:px-3 sm:text-xs">
-            <Avatar user={currentUser} size="sm" className="h-8 w-8 border-2 border-white bg-white text-burgundy" />
-            <span className="truncate">Profile</span>
+            <Avatar user={currentUser} size="sm" className="h-10 w-10 border-2 border-white bg-white text-burgundy sm:h-8 sm:w-8" />
+            <span className="hidden truncate sm:inline">Profile</span>
           </Link>
         </div>
       </div>
