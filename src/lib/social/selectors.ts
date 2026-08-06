@@ -15,7 +15,7 @@ export function toSocialUser(userId: string, state: SocialState): SocialUser {
       initials: initialsFor(name),
       color: p.avatarColor,
       bio: p.bio,
-      avatarUrl: p.avatarUrl,
+      avatarUrl: p.avatarUrl ?? currentUser.avatarUrl,
       isCurrentUser: true,
     };
   }
@@ -27,6 +27,7 @@ export function toSocialUser(userId: string, state: SocialState): SocialUser {
     initials: c?.initials ?? "AV",
     color: c?.color ?? "bg-accent",
     bio: c?.bio,
+    avatarUrl: c?.avatarUrl,
   };
 }
 

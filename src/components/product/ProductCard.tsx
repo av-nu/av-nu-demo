@@ -12,13 +12,13 @@ import { getBrandById } from "@/lib/data";
 import { StarRating } from "@/components/ui/StarRating";
 import { FaveButton } from "@/components/faves/FaveButton";
 import { ShareProductDialog } from "@/components/product/ShareProductDialog";
-import { useUserRatings } from "@/hooks/useUserRatings";
 import { useCart } from "@/hooks/useCart";
 
 interface ProductCardProps {
   product: Product;
   priority?: boolean;
   onShare?: (message: string) => void;
+  onProductClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void;
   /** When true, the card stretches to fill its container height with a
    *  rectangular image (used in the shoppable feed to align with videos). */
   stretch?: boolean;
@@ -29,15 +29,13 @@ export const ProductCard = memo(function ProductCard({
   product,
   priority = false,
   onShare,
+  onProductClick,
   stretch = false,
   imageAspect = "square",
 }: ProductCardProps) {
   const brand = getBrandById(product.brandId);
-  const { getUserRating, setUserRating } = useUserRatings();
   const { addToCart } = useCart();
   const [shareOpen, setShareOpen] = useState(false);
-
-  const userRating = getUserRating(product.id);
 
   const handleShareClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -45,12 +43,6 @@ export const ProductCard = memo(function ProductCard({
     setShareOpen(true);
   }, []);
 
-  const handleRate = useCallback(
-    (rating: number) => {
-      setUserRating(product.id, rating);
-    },
-    [product.id, setUserRating],
-  );
 
   const handleQuickAdd = useCallback(
     (e: React.MouseEvent) => {
@@ -79,6 +71,7 @@ export const ProductCard = memo(function ProductCard({
       >
         <Link
           href={`/product/${product.id}`}
+          onClick={onProductClick}
           className="block h-full w-full"
         >
           <Image
@@ -91,7 +84,7 @@ export const ProductCard = memo(function ProductCard({
           />
 
           {product.isNew && (
-            <span className="absolute left-2 top-2 z-10 rounded-md bg-accent px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-bg">
+            <span className="absolute left-2 top-2 z-10 rounded-md bg-list px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white">
               New
             </span>
           )}
@@ -120,6 +113,8 @@ export const ProductCard = memo(function ProductCard({
           <div className="text-[11px] uppercase tracking-wide text-text/50">
             {brand?.name ?? "Brand"}
           </div>
+          <div className="flex items-center gap-2">
+            <StarRating rating={product.rating} showUserRating={false} size="sm" />
           <motion.button
             type="button"
             aria-label="Share product"
@@ -129,26 +124,21 @@ export const ProductCard = memo(function ProductCard({
           >
             <Send className="h-3.5 w-3.5" />
           </motion.button>
+          </div>
         </div>
 
         <Link
           href={`/product/${product.id}`}
+          onClick={onProductClick}
           className="line-clamp-2 font-headline text-sm font-medium leading-snug text-text transition-colors hover:text-accent"
         >
           {product.name}
         </Link>
 
-        <div className="mt-1 flex items-center justify-between">
+        <div className="mt-1">
           <span className="text-sm font-semibold text-text">
             ${product.price}
           </span>
-
-          <StarRating
-            rating={product.rating}
-            userRating={userRating}
-            onRate={handleRate}
-            size="sm"
-          />
         </div>
       </div>
       {shareOpen && <ShareProductDialog product={product} onClose={() => setShareOpen(false)} onToast={onShare} />}

@@ -12,7 +12,6 @@ import { getBrandById } from "@/lib/data";
 import { StarRating } from "@/components/ui/StarRating";
 import { FaveButton } from "@/components/faves/FaveButton";
 import { ShareProductDialog } from "@/components/product/ShareProductDialog";
-import { useUserRatings } from "@/hooks/useUserRatings";
 
 interface ProductCardVerticalProps {
   product: Product;
@@ -26,11 +25,8 @@ export const ProductCardVertical = memo(function ProductCardVertical({
   onShare,
 }: ProductCardVerticalProps) {
   const brand = getBrandById(product.brandId);
-  const { getUserRating, setUserRating } = useUserRatings();
   const [imageLoaded, setImageLoaded] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-
-  const userRating = getUserRating(product.id);
 
   const handleShareClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -38,12 +34,6 @@ export const ProductCardVertical = memo(function ProductCardVertical({
     setShareOpen(true);
   }, []);
 
-  const handleRate = useCallback(
-    (rating: number) => {
-      setUserRating(product.id, rating);
-    },
-    [product.id, setUserRating],
-  );
 
   return (
     <motion.article
@@ -101,15 +91,11 @@ export const ProductCardVertical = memo(function ProductCardVertical({
               ${product.price}
             </span>
 
-            <StarRating
-              rating={product.rating}
-              userRating={userRating}
-              onRate={handleRate}
-              size="sm"
-            />
+
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+            <StarRating rating={product.rating} showUserRating={false} size="sm" />
             <motion.button
               type="button"
               aria-label="Share product"

@@ -5,13 +5,13 @@
 /*
  * av | nu palette
  * ---------------
- * Sunset ramp: #00202E #003F5C #2C4875 #8A508F #BC5090 #FF6361 #FF8531 #FFA600 #FFD380
+ * av | nu ramp: #284657 #FF6868 #AF4886 #030125 #ACAB36 #FFD380 #C4DEFE
  * `bg` and `surface` are softened neutrals so the saturated ramp can carry
  * the interface without making the canvas feel yellow or highlighted.
  *
  * PRIMARY ACTIONS: opaque primary buttons and active controls use navy
  * #003F5C. Magenta #BC5090 remains the strong brand accent, including the
- * italic "nu" in the headline, expressive labels, borders, and tinted surfaces.
+ * "nu" in the headline, expressive labels, borders, and tinted surfaces.
  * To audition another primary later, swap the --navy lines below:
  *   Deep blue (current): #003F5C / 0 63 92
  *   Magenta:              #BC5090 / 188 80 144
@@ -22,10 +22,22 @@
   --bg-rgb: 252 251 248;
   --surface: #f3f4f2;
   --surface-rgb: 243 244 242;
-  --text: #00202e;
-  --text-rgb: 0 32 46;
+  --text: #030125;
+  --text-rgb: 3 1 37;
+  --midnight: #030125;
+  --midnight-rgb: 3 1 37;
   --accent: #ff6361;
   --accent-rgb: 255 99 97;
+  --create: #ff6868;
+  --create-rgb: 255 104 104;
+  --guide: #af4886;
+  --guide-rgb: 175 72 134;
+  --list: #acab36;
+  --list-rgb: 172 171 54;
+  --moment: #ffd380;
+  --moment-rgb: 255 211 128;
+  --sky-soft: #c4defe;
+  --sky-soft-rgb: 196 222 254;
   --pink: #8a508f;
   --pink-rgb: 138 80 143;
   --sky: #2c4875;

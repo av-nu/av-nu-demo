@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, MessageCircle, Bookmark, ArrowRight, ChevronLeft, ChevronRight, Send, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { flattenPages, type ListComment, type ListPage } from "@/data/faves";
@@ -14,6 +14,8 @@ import { getProductById } from "@/lib/data";
 import { useListSocial } from "@/hooks/useListSocial";
 import { SavePostDialog } from "@/components/social/SavePostDialog";
 import { SharePostDialog } from "@/components/social/SharePostDialog";
+import { SocialPostActions } from "@/components/social/SocialPostActions";
+import { SocialPostMeta } from "@/components/social/SocialPostMeta";
 
 export type FeedListPost = {
   id: string;
@@ -84,37 +86,8 @@ export function FeedListPost({
   };
 
   return (
-    <article className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-text shadow-sm ring-1 ring-black/5">
-      {/* Header */}
-      <div className="flex items-center gap-3 px-3 py-3">
-        {post.authorId && post.authorId !== "me" ? (
-          <Link href={`/u/${post.authorId}`} className="flex min-w-0 flex-1 items-center gap-3">
-            <span className={cn("flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold text-white", post.authorColor)}>
-              {post.authorInitials}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-semibold text-white hover:underline">{post.authorName}</span>
-              <span className="block truncate text-xs text-white/55">{post.name}</span>
-            </span>
-          </Link>
-        ) : (
-          <>
-            <span className={cn("flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold text-white", post.authorColor)}>
-              {post.authorInitials}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-white">{post.authorName}</p>
-              <p className="truncate text-xs text-white/55">{post.name}</p>
-            </div>
-          </>
-        )}
-        {post.href && (
-          <Link href={post.href} className="flex items-center gap-1 text-xs font-medium text-white/80 transition-colors hover:text-white">
-            View
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        )}
-      </div>
+    <article className="flex h-full w-full flex-col overflow-hidden rounded-2xl border border-divider/50 bg-bg shadow-sm ring-1 ring-black/5">
+      <SocialPostMeta author={{ name: post.authorName, initials: post.authorInitials, color: post.authorColor }} kind="List" />
 
       {/* Carousel */}
       <div className="relative">
@@ -143,37 +116,21 @@ export function FeedListPost({
         )}
       </div>
 
-      {/* Action bar */}
-      <div className="flex items-center gap-7 px-3 pt-4">
-        <button type="button" onClick={() => toggleLike(post.id)} aria-label={liked ? "Unlike" : "Like"} className={cn("transition-colors", liked ? "text-pink" : "text-white/70 hover:text-pink")}>
-          <Heart className={cn("h-6 w-6", liked && "fill-pink")} />
-        </button>
-        <button type="button" onClick={openEngagement} aria-label="Comments" className="text-white/70 transition-colors hover:text-white">
-          <MessageCircle className="h-6 w-6" />
-        </button>
-        <div className="flex-1" />
-        {post.savePayload && (
-          <button type="button" onClick={handleSave} aria-label={saved ? "Saved" : "Save list"} className={cn("transition-colors", saved ? "text-accent" : "text-white/70 hover:text-accent")}>
-            <Bookmark className={cn("h-6 w-6", saved && "fill-accent")} />
-          </button>
-        )}
-        <button type="button" onClick={() => setShareOpen(true)} aria-label="Share post" className="text-white/70 transition-colors hover:text-white"><Send className="h-6 w-6" /></button>
-      </div>
+      <SocialPostActions liked={liked} saved={saved} onLike={() => toggleLike(post.id)} onComment={openEngagement} onSave={handleSave} onShare={() => setShareOpen(true)} />
 
       {/* Collapsed summary: likes + 1-line caption + comments trigger */}
-      <div className="space-y-1 px-3 pb-3 pt-2">
-        <p className="text-sm font-semibold text-white">
+      <div className="space-y-1 px-3 pb-3">
+        <p className="text-sm font-semibold text-midnight">
           {likeCount.toLocaleString()} {likeCount === 1 ? "like" : "likes"}
         </p>
 
         {post.caption && (
-          <p className="text-sm text-white/90">
-            <span className="font-semibold text-white">{post.authorName}</span>{" "}
+          <p className="text-sm text-midnight/90">
             <span className="line-clamp-1 align-top">{post.caption}</span>
           </p>
         )}
 
-        <button type="button" onClick={openEngagement} className="block text-sm text-white/50 transition-colors hover:text-white/75">
+        <button type="button" onClick={openEngagement} className="block text-sm text-midnight/50 transition-colors hover:text-midnight/75">
           {comments.length > 0
             ? `View ${post.caption ? "caption & " : ""}all ${comments.length} ${comments.length === 1 ? "comment" : "comments"}`
             : "View details & comment"}

@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Bookmark, Check, ChevronLeft, ChevronRight, Film, Heart, MessageCircle, Send, ShoppingBag, UserPlus, X } from "lucide-react";
 
 import { FeaturedGuideArtwork } from "@/components/home/FeaturedGuideArtwork";
+import { Avatar } from "@/components/social/Avatar";
 import { SavePostDialog } from "@/components/social/SavePostDialog";
 import { SharePostDialog } from "@/components/social/SharePostDialog";
 import { Portal } from "@/components/ui/Portal";
@@ -117,9 +118,7 @@ export function PostQuickView({ post, onClose }: { post: DiscoverPost; onClose: 
 
             <div className="flex shrink-0 flex-col overflow-visible lg:min-h-0 lg:flex-1 lg:shrink lg:overflow-hidden">
               <div className="flex items-center gap-3 border-b border-divider/60 px-5 py-4">
-                <Link href={author ? `/u/${author.id}` : "#"} className={`flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-semibold text-white ${author?.color ?? "bg-accent"}`}>
-                  {author?.initials ?? "AV"}
-                </Link>
+                {author ? <Link href={`/u/${author.id}`} className="shrink-0"><Avatar user={author} size="md" /></Link> : <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-semibold text-white">AV</span>}
                 <div className="min-w-0 flex-1">
                   <Link href={author ? `/u/${author.id}` : "#"} className="block truncate text-sm font-semibold text-text hover:underline">{author?.name ?? "av | nu creator"}</Link>
                   <p className="truncate text-xs text-text/50">@{author?.handle ?? "creator"}</p>
@@ -133,20 +132,22 @@ export function PostQuickView({ post, onClose }: { post: DiscoverPost; onClose: 
               </div>
 
               <div className="px-5 py-5 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-contain"> <div className="space-y-5">
-                <div className="flex items-center gap-7 border-y border-divider/60 py-3">
-                  <button type="button" onClick={() => setLiked((current) => !current)} className={`inline-flex items-center gap-3 text-sm font-semibold ${liked ? "text-pink" : "text-text/60"}`}><Heart className={`h-5 w-5 ${liked ? "fill-current" : ""}`} />{liked ? "Liked" : "Like"}</button>
-                  <button type="button" onClick={() => setSaveOpen(true)} className={`inline-flex items-center gap-3 text-sm font-semibold ${isSaved ? "text-accent" : "text-text/60"}`}><Bookmark className={`h-5 w-5 ${isSaved ? "fill-current" : ""}`} />{isSaved ? "Saved" : "Save"}</button>
-                  <button type="button" onClick={() => setShareOpen(true)} className="ml-auto text-text/50 hover:text-text" aria-label="Share post"><Send className="h-5 w-5" /></button>
-                </div>
-
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${post.kind === "video" ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"}`}>{post.kind === "video" ? "Moment" : "Guide"}</span>
+                    <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] ${post.kind === "video" ? "bg-moment/90 text-midnight" : post.data.format === "featured" ? "bg-guide/90 text-midnight" : "bg-list/90 text-midnight"}`}>{post.kind === "video" ? "Moment" : post.data.format === "featured" ? "Guide" : "List"}</span>
                     {post.kind === "video" && <Film className="h-4 w-4 text-text/40" />}
                   </div>
                   <h2 className="mt-3 font-headline text-2xl leading-tight text-text">{post.kind === "video" ? post.data.featured.name : post.data.name}</h2>
                   <p className="mt-2 text-sm leading-relaxed text-text/65">{caption}</p>
                   {author?.bio && <p className="mt-3 rounded-xl bg-surface/60 p-3 text-xs leading-relaxed text-text/60">{author.bio}</p>}
+                </div>
+
+                <div className="flex items-center gap-7 border-y border-divider/60 py-3">
+                  <button type="button" onClick={() => setLiked((current) => !current)} className={`inline-flex items-center gap-3 text-sm font-semibold ${liked ? "text-pink" : "text-text/60"}`}><Heart className={`h-5 w-5 ${liked ? "fill-current" : ""}`} />{liked ? "Liked" : "Like"}</button>
+                  <button type="button" onClick={() => document.getElementById("post-quick-view-comment")?.focus()} className="inline-flex items-center gap-3 text-sm font-semibold text-text/60" aria-label="Comment on post"><MessageCircle className="h-5 w-5" />Comment</button>
+                  <div className="flex-1" />
+                  <button type="button" onClick={() => setSaveOpen(true)} className={`inline-flex items-center gap-3 text-sm font-semibold ${isSaved ? "text-accent" : "text-text/60"}`}><Bookmark className={`h-5 w-5 ${isSaved ? "fill-current" : ""}`} />{isSaved ? "Saved" : "Save"}</button>
+                  <button type="button" onClick={() => setShareOpen(true)} className="text-text/50 hover:text-text" aria-label="Share post"><Send className="h-5 w-5" /></button>
                 </div>
 
                 <section>
@@ -165,7 +166,7 @@ export function PostQuickView({ post, onClose }: { post: DiscoverPost; onClose: 
                     {comments.map((item, index) => <p key={`${item}-${index}`} className="rounded-xl bg-surface/60 px-3 py-2 text-sm text-text/70">{item}</p>)}
                     {comments.length === 0 && <p className="text-sm text-text/45">Be the first to share a thought.</p>}
                   </div>
-                  <form onSubmit={(event) => { event.preventDefault(); addComment(); }} className="mt-3 flex gap-2"><input value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Add a comment…" className="h-10 min-w-0 flex-1 rounded-full border border-divider bg-surface/40 px-4 text-sm focus:border-accent/50 focus:outline-none" /><button type="submit" disabled={!comment.trim()} className="rounded-full bg-text px-4 text-xs font-semibold text-bg disabled:opacity-40">Post</button></form>
+                  <form onSubmit={(event) => { event.preventDefault(); addComment(); }} className="mt-3 flex gap-2"><input id="post-quick-view-comment" value={comment} onChange={(event) => setComment(event.target.value)} placeholder="Add a comment…" className="h-10 min-w-0 flex-1 rounded-full border border-divider bg-surface/40 px-4 text-sm focus:border-accent/50 focus:outline-none" /><button type="submit" disabled={!comment.trim()} className="rounded-full bg-text px-4 text-xs font-semibold text-bg disabled:opacity-40">Post</button></form>
                 </section>
               </div>
               </div>
