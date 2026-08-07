@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bookmark, Check, ChevronLeft, ChevronRight, Film, Heart, MessageCircle, Send, ShoppingBag, UserPlus, X } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Film, MessageCircle, ShoppingBag, UserPlus, X } from "lucide-react";
 
 import { FeaturedGuideArtwork } from "@/components/home/FeaturedGuideArtwork";
 import { Avatar } from "@/components/social/Avatar";
+import { SocialPostActions } from "@/components/social/SocialPostActions";
 import { SavePostDialog } from "@/components/social/SavePostDialog";
 import { SharePostDialog } from "@/components/social/SharePostDialog";
 import { Portal } from "@/components/ui/Portal";
@@ -83,11 +84,11 @@ export function PostQuickView({ post, onClose }: { post: DiscoverPost; onClose: 
             onClick={(event) => event.stopPropagation()}
             className="relative flex h-[100dvh] max-h-[100dvh] w-full flex-col overflow-y-auto overscroll-contain rounded-none bg-bg shadow-2xl lg:h-[760px] lg:max-h-[94vh] lg:max-w-5xl lg:flex-row lg:overflow-hidden lg:rounded-3xl"
           >
-            <div className="sticky top-0 z-40 flex shrink-0 items-center justify-between border-b border-divider/60 bg-bg/95 px-5 py-3 backdrop-blur-md lg:hidden">
+            <button type="button" onClick={onClose} aria-label="Close post" className="absolute right-3 top-3 z-[80] flex h-10 w-10 items-center justify-center rounded-full border border-divider/70 bg-bg/95 text-midnight/70 shadow-sm backdrop-blur hover:bg-surface hover:text-midnight"><X className="h-5 w-5" /></button>
+            <div className="sticky top-0 z-40 flex shrink-0 items-center border-b border-divider/60 bg-bg/95 px-5 py-3 backdrop-blur-md lg:hidden">
               <span className="text-sm font-semibold text-text">Post</span>
-              <button type="button" onClick={onClose} className="inline-flex items-center gap-1.5 rounded-full border border-divider/70 px-3 py-1.5 text-xs font-semibold text-text/70" aria-label="Close post"><X className="h-3.5 w-3.5" />Close</button>
             </div>
-            <div className="relative flex h-[62dvh] max-h-[640px] w-full shrink-0 items-center justify-center overflow-hidden bg-text lg:h-full lg:max-h-none lg:min-h-0 lg:w-[56%] lg:shrink">
+            <div className="relative flex h-[52dvh] min-h-[320px] max-h-[520px] w-full shrink-0 items-center justify-center overflow-hidden bg-text lg:h-full lg:max-h-none lg:min-h-0 lg:w-[56%] lg:shrink">
               {post.kind === "video" ? (
                 <video src={post.data.videoUrl} poster={getVideoPoster(post.data.videoUrl)} preload="metadata" controls autoPlay playsInline className="h-full w-full object-contain" />
               ) : post.data.format === "featured" ? (
@@ -114,6 +115,7 @@ export function PostQuickView({ post, onClose }: { post: DiscoverPost; onClose: 
                   )}
                 </div>
               ) : null}
+              <SocialPostActions className="absolute inset-x-0 bottom-0 z-10 lg:hidden" overlay liked={liked} saved={isSaved} onLike={() => setLiked((current) => !current)} onComment={() => document.getElementById("post-quick-view-comment")?.focus()} onSave={() => setSaveOpen(true)} onShare={() => setShareOpen(true)} />
             </div>
 
             <div className="flex shrink-0 flex-col overflow-visible lg:min-h-0 lg:flex-1 lg:shrink lg:overflow-hidden">
@@ -128,7 +130,6 @@ export function PostQuickView({ post, onClose }: { post: DiscoverPost; onClose: 
                     {relationship?.iFollow ? <><Check className="h-3.5 w-3.5" />Following</> : <><UserPlus className="h-3.5 w-3.5" />Follow</>}
                   </button>
                 )}
-                <button type="button" onClick={onClose} className="hidden h-9 w-9 items-center justify-center rounded-full text-text/50 hover:bg-surface hover:text-text lg:flex" aria-label="Close post"><X className="h-5 w-5" /></button>
               </div>
 
               <div className="px-5 py-5 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-contain"> <div className="space-y-5">
@@ -142,13 +143,7 @@ export function PostQuickView({ post, onClose }: { post: DiscoverPost; onClose: 
                   {author?.bio && <p className="mt-3 rounded-xl bg-surface/60 p-3 text-xs leading-relaxed text-text/60">{author.bio}</p>}
                 </div>
 
-                <div className="flex items-center gap-7 border-y border-divider/60 py-3">
-                  <button type="button" onClick={() => setLiked((current) => !current)} className={`inline-flex items-center gap-3 text-sm font-semibold ${liked ? "text-pink" : "text-text/60"}`}><Heart className={`h-5 w-5 ${liked ? "fill-current" : ""}`} />{liked ? "Liked" : "Like"}</button>
-                  <button type="button" onClick={() => document.getElementById("post-quick-view-comment")?.focus()} className="inline-flex items-center gap-3 text-sm font-semibold text-text/60" aria-label="Comment on post"><MessageCircle className="h-5 w-5" />Comment</button>
-                  <div className="flex-1" />
-                  <button type="button" onClick={() => setSaveOpen(true)} className={`inline-flex items-center gap-3 text-sm font-semibold ${isSaved ? "text-accent" : "text-text/60"}`}><Bookmark className={`h-5 w-5 ${isSaved ? "fill-current" : ""}`} />{isSaved ? "Saved" : "Save"}</button>
-                  <button type="button" onClick={() => setShareOpen(true)} className="text-text/50 hover:text-text" aria-label="Share post"><Send className="h-5 w-5" /></button>
-                </div>
+                <SocialPostActions className="hidden lg:flex" liked={liked} saved={isSaved} onLike={() => setLiked((current) => !current)} onComment={() => document.getElementById("post-quick-view-comment")?.focus()} onSave={() => setSaveOpen(true)} onShare={() => setShareOpen(true)} />
 
                 <section>
                   <h3 className="flex items-center gap-2 font-headline text-lg text-text"><ShoppingBag className="h-4 w-4 text-burgundy" />Shop this post</h3>

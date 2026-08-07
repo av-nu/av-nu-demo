@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { X } from "lucide-react";
 
 import { VideoReviewCard } from "@/components/social/VideoReviewCard";
 import { Portal } from "@/components/ui/Portal";
@@ -47,6 +48,7 @@ export function MomentQuickView({
             onClick={(event) => event.stopPropagation()}
             className="relative max-h-[94vh] w-full max-w-xl overflow-y-auto rounded-t-3xl bg-bg p-3 shadow-2xl sm:p-5 lg:rounded-3xl"
           >
+            <button type="button" onClick={onClose} aria-label="Close moment" className="sticky right-0 top-0 z-20 ml-auto flex h-9 w-9 items-center justify-center rounded-full border border-divider/70 bg-bg/95 text-midnight/60 shadow-sm backdrop-blur hover:bg-surface hover:text-midnight"><X className="h-4 w-4" /></button>
             <VideoReviewCard review={review} author={author} />
           </motion.div>
         </motion.div>
