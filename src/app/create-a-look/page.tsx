@@ -1,5 +1,6 @@
-import { CreateLookWorkspace } from "@/components/looks/CreateLookWorkspace";
+import { redirect } from "next/navigation";
 
+// The lookbook creation entry is replaced by the unified composer.
 export default function CreateLookPage() {
-  return <CreateLookWorkspace />;
+  redirect("/create");
 }

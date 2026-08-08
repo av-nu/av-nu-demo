@@ -32,6 +32,7 @@ export const AppShell = memo(function AppShell({
   }, []);
 
   const isAdmin = pathname?.startsWith("/admin") ?? false;
+  const isComposer = pathname === "/create";
 
   const useIsomorphicLayoutEffect =
     typeof window !== "undefined" ? useLayoutEffect : useEffect;
@@ -70,6 +71,17 @@ export const AppShell = memo(function AppShell({
   // and intentionally skips the shopper shell.
   if (isAdmin) {
     return <div className="min-h-screen bg-surface">{children}</div>;
+  }
+
+  // The post composer is a full-screen editor. It owns its own chrome and must
+  // not inherit the shopper shell's padding, tab bar, or floating cart icons —
+  // otherwise the canvas fights the page layout on small screens.
+  if (isComposer) {
+    return (
+      <AuthProvider>
+        <CartProvider>{children}</CartProvider>
+      </AuthProvider>
+    );
   }
 
   return (

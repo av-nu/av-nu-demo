@@ -1,10 +1,6 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { useRouter } from "next/navigation";
-
-import { CreateListDialog } from "@/components/faves/CreateListDialog";
-
+// Lists are a Faves feature now, not a social post type.
 export default function ListPage() {
-  const router = useRouter();
-  return <CreateListDialog onClose={() => router.push("/create")} onCreated={(id) => router.push(`/favorites/${id}`)} />;
+  redirect("/favorites");
 }

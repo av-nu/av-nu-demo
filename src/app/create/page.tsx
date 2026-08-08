@@ -1,5 +1,5 @@
-import { CreateLanding } from "@/components/create/CreateLanding";
+import { PostComposer } from "@/components/post/PostComposer";
 
 export default function CreatePage() {
-  return <CreateLanding />;
+  return <PostComposer />;
 }

@@ -1,7 +1,8 @@
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState, type DragEvent as ReactDragEvent } from "react";
+import { useEffect, useRef, useState, type DragEvent as ReactDragEvent } from "react";
 import { AlignCenter, AlignHorizontalJustifyCenter, ArrowDown, ArrowUp, BringToFront, Copy, Eye, EyeOff, Film, ImagePlus, Layers3, Lock, LockOpen, MousePointer2, Redo2, RotateCw, SendToBack, Shapes, Trash2, Type, Undo2 } from "lucide-react";
 
+import { useCanvasDocument } from "@/components/canvas/useCanvasDocument";
 import { EditorialColorPicker } from "@/components/looks/editorial/EditorialColorPicker";
 import { EditorialRenderer } from "@/components/looks/editorial/EditorialRenderer";
 import type { Product } from "@/data/mockProducts";
@@ -11,25 +12,17 @@ import {
   EDITORIAL_SHAPES,
   EDITORIAL_TEMPLATES,
   applyEditorialTemplate,
-  clampEditorialElement,
   createImageElement,
   createProductElement,
   createShapeElement,
   createTextElement,
   createVideoElement,
-  duplicateEditorialElement,
   editorialProductIds,
-  removeEditorialElement,
   reorderEditorialElement,
-  normalizeEditorialRotation,
-  snapEditorialElement,
-  updateEditorialElement,
-  type EditorialElement,
   type EditorialFormat,
   type EditorialImageMask,
   type EditorialPageDesign,
   type EditorialShapeKind,
-  type EditorialSnapGuides,
   type EditorialTemplateId,
 } from "@/lib/editorial";
 
@@ -74,15 +67,6 @@ function compressImage(file: File) {
   });
 }
 
-type Interaction = {
-  action: "drag" | "resize" | "rotate";
-  elementId: string;
-  startX: number;
-  startY: number;
-  element: EditorialElement;
-  rect: DOMRect;
-};
-
 type EditorialBuilderProps = {
   title: string;
   design: EditorialPageDesign;
@@ -122,185 +106,37 @@ function NumberField({ label, value, min, max, step = 1, onChange }: { label: st
 }
 
 export function EditorialBuilder({ title, design, products, promptProducts = [], onChangeAction, onAddPromptProduct = () => undefined, onDropProduct, onBrowsePromptResults = () => undefined }: EditorialBuilderProps) {
-  const [present, setPresent] = useState(design);
-  const [past, setPast] = useState<EditorialPageDesign[]>([]);
-  const [future, setFuture] = useState<EditorialPageDesign[]>([]);
-  const [selectedId, setSelectedId] = useState<string>();
   const [panel, setPanel] = useState<"design" | "add" | "layers">("design");
   const [zoom, setZoom] = useState(1);
-  const [interaction, setInteraction] = useState<Interaction>();
-  const [snapGuides, setSnapGuides] = useState<EditorialSnapGuides>();
   const [uploadError, setUploadError] = useState<string>();
   const [uploadMask, setUploadMask] = useState<EditorialImageMask>("rectangle");
-  const canvasRef = useRef<HTMLDivElement>(null);
   const uploadRef = useRef<HTMLInputElement>(null);
   const videoUploadRef = useRef<HTMLInputElement>(null);
   const backgroundUploadRef = useRef<HTMLInputElement>(null);
-  const presentRef = useRef(present);
 
-  useEffect(() => { presentRef.current = present; }, [present]);
-  useEffect(() => {
-    if (design === presentRef.current) return;
-    setPresent(design);
-    presentRef.current = design;
-    setPast([]);
-    setFuture([]);
-    setSelectedId(undefined);
-  }, [design]);
+  // Shared editing core — see useCanvasDocument. The post composer uses the same
+  // hook so drag/resize/rotate behavior stays identical across surfaces.
+  const {
+    design: present,
+    dimensions,
+    selectedId,
+    setSelectedId,
+    selected,
+    snapGuides,
+    canvasRef,
+    canUndo,
+    canRedo,
+    commit,
+    undo,
+    redo,
+    patchSelected,
+    removeSelected,
+    duplicateSelected,
+    addElement,
+    startInteraction,
+  } = useCanvasDocument({ design, onChange: onChangeAction });
 
-  const selected = present.elements.find((element) => element.id === selectedId);
   const presentProductIds = editorialProductIds(present);
-  const dimensions = EDITORIAL_FORMATS[present.format];
-
-  const commit = useCallback((next: EditorialPageDesign, nextSelectedId?: string) => {
-    setPast((current) => [...current.slice(-49), presentRef.current]);
-    setFuture([]);
-    setPresent(next);
-    presentRef.current = next;
-    onChangeAction(next);
-    if (nextSelectedId !== undefined) setSelectedId(nextSelectedId);
-  }, [onChangeAction]);
-
-  const applyTransient = useCallback((next: EditorialPageDesign) => {
-    setPresent(next);
-    presentRef.current = next;
-    onChangeAction(next);
-  }, [onChangeAction]);
-
-  const undo = useCallback(() => {
-    setPast((current) => {
-      const previous = current[current.length - 1];
-      if (!previous) return current;
-      setFuture((items) => [presentRef.current, ...items].slice(0, 50));
-      setPresent(previous);
-      presentRef.current = previous;
-      onChangeAction(previous);
-      setSelectedId(undefined);
-      return current.slice(0, -1);
-    });
-  }, [onChangeAction]);
-
-  const redo = useCallback(() => {
-    setFuture((current) => {
-      const next = current[0];
-      if (!next) return current;
-      setPast((items) => [...items.slice(-49), presentRef.current]);
-      setPresent(next);
-      presentRef.current = next;
-      onChangeAction(next);
-      setSelectedId(undefined);
-      return current.slice(1);
-    });
-  }, [onChangeAction]);
-
-  const patchSelected = useCallback((patch: Partial<EditorialElement>) => {
-    if (!selectedId) return;
-    const element = presentRef.current.elements.find((item) => item.id === selectedId);
-    if (!element) return;
-    const nextElement = clampEditorialElement({ ...element, ...patch } as EditorialElement, presentRef.current.format);
-    commit(updateEditorialElement(presentRef.current, selectedId, nextElement));
-  }, [commit, selectedId]);
-
-  const removeSelected = useCallback(() => {
-    if (!selectedId) return;
-    commit(removeEditorialElement(presentRef.current, selectedId));
-    setSelectedId(undefined);
-  }, [commit, selectedId]);
-
-  const duplicateSelected = useCallback(() => {
-    if (!selectedId) return;
-    const result = duplicateEditorialElement(presentRef.current, selectedId);
-    commit(result.design, result.elementId);
-  }, [commit, selectedId]);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement;
-      const editingText = target.matches("input, textarea, select, [contenteditable='true']");
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") {
-        event.preventDefault();
-        if (event.shiftKey) redo(); else undo();
-        return;
-      }
-      if (editingText || !selectedId) return;
-      if (event.key === "Backspace" || event.key === "Delete") {
-        event.preventDefault();
-        removeSelected();
-        return;
-      }
-      const delta = event.shiftKey ? 10 : 2;
-      const element = presentRef.current.elements.find((item) => item.id === selectedId);
-      if (!element || element.locked) return;
-      const patch = event.key === "ArrowLeft" ? { x: element.x - delta } : event.key === "ArrowRight" ? { x: element.x + delta } : event.key === "ArrowUp" ? { y: element.y - delta } : event.key === "ArrowDown" ? { y: element.y + delta } : undefined;
-      if (patch) {
-        event.preventDefault();
-        commit(updateEditorialElement(presentRef.current, selectedId, clampEditorialElement({ ...element, ...patch }, presentRef.current.format)));
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [commit, redo, removeSelected, selectedId, undo]);
-
-  useEffect(() => {
-    if (!interaction) return;
-    const handleMove = (event: PointerEvent) => {
-      const scaleX = dimensions.width / interaction.rect.width;
-      const scaleY = dimensions.height / interaction.rect.height;
-      const dx = (event.clientX - interaction.startX) * scaleX;
-      const dy = (event.clientY - interaction.startY) * scaleY;
-      let nextElement: EditorialElement;
-      if (interaction.action === "drag") {
-        const candidate = clampEditorialElement({ ...interaction.element, x: interaction.element.x + dx, y: interaction.element.y + dy }, presentRef.current.format);
-        if (presentRef.current.showGuides) {
-          const snapped = snapEditorialElement(candidate, presentRef.current.format, presentRef.current.elements, 8 * Math.max(scaleX, scaleY));
-          nextElement = clampEditorialElement(snapped.element, presentRef.current.format);
-          setSnapGuides(snapped.guides);
-        } else {
-          nextElement = candidate;
-        }
-      } else if (interaction.action === "resize") {
-        const width = Math.max(30, interaction.element.width + dx);
-        const height = event.shiftKey ? width / (interaction.element.width / interaction.element.height) : Math.max(20, interaction.element.height + dy);
-        nextElement = clampEditorialElement({ ...interaction.element, width, height }, presentRef.current.format);
-      } else {
-        const centerX = interaction.rect.left + ((interaction.element.x + interaction.element.width / 2) / dimensions.width) * interaction.rect.width;
-        const centerY = interaction.rect.top + ((interaction.element.y + interaction.element.height / 2) / dimensions.height) * interaction.rect.height;
-        const startAngle = Math.atan2(interaction.startY - centerY, interaction.startX - centerX);
-        const angle = Math.atan2(event.clientY - centerY, event.clientX - centerX);
-        const rotation = normalizeEditorialRotation(interaction.element.rotation + ((angle - startAngle) * 180) / Math.PI);
-        nextElement = { ...interaction.element, rotation: event.shiftKey ? Math.round(rotation / 15) * 15 : rotation };
-      }
-      applyTransient(updateEditorialElement(presentRef.current, interaction.elementId, nextElement));
-    };
-    const handleUp = () => { setInteraction(undefined); setSnapGuides(undefined); };
-    window.addEventListener("pointermove", handleMove);
-    window.addEventListener("pointerup", handleUp, { once: true });
-    window.addEventListener("pointercancel", handleUp, { once: true });
-    return () => {
-      window.removeEventListener("pointermove", handleMove);
-      window.removeEventListener("pointerup", handleUp);
-      window.removeEventListener("pointercancel", handleUp);
-    };
-  }, [applyTransient, dimensions.height, dimensions.width, interaction]);
-
-  const startInteraction = (event: React.PointerEvent, elementId: string, action: Interaction["action"]) => {
-    event.preventDefault();
-    event.stopPropagation();
-    const element = presentRef.current.elements.find((item) => item.id === elementId);
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!element || !rect) return;
-    setSelectedId(elementId);
-    if (element.locked) return;
-    setPast((current) => [...current.slice(-49), presentRef.current]);
-    setFuture([]);
-    setInteraction({ action, elementId, startX: event.clientX, startY: event.clientY, element, rect });
-  };
-
-  const addElement = (element: EditorialElement) => {
-    const maxZ = Math.max(0, ...present.elements.map((item) => item.zIndex));
-    const nextElement = { ...element, zIndex: maxZ + 1 } as EditorialElement;
-    commit({ ...present, elements: [...present.elements, nextElement] }, nextElement.id);
-  };
 
   const handleCanvasDragOver = (event: ReactDragEvent<HTMLDivElement>) => {
     if (event.dataTransfer.types.includes("application/x-avnu-product")) event.preventDefault();
@@ -351,7 +187,7 @@ export function EditorialBuilder({ title, design, products, promptProducts = [],
     if (!file) return;
     setUploadError(undefined);
     try {
-      commit({ ...presentRef.current, backgroundImage: await compressImage(file), backgroundOpacity: 1 });
+      commit({ ...present, backgroundImage: await compressImage(file), backgroundOpacity: 1 });
     } catch (error) {
       setUploadError(error instanceof Error ? error.message : "Background upload failed.");
     } finally {
@@ -388,7 +224,7 @@ export function EditorialBuilder({ title, design, products, promptProducts = [],
       {uploadError && <div role="alert" className="rounded-xl border border-pink/25 bg-pink/5 px-3 py-2 text-xs font-medium text-pink">{uploadError}</div>}
       {!selected ? (
         <>
-          <EditorialColorPicker label="Page color" value={present.backgroundColor} action={(color) => commit({ ...presentRef.current, backgroundColor: color })} />
+          <EditorialColorPicker label="Page color" value={present.backgroundColor} action={(color) => commit({ ...present, backgroundColor: color })} />
           <div><FieldLabel>Page image</FieldLabel><div className="mt-2 flex flex-wrap gap-2"><Button label="Upload page background" onClick={() => backgroundUploadRef.current?.click()}><ImagePlus className="h-3.5 w-3.5" />Upload</Button>{present.backgroundImage && <Button label="Remove page background" onClick={() => commit({ ...present, backgroundImage: undefined })}><Trash2 className="h-3.5 w-3.5" />Remove</Button>}</div><input ref={backgroundUploadRef} type="file" accept="image/*" onChange={(event) => handleBackgroundUpload(event.target.files?.[0])} className="sr-only" />{present.backgroundImage && <label className="mt-2 block"><span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-text/40">Image opacity</span><input type="range" min="0.1" max="1" step="0.05" value={present.backgroundOpacity} onChange={(event) => commit({ ...present, backgroundOpacity: Number(event.target.value) })} className="mt-1 w-full accent-text" /></label>}</div>
           <label className="flex items-center justify-between rounded-xl border border-divider/60 bg-bg px-3 py-2.5 text-xs font-semibold text-text/65"><span>Alignment guides</span><input type="checkbox" checked={present.showGuides} onChange={(event) => commit({ ...present, showGuides: event.target.checked })} /></label>
           <p className="rounded-xl bg-accent/5 px-3 py-3 text-xs leading-relaxed text-text/55"><MousePointer2 className="mr-1 inline h-3.5 w-3.5 text-accent" /> Select an element on the canvas to edit its position, styling, crop, and layer.</p>
@@ -427,8 +263,8 @@ export function EditorialBuilder({ title, design, products, promptProducts = [],
   return (
     <section className="min-w-0 overflow-hidden rounded-2xl border border-divider/70 bg-surface/35 shadow-sm">
       <div className="sticky top-0 z-20 flex flex-wrap items-center gap-2 border-b border-divider/60 bg-bg/90 px-3 py-3 backdrop-blur sm:px-4">
-        <Button label="Undo" disabled={past.length === 0} onClick={undo}><Undo2 className="h-4 w-4" /></Button>
-        <Button label="Redo" disabled={future.length === 0} onClick={redo}><Redo2 className="h-4 w-4" /></Button>
+        <Button label="Undo" disabled={!canUndo} onClick={undo}><Undo2 className="h-4 w-4" /></Button>
+        <Button label="Redo" disabled={!canRedo} onClick={redo}><Redo2 className="h-4 w-4" /></Button>
         <span className="mx-1 hidden h-6 w-px bg-divider sm:block" />
         <label className="flex h-9 items-center gap-2 rounded-lg border border-divider/70 bg-bg px-2.5 text-xs font-semibold text-text/65"><span className="hidden sm:inline">Format</span><select value={present.format} onChange={(event) => setFormat(event.target.value as EditorialFormat)} className="bg-transparent focus:outline-none">{Object.entries(EDITORIAL_FORMATS).map(([value, item]) => <option key={value} value={value}>{item.label}</option>)}</select></label>
         <label className="ml-auto flex h-9 items-center gap-2 rounded-lg border border-divider/70 bg-bg px-2.5 text-xs font-semibold text-text/65"><span>{Math.round(zoom * 100)}%</span><input type="range" min="0.55" max="1.25" step="0.05" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} className="w-20 accent-text" /></label>

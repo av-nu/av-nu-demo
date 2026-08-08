@@ -1,10 +1,7 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { useRouter } from "next/navigation";
-
-import { VideoReviewUploadDialog } from "@/components/social/VideoReviewUploadDialog";
-
+// Moments are no longer a separate creation path — the unified composer handles
+// photo and video posts.
 export default function MomentPage() {
-  const router = useRouter();
-  return <VideoReviewUploadDialog onClose={() => router.push("/create")} onPublished={() => router.push("/moments")} />;
+  redirect("/create");
 }

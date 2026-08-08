@@ -25,8 +25,8 @@ const moreLinks = [
   },
   {
     href: "/create",
-    label: "Create",
-    description: "Make Moments, Guides, and Lists",
+    label: "Post",
+    description: "Share a photo, video, or collage",
     icon: Sparkles,
   },
   {
