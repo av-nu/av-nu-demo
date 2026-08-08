@@ -1,3 +1,4 @@
+import type { NewPost, Post } from "@/lib/post";
 import type {
   MyProfile,
   NewVideoReview,
@@ -42,6 +43,15 @@ export interface SocialService {
   addVideoReview(input: NewVideoReview): Promise<string>;
   updateVideoReview(id: string, patch: Partial<VideoReview>): Promise<void>;
   deleteVideoReview(id: string): Promise<void>;
+
+  // --- posts ---------------------------------------------------------------
+  /**
+   * Persist a new unified post. Rejects if storage is full so the composer can
+   * surface a real error instead of silently losing the user's work.
+   */
+  addPost(input: NewPost): Promise<string>;
+  updatePost(id: string, patch: Partial<Post>): Promise<void>;
+  deletePost(id: string): Promise<void>;
 
   // --- demo helpers --------------------------------------------------------
   /**

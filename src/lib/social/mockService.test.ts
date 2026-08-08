@@ -113,6 +113,76 @@ describe("MockSocialService relationship transitions", () => {
     expect(svc.getSnapshot().videoReviews).toHaveLength(0);
   });
 
+  it("adds, updates, and deletes a unified post", async () => {
+    const svc = await freshService();
+    const { createBlankPage } = await import("@/lib/post");
+
+    const id = await svc.addPost({
+      pages: [createBlankPage("portrait")],
+      format: "portrait",
+      caption: "Autumn layering",
+      visibility: "public",
+    });
+
+    expect(svc.getSnapshot().posts).toHaveLength(1);
+    expect(svc.getSnapshot().posts[0]).toMatchObject({ id, authorId: "me", caption: "Autumn layering", format: "portrait" });
+
+    await svc.updatePost(id, { caption: "Autumn layering, revisited" });
+    expect(svc.getSnapshot().posts[0].caption).toBe("Autumn layering, revisited");
+
+    await svc.deletePost(id);
+    expect(svc.getSnapshot().posts).toHaveLength(0);
+  });
+
+  it("keeps derived product ids honest when a post is updated", async () => {
+    const svc = await freshService();
+    const { createBlankPage, createPostPage } = await import("@/lib/post");
+    const { createProductElement } = await import("@/lib/editorial");
+
+    const id = await svc.addPost({
+      pages: [createBlankPage("portrait")],
+      format: "portrait",
+      caption: "",
+      visibility: "public",
+    });
+    expect(svc.getSnapshot().posts[0].productIds).toEqual([]);
+
+    const page = createPostPage(
+      { version: 1, format: "portrait", backgroundColor: "#fff", backgroundOpacity: 1, showGuides: true, elements: [createProductElement("p-42")] },
+      [{ id: "pin-1", productId: "p-99", x: 20, y: 20 }],
+    );
+    await svc.updatePost(id, { pages: [page] });
+
+    expect(svc.getSnapshot().posts[0].productIds).toEqual(["p-42", "p-99"]);
+  });
+
+  it("stamps the posts schema version so later migrations can detect the shape", async () => {
+    const svc = await freshService();
+    expect(svc.getSnapshot().postsVersion).toBe(1);
+  });
+
+  it("surfaces a storage-full error instead of silently losing a post", async () => {
+    const svc = await freshService();
+    const { createBlankPage } = await import("@/lib/post");
+    const original = localStorageStub.setItem;
+    localStorageStub.setItem = () => {
+      const error = new Error("full");
+      error.name = "QuotaExceededError";
+      throw error;
+    };
+
+    try {
+      await expect(svc.addPost({
+        pages: [createBlankPage("portrait")],
+        format: "portrait",
+        caption: "too big",
+        visibility: "public",
+      })).rejects.toThrow(/out of storage/i);
+    } finally {
+      localStorageStub.setItem = original;
+    }
+  });
+
   it("marks notifications read", async () => {
     const svc = await freshService();
     const first = svc.getSnapshot().notifications[0];

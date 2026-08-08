@@ -1,14 +1,16 @@
 import { contacts } from "@/data/social";
 import type { ListComment } from "@/data/faves";
+import { normalizePost, type NewPost, type Post } from "@/lib/post";
 import type { SocialService } from "./SocialService";
 import { buildSeedState } from "./seed";
-import type {
-  Connection,
-  MyProfile,
-  NewVideoReview,
-  Notification,
-  SocialState,
-  VideoReview,
+import {
+  POSTS_VERSION,
+  type Connection,
+  type MyProfile,
+  type NewVideoReview,
+  type Notification,
+  type SocialState,
+  type VideoReview,
 } from "./types";
 
 const STORAGE_KEY = "avnu-social-state";
@@ -20,6 +22,20 @@ function randomId(prefix: string) {
 
 function defaultConnection(userId: string): Connection {
   return { userId, iFollow: false, followsMe: false, inner: "none" };
+}
+
+/** Thrown when the browser refuses to persist because storage is full. */
+export class MediaQuotaError extends Error {
+  constructor() {
+    super("This device is out of storage for the demo. Remove a post and try again.");
+    this.name = "MediaQuotaError";
+  }
+}
+
+function isQuotaExceeded(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const name = (error as { name?: string }).name;
+  return name === "QuotaExceededError" || name === "NS_ERROR_DOM_QUOTA_REACHED";
 }
 
 /**
@@ -85,6 +101,10 @@ class MockSocialService implements SocialService {
         followedBrands: parsed.followedBrands ?? seed.followedBrands,
         notifications: parsed.notifications ?? seed.notifications,
         videoReviews: parsed.videoReviews ?? seed.videoReviews,
+        // Re-normalize persisted posts so invariants hold even if the shape was
+        // written by an older build.
+        posts: (parsed.posts ?? seed.posts).map(normalizePost),
+        postsVersion: parsed.postsVersion ?? POSTS_VERSION,
       };
     } catch {
       return buildSeedState();
@@ -95,6 +115,11 @@ class MockSocialService implements SocialService {
     return this.getSnapshot();
   }
 
+  /**
+   * Persists state. Quota failures are surfaced rather than swallowed: losing a
+   * post the user just built is worse than an explicit error, and the composer
+   * needs to be able to tell them.
+   */
   private write(next: SocialState) {
     if (typeof window === "undefined") return;
     try {
@@ -102,8 +127,11 @@ class MockSocialService implements SocialService {
       window.localStorage.setItem(STORAGE_KEY, raw);
       this.cacheRaw = raw;
       this.cacheParsed = next;
-    } catch {
-      // ignore quota / serialization errors in the demo
+    } catch (error) {
+      if (isQuotaExceeded(error)) {
+        throw new MediaQuotaError();
+      }
+      throw error;
     }
     window.dispatchEvent(new CustomEvent(SYNC_EVENT, { detail: { key: STORAGE_KEY } }));
     this.emit();
@@ -265,6 +293,40 @@ class MockSocialService implements SocialService {
       ...state,
       videoReviews: state.videoReviews.filter((v) => v.id !== id),
     });
+  }
+
+  // --- posts ----------------------------------------------------------------
+
+  async addPost(input: NewPost): Promise<string> {
+    const state = this.read();
+    const post = normalizePost({
+      id: randomId("post"),
+      authorId: "me",
+      pages: input.pages,
+      format: input.format,
+      coverPageIndex: input.coverPageIndex ?? 0,
+      productIds: [],
+      caption: input.caption,
+      visibility: input.visibility,
+      likes: 0,
+      comments: [],
+      createdAt: Date.now(),
+    });
+    this.write({ ...state, posts: [post, ...state.posts] });
+    return post.id;
+  }
+
+  async updatePost(id: string, patch: Partial<Post>): Promise<void> {
+    const state = this.read();
+    this.write({
+      ...state,
+      posts: state.posts.map((post) => (post.id === id ? normalizePost({ ...post, ...patch }) : post)),
+    });
+  }
+
+  async deletePost(id: string): Promise<void> {
+    const state = this.read();
+    this.write({ ...state, posts: state.posts.filter((post) => post.id !== id) });
   }
 
   // --- demo helpers ---------------------------------------------------------

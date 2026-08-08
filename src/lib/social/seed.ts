@@ -1,5 +1,5 @@
 import { contacts, currentUser } from "@/data/social";
-import type { Connection, Notification, SocialState } from "./types";
+import { POSTS_VERSION, type Connection, type Notification, type SocialState } from "./types";
 
 // Builds the initial social state from the seeded contact directory. Inner
 // contacts start connected, followers start following the current user, and a
@@ -104,5 +104,7 @@ export function buildSeedState(): SocialState {
     followedBrands: [],
     notifications: buildNotifications(),
     videoReviews: [],
+    posts: [],
+    postsVersion: POSTS_VERSION,
   };
 }

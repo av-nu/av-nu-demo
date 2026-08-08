@@ -1,6 +1,16 @@
 export type EditorialFormat = "portrait" | "square" | "landscape" | "spread";
-export type EditorialTemplateId = "fashion-cover" | "new-arrivals" | "catalog" | "collection-story" | "magazine-spread";
-export type EditorialElementType = "product" | "image" | "video" | "text" | "shape";
+export type EditorialTemplateId =
+  | "fashion-cover"
+  | "new-arrivals"
+  | "catalog"
+  | "collection-story"
+  | "magazine-spread"
+  | "featured"
+  | "hero-stack"
+  | "split-two"
+  | "triptych"
+  | "polaroid-scatter";
+export type EditorialElementType = "product" | "image" | "video" | "text" | "shape" | "sticker" | "drawing";
 export type EditorialTextAlign = "left" | "center" | "right";
 export type EditorialImageFit = "cover" | "contain";
 export type EditorialShapeKind = "rectangle" | "ellipse" | "line" | "heart" | "star" | "clover" | "diamond" | "triangle" | "arch" | "blob";
@@ -66,7 +76,16 @@ export type EditorialVideoElement = EditorialElementBase & {
 export type EditorialTextElement = EditorialElementBase & {
   type: "text";
   content: string;
+  /**
+   * Legacy font slot, kept so documents authored before the font catalog keep
+   * rendering. `fontId` takes precedence when present.
+   */
   fontFamily: "headline" | "sans" | "serif";
+  /** Font catalog id — see {@link FONT_CATALOG}. */
+  fontId: EditorialFontId;
+  /** Highlight drawn behind the glyphs (distinct from `backgroundColor`). */
+  highlightColor: string;
+  highlightStyle: EditorialHighlightStyle;
   fontSize: number;
   fontWeight: 400 | 500 | 600 | 700;
   italic: boolean;
@@ -87,7 +106,55 @@ export type EditorialShapeElement = EditorialElementBase & {
   borderRadius: number;
 };
 
-export type EditorialElement = EditorialProductElement | EditorialImageElement | EditorialVideoElement | EditorialTextElement | EditorialShapeElement;
+/** Emoji or icon sticker placed on the canvas. */
+export type EditorialStickerElement = EditorialElementBase & {
+  type: "sticker";
+  kind: "emoji" | "icon";
+  /** Emoji glyph, or an icon id resolved by the sticker catalog. */
+  value: string;
+  /** Optional resolved SVG source, for consistent cross-platform rendering. */
+  src?: string;
+  /** Tint applied to icon stickers. */
+  color?: string;
+};
+
+export type EditorialDrawTool = "pen" | "marker" | "highlighter" | "brush" | "pencil";
+
+/** A single committed stroke, in element-local coordinates. */
+export type EditorialDrawingPath = {
+  id: string;
+  /** SVG path data in element-local units (viewBox `0 0 width height`). */
+  d: string;
+  color: string;
+  width: number;
+  tool: EditorialDrawTool;
+  opacity: number;
+};
+
+/** A freehand drawing layer holding one or more strokes. */
+export type EditorialDrawingElement = EditorialElementBase & {
+  type: "drawing";
+  paths: EditorialDrawingPath[];
+  /** Local coordinate space the paths were authored in. */
+  viewBoxWidth: number;
+  viewBoxHeight: number;
+};
+
+export type EditorialElement =
+  | EditorialProductElement
+  | EditorialImageElement
+  | EditorialVideoElement
+  | EditorialTextElement
+  | EditorialShapeElement
+  | EditorialStickerElement
+  | EditorialDrawingElement;
+
+/** Elements that render media and therefore support masks, crop, and borders. */
+export type EditorialMediaElement = EditorialProductElement | EditorialImageElement | EditorialVideoElement;
+
+export function isEditorialMediaElement(element: EditorialElement): element is EditorialMediaElement {
+  return element.type === "product" || element.type === "image" || element.type === "video";
+}
 
 export type EditorialPageDesign = {
   version: 1;
@@ -98,6 +165,66 @@ export type EditorialPageDesign = {
   showGuides: boolean;
   elements: EditorialElement[];
 };
+
+export type EditorialHighlightStyle = "none" | "block" | "marker" | "underline";
+
+export const EDITORIAL_HIGHLIGHT_STYLES: Array<{ id: EditorialHighlightStyle; label: string }> = [
+  { id: "none", label: "None" },
+  { id: "block", label: "Block" },
+  { id: "marker", label: "Marker" },
+  { id: "underline", label: "Underline" },
+];
+
+/**
+ * Font catalog for the text tool. The three legacy ids (`headline`, `sans`,
+ * `serif`) are kept first so documents authored before the catalog existed map
+ * onto it without a translation table.
+ */
+export type EditorialFontId =
+  | "headline"
+  | "sans"
+  | "serif"
+  | "playfair"
+  | "lora"
+  | "dm-serif"
+  | "inter"
+  | "dm-sans"
+  | "space-grotesk"
+  | "work-sans"
+  | "bebas"
+  | "archivo-black"
+  | "abril"
+  | "caveat"
+  | "dancing-script"
+  | "jetbrains-mono";
+
+export type EditorialFontCategory = "core" | "serif" | "sans" | "display" | "script" | "mono";
+
+export const FONT_CATALOG: Array<{ id: EditorialFontId; label: string; category: EditorialFontCategory; stack: string }> = [
+  { id: "headline", label: "Headline", category: "core", stack: "var(--font-headline), Georgia, serif" },
+  { id: "sans", label: "Sans", category: "core", stack: "var(--font-body), Arial, sans-serif" },
+  { id: "serif", label: "Serif", category: "core", stack: "Georgia, 'Times New Roman', serif" },
+  { id: "playfair", label: "Playfair Display", category: "serif", stack: "var(--font-playfair), Georgia, serif" },
+  { id: "lora", label: "Lora", category: "serif", stack: "var(--font-lora), Georgia, serif" },
+  { id: "dm-serif", label: "DM Serif", category: "serif", stack: "var(--font-dm-serif), Georgia, serif" },
+  { id: "inter", label: "Inter", category: "sans", stack: "var(--font-inter), Arial, sans-serif" },
+  { id: "dm-sans", label: "DM Sans", category: "sans", stack: "var(--font-dm-sans), Arial, sans-serif" },
+  { id: "space-grotesk", label: "Space Grotesk", category: "sans", stack: "var(--font-space-grotesk), Arial, sans-serif" },
+  { id: "work-sans", label: "Work Sans", category: "sans", stack: "var(--font-work-sans), Arial, sans-serif" },
+  { id: "bebas", label: "Bebas Neue", category: "display", stack: "var(--font-bebas), Impact, sans-serif" },
+  { id: "archivo-black", label: "Archivo Black", category: "display", stack: "var(--font-archivo-black), Impact, sans-serif" },
+  { id: "abril", label: "Abril Fatface", category: "display", stack: "var(--font-abril), Georgia, serif" },
+  { id: "caveat", label: "Caveat", category: "script", stack: "var(--font-caveat), cursive" },
+  { id: "dancing-script", label: "Dancing Script", category: "script", stack: "var(--font-dancing-script), cursive" },
+  { id: "jetbrains-mono", label: "JetBrains Mono", category: "mono", stack: "var(--font-jetbrains-mono), monospace" },
+];
+
+const FONT_IDS = new Set<string>(FONT_CATALOG.map((font) => font.id));
+
+export function editorialFontStack(fontId: EditorialFontId | undefined, fallback: "headline" | "sans" | "serif" = "sans") {
+  const font = FONT_CATALOG.find((item) => item.id === fontId) ?? FONT_CATALOG.find((item) => item.id === fallback);
+  return font?.stack ?? "var(--font-body), Arial, sans-serif";
+}
 
 export const EDITORIAL_FORMATS: Record<EditorialFormat, { width: number; height: number; label: string }> = {
   portrait: { width: 1000, height: 1250, label: "Portrait 4:5" },
@@ -147,6 +274,11 @@ export const EDITORIAL_TEMPLATES: Array<{ id: EditorialTemplateId; label: string
   { id: "catalog", label: "Collection grid", description: "Structured product story", format: "landscape" },
   { id: "collection-story", label: "Collection story", description: "Editorial image and product notes", format: "portrait" },
   { id: "magazine-spread", label: "Magazine spread", description: "Two-page fashion feature", format: "spread" },
+  { id: "featured", label: "Featured", description: "Full-bleed hero with a strip of secondary pieces", format: "portrait" },
+  { id: "hero-stack", label: "Hero stack", description: "One large piece above a pair", format: "portrait" },
+  { id: "split-two", label: "Split", description: "Two pieces side by side", format: "square" },
+  { id: "triptych", label: "Triptych", description: "Three equal columns", format: "landscape" },
+  { id: "polaroid-scatter", label: "Scatter", description: "Loosely angled snapshots", format: "portrait" },
 ];
 
 let elementSequence = 0;
@@ -232,6 +364,9 @@ export function createTextElement(content = "Add your story", preset: "title" | 
     type: "text",
     content,
     fontFamily: preset === "body" ? "sans" : "headline",
+    fontId: preset === "body" ? "sans" : "headline",
+    highlightColor: "transparent",
+    highlightStyle: "none",
     fontSize: size,
     fontWeight: preset === "body" ? 400 : 600,
     italic: false,
@@ -255,6 +390,53 @@ export function createShapeElement(shape: EditorialShapeKind = "rectangle"): Edi
     strokeWidth: 0,
     borderRadius: shape === "ellipse" ? 999 : 0,
   };
+}
+
+export function createStickerElement(value: string, kind: "emoji" | "icon" = "emoji", options: { src?: string; color?: string } = {}): EditorialStickerElement {
+  return {
+    ...baseElement("sticker", kind === "emoji" ? "Emoji" : "Icon", { x: 220, y: 240, width: 160, height: 160, zIndex: 60 }),
+    type: "sticker",
+    kind,
+    value,
+    src: options.src,
+    color: options.color,
+  };
+}
+
+export function createDrawingElement(format: EditorialFormat = "portrait", paths: EditorialDrawingPath[] = []): EditorialDrawingElement {
+  const { width, height } = EDITORIAL_FORMATS[format];
+  return {
+    ...baseElement("drawing", "Drawing", { x: 0, y: 0, width, height, zIndex: 70 }),
+    type: "drawing",
+    paths,
+    viewBoxWidth: width,
+    viewBoxHeight: height,
+  };
+}
+
+export function makeEditorialDrawingPath(d: string, options: { color?: string; width?: number; tool?: EditorialDrawTool; opacity?: number } = {}): EditorialDrawingPath {
+  const tool = options.tool ?? "pen";
+  return {
+    id: makeEditorialElementId("stroke"),
+    d,
+    color: options.color ?? "#030125",
+    width: options.width ?? 8,
+    tool,
+    opacity: options.opacity ?? (tool === "highlighter" ? 0.4 : 1),
+  };
+}
+
+/** Appends a stroke to a drawing element without mutating the source. */
+export function appendDrawingPath(element: EditorialDrawingElement, path: EditorialDrawingPath): EditorialDrawingElement {
+  return { ...element, paths: [...element.paths, path] };
+}
+
+/** Removes strokes by id — the eraser's whole-stroke mode. */
+export function eraseDrawingPaths(element: EditorialDrawingElement, pathIds: string[]): EditorialDrawingElement {
+  if (pathIds.length === 0) return element;
+  const remove = new Set(pathIds);
+  const paths = element.paths.filter((path) => !remove.has(path.id));
+  return paths.length === element.paths.length ? element : { ...element, paths };
 }
 
 function titleElements(title: string, format: EditorialFormat): EditorialTextElement[] {
@@ -287,6 +469,52 @@ export function applyEditorialTemplate(productIds: string[], title: string, temp
     const first = products[0] ? { ...products[0], x: 56, y: 170, width: 560, height: 760, borderRadius: 0, shadow: "none" as const } : undefined;
     const second = products[1] ? { ...products[1], x: 660, y: 300, width: 280, height: 360, borderRadius: 0 } : undefined;
     elements = [...text, ...(first ? [first] : []), ...(second ? [second] : []), { ...createTextElement("A considered edit of pieces chosen for shape, texture, and ease.", "body"), x: 650, y: 700, width: 290, height: 180, fontSize: 24, lineHeight: 1.45 }];
+  } else if (template.id === "featured") {
+    // Mirrors the long-standing FeaturedGuideArtwork composition: a full-bleed
+    // hero, a legibility scrim, the title over the top, and a strip of
+    // secondary pieces along the bottom.
+    const hero = products[0] ? { ...products[0], x: 0, y: 0, width: dimensions.width, height: dimensions.height, borderRadius: 0, shadow: "none" as const, fit: "cover" as const } : undefined;
+    const scrim = { ...createShapeElement("rectangle"), name: "Scrim", x: 0, y: 0, width: dimensions.width, height: dimensions.height, fill: "rgba(3, 1, 37, 0.42)", borderRadius: 0 };
+    const heading = { ...createTextElement(title || "Featured", "title"), x: 56, y: 64, width: dimensions.width - 200, height: 190, fontSize: 76, lineHeight: 0.98, color: "#ffffff" };
+    const caption = { ...createTextElement("A considered edit — the pieces worth knowing.", "body"), x: 56, y: 268, width: dimensions.width - 260, height: 110, fontSize: 24, lineHeight: 1.45, color: "rgba(255,255,255,0.92)" };
+    const strip = products.slice(1, 4).map((product, index) => ({
+      ...product,
+      x: 56 + index * 250,
+      y: dimensions.height - 286,
+      width: 226,
+      height: 226,
+      borderRadius: 24,
+      borderColor: "#ffffff",
+      borderWidth: 8,
+      shadow: "soft" as const,
+    }));
+    elements = [...(hero ? [hero] : []), scrim, heading, caption, ...strip];
+  } else if (template.id === "hero-stack") {
+    const hero = products[0] ? { ...products[0], x: 56, y: 190, width: dimensions.width - 112, height: 620, borderRadius: 18, shadow: "none" as const } : undefined;
+    const pair = products.slice(1, 3).map((product, index) => ({ ...product, x: 56 + index * 452, y: 846, width: 436, height: 340, borderRadius: 18, shadow: "none" as const }));
+    elements = [...text, ...(hero ? [hero] : []), ...pair];
+  } else if (template.id === "split-two") {
+    const pair = products.slice(0, 2).map((product, index) => ({ ...product, x: index * (dimensions.width / 2), y: 0, width: dimensions.width / 2, height: dimensions.height, borderRadius: 0, shadow: "none" as const, fit: "cover" as const }));
+    elements = [...pair, { ...createTextElement(title || "Two ways", "title"), x: 60, y: dimensions.height - 190, width: dimensions.width - 120, height: 120, fontSize: 64, color: "#ffffff" }];
+  } else if (template.id === "triptych") {
+    const columnWidth = dimensions.width / 3;
+    const columns = products.slice(0, 3).map((product, index) => ({ ...product, x: index * columnWidth, y: 0, width: columnWidth, height: dimensions.height, borderRadius: 0, shadow: "none" as const, fit: "cover" as const }));
+    elements = [...columns, { ...createTextElement(title || "THE EDIT", "subtitle"), x: 48, y: dimensions.height - 120, width: dimensions.width - 96, height: 64, fontSize: 34, letterSpacing: 9, color: "#ffffff" }];
+  } else if (template.id === "polaroid-scatter") {
+    const angles = [-6, 5, -3, 7];
+    const scattered = products.slice(0, 4).map((product, index) => ({
+      ...product,
+      x: 90 + (index % 2) * 400,
+      y: 220 + Math.floor(index / 2) * 430,
+      width: 380,
+      height: 380,
+      rotation: angles[index % angles.length],
+      borderRadius: 6,
+      borderColor: "#ffffff",
+      borderWidth: 18,
+      shadow: "soft" as const,
+    }));
+    elements = [...text, ...scattered];
   } else {
     const left = products[0] ? { ...products[0], x: 55, y: 115, width: 690, height: 720, borderRadius: 0, shadow: "none" as const } : undefined;
     const rightProducts = products.slice(1, 5).map((product, index) => ({ ...product, x: 860 + (index % 2) * 340, y: 170 + Math.floor(index / 2) * 340, width: 270, height: 270, borderRadius: 0, shadow: "none" as const }));
@@ -320,6 +548,34 @@ export function normalizeEditorialPage(value: EditorialPageDesign | undefined, p
     if (element.type === "shape" && !validShapes.has(element.shape)) {
       changed = true;
       return { ...element, shape: "rectangle" as const };
+    }
+    if (element.type === "text") {
+      // Documents authored before the font catalog have no `fontId`; derive it
+      // from the legacy slot so the ids stay a single source of truth.
+      const patch: Partial<EditorialTextElement> = {};
+      if (!element.fontId || !FONT_IDS.has(element.fontId)) patch.fontId = element.fontFamily ?? "sans";
+      if (typeof element.highlightColor !== "string") patch.highlightColor = "transparent";
+      if (!element.highlightStyle) patch.highlightStyle = "none";
+      if (Object.keys(patch).length > 0) {
+        changed = true;
+        return { ...element, ...patch };
+      }
+      return element;
+    }
+    if (element.type === "drawing") {
+      const paths = Array.isArray(element.paths) ? element.paths.filter((path) => path && typeof path.d === "string") : [];
+      const viewBoxWidth = Number.isFinite(element.viewBoxWidth) && element.viewBoxWidth > 0 ? element.viewBoxWidth : Math.max(1, element.width);
+      const viewBoxHeight = Number.isFinite(element.viewBoxHeight) && element.viewBoxHeight > 0 ? element.viewBoxHeight : Math.max(1, element.height);
+      if (paths.length !== (element.paths?.length ?? 0) || viewBoxWidth !== element.viewBoxWidth || viewBoxHeight !== element.viewBoxHeight) {
+        changed = true;
+        return { ...element, paths, viewBoxWidth, viewBoxHeight };
+      }
+      return element;
+    }
+    if (element.type === "sticker" && typeof element.value !== "string") {
+      changed = true;
+      const kind: EditorialStickerElement["kind"] = element.kind === "icon" ? "icon" : "emoji";
+      return { ...element, value: "★", kind };
     }
     return element;
   });

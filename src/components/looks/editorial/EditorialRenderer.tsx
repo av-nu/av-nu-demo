@@ -6,7 +6,7 @@ import { RotateCw } from "lucide-react";
 import { useId, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 
 import { mockProducts } from "@/data/mockProducts";
-import { EDITORIAL_FORMATS, EDITORIAL_VECTOR_PATHS, type EditorialElement, type EditorialImageMask, type EditorialPageDesign, type EditorialSnapGuides } from "@/lib/editorial";
+import { EDITORIAL_FORMATS, EDITORIAL_VECTOR_PATHS, editorialFontStack, isEditorialMediaElement, type EditorialElement, type EditorialImageMask, type EditorialPageDesign, type EditorialSnapGuides } from "@/lib/editorial";
 
 function shadowFor(value: "none" | "soft" | "strong") {
   if (value === "strong") return "0 22px 50px rgba(40, 30, 25, 0.28)";
@@ -50,13 +50,30 @@ function elementContent(element: EditorialElement, canvasWidth: number) {
   }
 
   if (element.type === "text") {
+    const highlight = element.highlightStyle && element.highlightStyle !== "none" ? element.highlightColor : undefined;
+    const content = highlight
+      ? (
+        <span
+          className="box-decoration-clone"
+          style={
+            element.highlightStyle === "underline"
+              ? { backgroundImage: `linear-gradient(${highlight}, ${highlight})`, backgroundSize: "100% 0.3em", backgroundPosition: "0 88%", backgroundRepeat: "no-repeat" }
+              : element.highlightStyle === "marker"
+                ? { backgroundImage: `linear-gradient(${highlight}, ${highlight})`, backgroundSize: "100% 62%", backgroundPosition: "0 62%", backgroundRepeat: "no-repeat" }
+                : { backgroundColor: highlight, padding: "0.08em 0.22em" }
+          }
+        >
+          {element.content}
+        </span>
+      )
+      : element.content;
     return (
       <div
         className="h-full w-full whitespace-pre-wrap break-words"
         style={{
           color: element.color,
           backgroundColor: element.backgroundColor,
-          fontFamily: fontFor(element.fontFamily),
+          fontFamily: element.fontId ? editorialFontStack(element.fontId, element.fontFamily) : fontFor(element.fontFamily),
           fontSize: `${(element.fontSize / canvasWidth) * 100}cqw`,
           fontWeight: element.fontWeight,
           fontStyle: element.italic ? "italic" : "normal",
@@ -66,8 +83,47 @@ function elementContent(element: EditorialElement, canvasWidth: number) {
           padding: `${(element.padding / canvasWidth) * 100}cqw`,
         }}
       >
-        {element.content}
+        {content}
       </div>
+    );
+  }
+
+  if (element.type === "sticker") {
+    if (element.src) {
+      // eslint-disable-next-line @next/next/no-img-element
+      return <img src={element.src} alt={element.name} draggable={false} className="h-full w-full object-contain" style={element.color ? { color: element.color } : undefined} />;
+    }
+    return (
+      <div
+        className="flex h-full w-full items-center justify-center leading-none"
+        style={{ fontSize: `${(Math.min(element.width, element.height) / canvasWidth) * 100}cqw`, color: element.color }}
+      >
+        {element.value}
+      </div>
+    );
+  }
+
+  if (element.type === "drawing") {
+    return (
+      <svg
+        aria-hidden="true"
+        className="h-full w-full overflow-visible"
+        viewBox={`0 0 ${element.viewBoxWidth} ${element.viewBoxHeight}`}
+        preserveAspectRatio="none"
+      >
+        {element.paths.map((path) => (
+          <path
+            key={path.id}
+            d={path.d}
+            fill="none"
+            stroke={path.color}
+            strokeWidth={path.width}
+            strokeOpacity={path.opacity}
+            strokeLinecap={path.tool === "marker" || path.tool === "highlighter" ? "butt" : "round"}
+            strokeLinejoin="round"
+          />
+        ))}
+      </svg>
     );
   }
 
@@ -115,10 +171,10 @@ export function EditorialRenderer({ design, selectedId, interactive = false, pro
         if (element.hidden) return null;
         const selected = interactive && selectedId === element.id;
         const maskId = `editorial-mask-${rendererId}-${element.id.replace(/[^a-zA-Z0-9_-]/g, "")}`;
-        const isMedia = element.type === "product" || element.type === "image" || element.type === "video";
-        const imageStyle = isMedia ? { ...maskStyle(element.mask, element.borderRadius, dimensions.width, maskId), boxShadow: shadowFor(element.shadow) } : undefined;
-        const borderStyle = isMedia && element.mask !== "circle" ? { border: `${(element.borderWidth / dimensions.width) * 100}cqw solid ${element.borderColor}` } : undefined;
-        const maskPath = isMedia ? EDITORIAL_VECTOR_PATHS[element.mask] : undefined;
+        const media = isEditorialMediaElement(element) ? element : undefined;
+        const imageStyle = media ? { ...maskStyle(media.mask, media.borderRadius, dimensions.width, maskId), boxShadow: shadowFor(media.shadow) } : undefined;
+        const borderStyle = media && media.mask !== "circle" ? { border: `${(media.borderWidth / dimensions.width) * 100}cqw solid ${media.borderColor}` } : undefined;
+        const maskPath = media ? EDITORIAL_VECTOR_PATHS[media.mask] : undefined;
         return (
           <div
             key={element.id}

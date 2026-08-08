@@ -3,6 +3,7 @@
 // a real backend would expose the same shapes over an API.
 
 import type { FaveVisibility, ListComment } from "@/data/faves";
+import type { Post } from "@/lib/post";
 
 /** Inner-circle relationship state between the current user and another user. */
 export type InnerState = "none" | "outgoing" | "incoming" | "connected";
@@ -93,7 +94,17 @@ export type SocialState = {
   notifications: Notification[];
   /** The current user's authored video reviews. */
   videoReviews: VideoReview[];
+  /** The current user's authored unified posts. */
+  posts: Post[];
+  /**
+   * Schema version for the post store, so later migrations can detect and
+   * upgrade persisted state without guessing.
+   */
+  postsVersion: number;
 };
+
+/** Current {@link SocialState.postsVersion}. */
+export const POSTS_VERSION = 1;
 
 /** A read model for any user's public-facing profile (current user or other). */
 export type SocialUser = {

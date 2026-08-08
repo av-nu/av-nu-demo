@@ -4,13 +4,21 @@ import {
   EDITORIAL_FORMATS,
   EDITORIAL_IMAGE_MASKS,
   EDITORIAL_SHAPES,
+  EDITORIAL_TEMPLATES,
+  FONT_CATALOG,
+  appendDrawingPath,
   applyEditorialTemplate,
   clampEditorialElement,
+  createDrawingElement,
   createImageElement,
   createProductElement,
   createShapeElement,
+  createStickerElement,
   createTextElement,
   duplicateEditorialElement,
+  editorialFontStack,
+  eraseDrawingPaths,
+  makeEditorialDrawingPath,
   editorialProductIds,
   normalizeEditorialPage,
   normalizeEditorialRotation,
@@ -95,5 +103,108 @@ describe("editorial document", () => {
   it("keeps rotation within the inspector range", () => {
     expect(normalizeEditorialRotation(190)).toBe(-170);
     expect(normalizeEditorialRotation(-540)).toBe(-180);
+  });
+});
+
+describe("stickers and drawings", () => {
+  it("creates emoji and icon stickers", () => {
+    const emoji = createStickerElement("🌿");
+    const icon = createStickerElement("leaf", "icon", { color: "#ACAB36" });
+
+    expect(emoji.type).toBe("sticker");
+    expect(emoji.kind).toBe("emoji");
+    expect(emoji.value).toBe("🌿");
+    expect(icon.kind).toBe("icon");
+    expect(icon.color).toBe("#ACAB36");
+  });
+
+  it("creates a drawing sized to the canvas and appends strokes immutably", () => {
+    const drawing = createDrawingElement("square");
+    const stroke = makeEditorialDrawingPath("M0 0 L10 10", { tool: "pen", color: "#030125" });
+    const withStroke = appendDrawingPath(drawing, stroke);
+
+    expect(drawing.width).toBe(EDITORIAL_FORMATS.square.width);
+    expect(drawing.viewBoxHeight).toBe(EDITORIAL_FORMATS.square.height);
+    expect(drawing.paths).toHaveLength(0);
+    expect(withStroke.paths).toHaveLength(1);
+  });
+
+  it("defaults the highlighter to a translucent stroke", () => {
+    expect(makeEditorialDrawingPath("M0 0", { tool: "highlighter" }).opacity).toBeLessThan(1);
+    expect(makeEditorialDrawingPath("M0 0", { tool: "pen" }).opacity).toBe(1);
+  });
+
+  it("erases strokes by id and preserves identity when nothing matches", () => {
+    const stroke = makeEditorialDrawingPath("M0 0 L5 5");
+    const drawing = appendDrawingPath(createDrawingElement("portrait"), stroke);
+
+    expect(eraseDrawingPaths(drawing, [stroke.id]).paths).toHaveLength(0);
+    expect(eraseDrawingPaths(drawing, ["nope"])).toBe(drawing);
+    expect(eraseDrawingPaths(drawing, [])).toBe(drawing);
+  });
+
+  it("repairs drawings whose stored geometry is unusable", () => {
+    const drawing = { ...createDrawingElement("portrait"), viewBoxWidth: 0, viewBoxHeight: Number.NaN, width: 400, height: 500 };
+    const design = { version: 1 as const, format: "portrait" as const, backgroundColor: "#fff", backgroundOpacity: 1, showGuides: true, elements: [drawing] };
+
+    const normalized = normalizeEditorialPage(design, [], "");
+    const [repaired] = normalized.elements;
+    if (repaired.type !== "drawing") throw new Error("expected a drawing element");
+
+    expect(repaired.viewBoxWidth).toBe(400);
+    expect(repaired.viewBoxHeight).toBe(500);
+  });
+});
+
+describe("typography", () => {
+  it("gives new text a catalog font and no highlight", () => {
+    const text = createTextElement("Title");
+
+    expect(text.fontId).toBe("headline");
+    expect(text.highlightStyle).toBe("none");
+    expect(createTextElement("Body", "body").fontId).toBe("sans");
+  });
+
+  it("backfills fontId from the legacy font slot on older documents", () => {
+    const legacy = { ...createTextElement("Old"), fontFamily: "serif" as const };
+    // Simulate a document persisted before the catalog existed.
+    delete (legacy as { fontId?: string }).fontId;
+    const design = { version: 1 as const, format: "portrait" as const, backgroundColor: "#fff", backgroundOpacity: 1, showGuides: true, elements: [legacy] };
+
+    const normalized = normalizeEditorialPage(design, [], "");
+    const [text] = normalized.elements;
+    if (text.type !== "text") throw new Error("expected a text element");
+
+    expect(text.fontId).toBe("serif");
+  });
+
+  it("resolves a font stack for catalog ids and falls back safely", () => {
+    expect(editorialFontStack("playfair")).toContain("--font-playfair");
+    expect(editorialFontStack(undefined, "headline")).toContain("--font-headline");
+    expect(FONT_CATALOG.map((font) => font.id)).toEqual(expect.arrayContaining(["headline", "sans", "serif", "bebas", "caveat"]));
+  });
+});
+
+describe("layout templates", () => {
+  it("keeps the Featured composition: full-bleed hero plus a secondary strip", () => {
+    const design = applyEditorialTemplate(["p-1", "p-2", "p-3", "p-4"], "Featured edit", "featured");
+    const dimensions = EDITORIAL_FORMATS.portrait;
+    const [hero] = design.elements;
+
+    expect(design.format).toBe("portrait");
+    expect(hero.type).toBe("product");
+    expect(hero.width).toBe(dimensions.width);
+    expect(hero.height).toBe(dimensions.height);
+    // Hero + scrim + heading + caption + three strip thumbnails.
+    expect(design.elements.filter((element) => element.type === "product")).toHaveLength(4);
+    expect(design.elements.some((element) => element.type === "text")).toBe(true);
+  });
+
+  it("exposes the new templates and still honors the originals", () => {
+    expect(EDITORIAL_TEMPLATES.map((template) => template.id)).toEqual(
+      expect.arrayContaining(["featured", "hero-stack", "split-two", "triptych", "polaroid-scatter", "fashion-cover"]),
+    );
+    expect(applyEditorialTemplate(["p-1", "p-2"], "Split", "split-two").format).toBe("square");
+    expect(applyEditorialTemplate(["p-1", "p-2", "p-3"], "Three", "triptych").format).toBe("landscape");
   });
 });
