@@ -6,7 +6,8 @@ import { RotateCw } from "lucide-react";
 import { useId, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 
 import { mockProducts } from "@/data/mockProducts";
-import { EDITORIAL_FORMATS, EDITORIAL_VECTOR_PATHS, editorialFontStack, isEditorialMediaElement, type EditorialElement, type EditorialImageMask, type EditorialPageDesign, type EditorialSnapGuides } from "@/lib/editorial";
+import { isUnoptimizableSrc, useMediaSrc } from "@/lib/media/useMediaSrc";
+import { EDITORIAL_FORMATS, EDITORIAL_VECTOR_PATHS, editorialFontStack, isEditorialMediaElement, type EditorialElement, type EditorialMediaElement, type EditorialImageMask, type EditorialPageDesign, type EditorialSnapGuides } from "@/lib/editorial";
 
 function shadowFor(value: "none" | "soft" | "strong") {
   if (value === "strong") return "0 22px 50px rgba(40, 30, 25, 0.28)";
@@ -28,25 +29,54 @@ function maskStyle(mask: EditorialImageMask, borderRadius: number, canvasWidth: 
   return { borderRadius: `${(borderRadius / canvasWidth) * 100}cqw` };
 }
 
-function elementContent(element: EditorialElement, canvasWidth: number) {
-  if (element.type === "product" || element.type === "image" || element.type === "video") {
-    const src = element.type === "product" ? mockProducts.find((product) => product.id === element.productId)?.images[0] : element.src;
-    if (!src) return <div className="flex h-full items-center justify-center bg-black/5 text-xs text-black/35">Media unavailable</div>;
-    if (element.type === "video") {
-      return <video src={src} controls playsInline className={element.fit === "cover" ? "h-full w-full object-cover" : "h-full w-full object-contain"} style={{ objectPosition: `${element.cropX}% ${element.cropY}%`, transform: `scale(${element.zoom})` }} />;
-    }
+/**
+ * Media elements resolve their ref through the media store, so this has to be a
+ * component rather than a plain render function.
+ */
+function MediaElementContent({ element }: { element: EditorialMediaElement }) {
+  const ref = element.type === "product"
+    ? mockProducts.find((product) => product.id === element.productId)?.images[0]
+    : element.src;
+  const { src, status } = useMediaSrc(ref);
+
+  if (status === "loading") return <div className="h-full w-full animate-pulse bg-black/5" />;
+  if (!src) {
     return (
-      <Image
-        src={src}
-        alt={element.name}
-        fill
-        sizes="(max-width: 768px) 80vw, 700px"
-        className={element.fit === "cover" ? "object-cover" : "object-contain"}
-        style={{ objectPosition: `${element.cropX}% ${element.cropY}%`, transform: `scale(${element.zoom})` }}
-        unoptimized={src.startsWith("data:")}
-        draggable={false}
-      />
+      <div className="flex h-full w-full items-center justify-center bg-black/5 px-2 text-center text-[10px] leading-tight text-black/40">
+        Media unavailable
+      </div>
     );
+  }
+
+  const objectStyle = { objectPosition: `${element.cropX}% ${element.cropY}%`, transform: `scale(${element.zoom})` };
+  const fitClass = element.fit === "cover" ? "object-cover" : "object-contain";
+
+  if (element.type === "video") {
+    return <video src={src} controls playsInline className={`h-full w-full ${fitClass}`} style={objectStyle} />;
+  }
+
+  // Object URLs and data URLs cannot go through next/image's loader.
+  if (isUnoptimizableSrc(src)) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={src} alt={element.name} draggable={false} className={`h-full w-full ${fitClass}`} style={objectStyle} />;
+  }
+
+  return (
+    <Image
+      src={src}
+      alt={element.name}
+      fill
+      sizes="(max-width: 768px) 80vw, 700px"
+      className={fitClass}
+      style={objectStyle}
+      draggable={false}
+    />
+  );
+}
+
+function elementContent(element: EditorialElement, canvasWidth: number) {
+  if (isEditorialMediaElement(element)) {
+    return <MediaElementContent element={element} />;
   }
 
   if (element.type === "text") {

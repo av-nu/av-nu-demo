@@ -91,13 +91,18 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
       // Media goes to the MediaStore; the design only ever holds a ref.
       const ref = await mediaStore.put(file, kind);
       const page = createMediaPage(ref, kind, post.format);
+      // Derive the landing page index from the updater's own result so it cannot
+      // drift from a stale closure.
       setPost((current) => {
-        // A fresh, untouched draft adopts the upload as its first page.
-        const isPristine = !started && current.pages.length === 1 && current.pages[0].design.elements.length === 0;
-        if (isPristine) return normalizePost({ ...current, pages: [page] });
-        return addPostPage(current, page);
+        // A fresh, untouched draft adopts the upload as its first page rather
+        // than leaving an empty page in front of it.
+        const isPristine = current.pages.length === 1 && current.pages[0].design.elements.length === 0;
+        const next = isPristine
+          ? normalizePost({ ...current, pages: [page] })
+          : addPostPage(current, page);
+        setActiveIndex(Math.max(0, next.pages.findIndex((item) => item.id === page.id)));
+        return next;
       });
-      setActiveIndex((current) => (started ? post.pages.length : current));
       setStarted(true);
       setActiveTool(undefined);
     } catch {

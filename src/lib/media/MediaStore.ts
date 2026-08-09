@@ -24,6 +24,17 @@ export interface MediaStore {
 
 const IDB_PREFIX = "idb:";
 
+/**
+ * Marker for media that can no longer be recovered — chiefly `blob:` URLs from
+ * the pre-MediaStore uploader, whose bytes are gone after a reload. Renderers
+ * show an explicit placeholder rather than a broken image.
+ */
+export const MISSING_MEDIA_REF = "missing:media";
+
+export function isMissingMediaRef(ref: string | undefined): boolean {
+  return !ref || ref === MISSING_MEDIA_REF;
+}
+
 /** True for refs this app owns and must resolve before rendering. */
 export function isManagedMediaRef(ref: string): boolean {
   return ref.startsWith(IDB_PREFIX);

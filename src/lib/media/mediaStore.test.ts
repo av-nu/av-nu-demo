@@ -1,14 +1,17 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  MISSING_MEDIA_REF,
   isDirectMediaRef,
   isExpiredMediaRef,
   isManagedMediaRef,
+  isMissingMediaRef,
   makeMediaKey,
   managedMediaKey,
   toManagedMediaRef,
 } from "./MediaStore";
 import { createMemoryMediaStore } from "./memoryMediaStore";
+import { isUnoptimizableSrc } from "./useMediaSrc";
 
 describe("media refs", () => {
   it("round-trips a managed ref", () => {
@@ -40,6 +43,35 @@ describe("media refs", () => {
     expect(first.startsWith("image-")).toBe(true);
     expect(second.startsWith("video-")).toBe(true);
     expect(first).not.toBe(second);
+  });
+});
+
+describe("missing media", () => {
+  it("treats the missing marker and empty refs as unavailable", () => {
+    expect(isMissingMediaRef(MISSING_MEDIA_REF)).toBe(true);
+    expect(isMissingMediaRef(undefined)).toBe(true);
+    expect(isMissingMediaRef("idb:image-1")).toBe(false);
+    expect(isMissingMediaRef("/videos/a.mp4")).toBe(false);
+  });
+});
+
+describe("render-time src classification", () => {
+  // A managed ref must never reach next/image — doing so throws
+  // "Invalid src prop ... hostname is not configured".
+  it("flags object and data URLs as unoptimizable", () => {
+    expect(isUnoptimizableSrc("blob:http://localhost/abc")).toBe(true);
+    expect(isUnoptimizableSrc("data:image/webp;base64,xx")).toBe(true);
+  });
+
+  it("leaves hosted and app-relative URLs optimizable", () => {
+    expect(isUnoptimizableSrc("https://cdn.test/a.jpg")).toBe(false);
+    expect(isUnoptimizableSrc("/products/a.jpg")).toBe(false);
+  });
+
+  it("never classifies a managed ref as directly loadable", () => {
+    const ref = toManagedMediaRef(makeMediaKey("image"));
+    expect(isDirectMediaRef(ref)).toBe(false);
+    expect(isManagedMediaRef(ref)).toBe(true);
   });
 });
 

@@ -27,10 +27,7 @@ import {
   type PostPage,
   type PostProductPin,
 } from "@/lib/post";
-import { isExpiredMediaRef } from "@/lib/media/MediaStore";
-
-/** Marker used when legacy media can no longer be recovered (see below). */
-export const MISSING_MEDIA_REF = "missing:media";
+import { MISSING_MEDIA_REF, isExpiredMediaRef, isMissingMediaRef } from "@/lib/media/MediaStore";
 
 /**
  * `blob:` URLs from the old uploader are unrecoverable after a reload — the
@@ -42,9 +39,7 @@ function mediaRefFor(url: string | undefined): string {
   return isExpiredMediaRef(url) ? MISSING_MEDIA_REF : url;
 }
 
-export function isMissingMediaRef(ref: string): boolean {
-  return ref === MISSING_MEDIA_REF;
-}
+export { MISSING_MEDIA_REF, isMissingMediaRef };
 
 // --- video reviews (moments) --------------------------------------------------
 
