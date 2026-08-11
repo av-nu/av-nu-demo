@@ -3,32 +3,23 @@ import Image from "next/image";
 import Link from "next/link";
 import { BookOpen, Camera, ListChecks, Plus, Users } from "lucide-react";
 
-import { FeaturedGuideArtwork } from "@/components/home/FeaturedGuideArtwork";
-import { MomentQuickView } from "@/components/home/MomentQuickView";
-import { PostQuickView, type DiscoverPost } from "@/components/home/PostQuickView";
+import { PostCard } from "@/components/post/PostCard";
+import { PostQuickView } from "@/components/post/PostQuickView";
+import type { Post } from "@/lib/post";
 import { ProductQuickView } from "@/components/home/ProductQuickView";
 import { Avatar } from "@/components/social/Avatar";
 import { SavePostDialog } from "@/components/social/SavePostDialog";
 import { SharePostDialog } from "@/components/social/SharePostDialog";
-import { SocialPostActions } from "@/components/social/SocialPostActions";
-import { SocialPostMeta } from "@/components/social/SocialPostMeta";
-import { SocialPostProduct } from "@/components/social/SocialPostProduct";
 import { ProductCard } from "@/components/product/ProductCard";
-import { VideoReviewCard } from "@/components/social/VideoReviewCard";
-import { buildSpotlightRows } from "@/data/spotlight";
-import { discoverGuidePosts } from "@/data/curatedGuides";
-import { communityLists, flattenPages } from "@/data/faves";
-import { contacts, getContactById } from "@/data/social";
+import { contacts } from "@/data/social";
 import { mockBrands } from "@/data/mockBrands";
 import { mockProducts, type Product } from "@/data/mockProducts";
 import { useListSocial } from "@/hooks/useListSocial";
 import { useSavedPostGroups } from "@/hooks/useSavedPostGroups";
 import { useSocialGraph } from "@/hooks/useSocialGraph";
 import { useSocialStore } from "@/hooks/useSocialStore";
-import { useVideoReviews } from "@/hooks/useVideoReviews";
+import { useFeedPosts } from "@/hooks/useFeedPosts";
 import { getProductById } from "@/lib/data";
-import type { VideoReview } from "@/lib/social";
-import { getVideoPoster } from "@/lib/utils";
 import { toSocialUser } from "@/lib/social";
 
 const DISCOVERY_CATEGORY_ORDER = ["Apparel", "Accessories", "Home & Living", "Beauty", "Wellness", "Outdoors", "Food & Drink", "Pet", "Kids"];
@@ -64,29 +55,23 @@ function interleaveProducts(products: Product[]) {
 
 export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }) {
   const [scope, setScope] = useState<"discover" | "inner">("discover");
-  const [activePost, setActivePost] = useState<DiscoverPost>();
+  const [activePost, setActivePost] = useState<Post>();
   const [activeProduct, setActiveProduct] = useState<Product>();
-  const [activeMoment, setActiveMoment] = useState<{ review: VideoReview; author: ReturnType<typeof toSocialUser> }>();
-  const [savePost, setSavePost] = useState<DiscoverPost>();
-  const [sharePost, setSharePost] = useState<DiscoverPost>();
+  const [savePost, setSavePost] = useState<Post>();
+  const [sharePost, setSharePost] = useState<Post>();
   const { isLiked, toggleLike } = useListSocial();
   const { groups, saveToDefault } = useSavedPostGroups();
   const { followedBrands, followBrand, unfollowBrand } = useSocialGraph();
   const { state } = useSocialStore();
-  const { publishedMoments } = useVideoReviews();
+  const feedPosts = useFeedPosts();
   const currentUser = toSocialUser("me", state);
-  const videos = useMemo(() => buildSpotlightRows(16), []);
-  const innerIds = new Set(contacts.filter((contact) => contact.circle === "inner").map((contact) => contact.id));
-  const visibleLists = discoverGuidePosts(communityLists).filter((list) => scope === "discover" || innerIds.has(list.authorId));
-  const visibleVideos = scope === "discover" ? videos : videos.slice(0, 2);
+  const innerIds = useMemo(() => new Set(contacts.filter((contact) => contact.circle === "inner").map((contact) => contact.id)), []);
   const products = useMemo(() => scope === "discover" ? mockProducts : mockProducts.slice(0, 24), [scope]);
   const mixed = useMemo(() => {
     const productItems = interleaveProducts(products).map((product, index) => ({ kind: "product" as const, id: product.id, index, data: product }));
-    const postItems = [
-      ...publishedMoments.map((moment, index) => ({ kind: "moment" as const, id: moment.id, index, data: moment })),
-      ...visibleVideos.map((row, index) => ({ kind: "video" as const, id: row.id, index, data: row })),
-      ...visibleLists.map((list, index) => ({ kind: "list" as const, id: list.id, index, data: list })),
-    ];
+    const postItems = feedPosts
+      .filter((post) => scope === "discover" || innerIds.has(post.authorId) || post.authorId === "me")
+      .map((post, index) => ({ kind: "post" as const, id: post.id, index, data: post }));
     const result: Array<(typeof productItems)[number] | (typeof postItems)[number]> = [];
     let postIndex = 0;
 
@@ -96,7 +81,7 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
     });
 
     return [...result, ...postItems.slice(postIndex)];
-  }, [products, publishedMoments, visibleLists, visibleVideos]);
+  }, [feedPosts, innerIds, products, scope]);
   const [visibleCount, setVisibleCount] = useState(24);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const hasMore = visibleCount < mixed.length;
@@ -170,70 +155,24 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
       <div className="columns-2 gap-3 md:columns-3 lg:columns-4">
         {mixed.slice(0, visibleCount).map((item) => {
           if (item.kind === "product") return <div key={`product-${item.id}`} className="mb-5 w-full break-inside-avoid cursor-pointer"><ProductCard product={item.data} onShare={onToast} onProductClick={(event) => { event.preventDefault(); setActiveProduct(item.data); }} imageAspect={item.index % 3 === 0 ? "tall" : item.index % 3 === 1 ? "portrait" : "square"} /></div>;
-          if (item.kind === "moment") {
-            const author = item.data.authorId === "me" ? currentUser : toSocialUser(item.data.authorId, state);
-            return <div key={`moment-${item.id}`} className="mb-5 w-full break-inside-avoid"><VideoReviewCard review={item.data} author={author} onOpen={() => setActiveMoment({ review: item.data, author })} /></div>;
-          }
-          if (item.kind === "video") {
-            const author = contacts[item.index % contacts.length];
-            const videoPost: DiscoverPost = { kind: "video", id: item.id, data: item.data, author };
-            const videoSaved = groups.some((group) => group.postIds.includes(item.id));
-            return (
-              <Link key={`video-${item.id}`} href={`/post/video/${item.id}`} onClick={(event) => { event.preventDefault(); setActivePost(videoPost); }} className="group mb-5 block w-full break-inside-avoid overflow-hidden rounded-2xl border border-divider/50 bg-bg">
-                <SocialPostMeta author={author} kind="Moment" />
-                <div className={`relative bg-text ${item.index % 2 ? "aspect-[4/5]" : "aspect-[3/5]"}`}>
-                  <video src={item.data.videoUrl} poster={getVideoPoster(item.data.videoUrl)} preload="metadata" muted loop playsInline autoPlay className="h-full w-full object-cover" />
-                </div>
-                <SocialPostActions
-                  liked={isLiked(item.id)}
-                  saved={videoSaved}
-                  onLike={() => toggleLike(item.id)}
-                  onComment={() => setActivePost(videoPost)}
-                  onSave={() => { if (saveToDefault(item.id)) setSavePost(videoPost); else onToast("Saved moment to Saved Posts"); }}
-                  onShare={() => setSharePost(videoPost)}
-                />
-                <div className="px-3 pb-3">
-                  <p className="font-headline text-base leading-tight text-midnight">{item.data.title}</p>
-                  <p className="mt-1 text-[11px] text-midnight/50">Watch and shop the look</p>
-                  {item.data.featured && <SocialPostProduct product={item.data.featured} onOpen={() => setActiveProduct(item.data.featured)} />}
-                </div>
-              </Link>
-            );
-          }
-          const author = getContactById(item.data.authorId);
-          const productIds = flattenPages(item.data.pages);
-          const images = productIds.map((id) => getProductById(id)?.images[0]).filter(Boolean).slice(0, 4) as string[];
-          const listPost: DiscoverPost = { kind: "list", id: item.id, data: item.data, author };
-          const listSaved = groups.some((group) => group.postIds.includes(item.id));
-          const listFirstProduct = getProductById(productIds[0] ?? "");
+          const post = item.data;
+          const author = post.authorId === "me" ? currentUser : toSocialUser(post.authorId, state);
+          const postSaved = groups.some((group) => group.postIds.includes(post.id));
           return (
-            <Link key={`list-${item.id}`} href={`/post/list/${item.id}`} onClick={(event) => { event.preventDefault(); setActivePost(listPost); }} className="group mb-5 block w-full break-inside-avoid overflow-hidden rounded-2xl border border-divider/50 bg-bg">
-              <SocialPostMeta author={author ?? { name: "av | nu", initials: "AV", color: "bg-accent" }} kind={item.data.format === "featured" ? "Guide" : "List"} />
-              {item.data.format === "featured" ? (
-                <FeaturedGuideArtwork guide={item.data} productIds={productIds} author={author} showCopy={false} />
-              ) : (
-                <div className={`grid ${images.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
-                  {images.map((src) => (
-                    <div key={src} className={`relative ${item.index % 3 === 0 ? "aspect-[4/5]" : item.index % 3 === 1 ? "aspect-square" : "aspect-[3/4]"}`}>
-                      <Image src={src} alt="" fill sizes="240px" className="object-cover transition-transform duration-500 group-hover:scale-105" />
-                    </div>
-                  ))}
-                </div>
-              )}
-              <SocialPostActions
-                liked={isLiked(item.id)}
-                saved={listSaved}
-                onLike={() => toggleLike(item.id)}
-                onComment={() => setActivePost(listPost)}
-                onSave={() => { if (saveToDefault(item.id)) setSavePost(listPost); else onToast("Saved list to Saved Posts"); }}
-                onShare={() => setSharePost(listPost)}
+            <div key={`post-${post.id}`} className="mb-5 w-full break-inside-avoid">
+              <PostCard
+                post={post}
+                author={author}
+                liked={isLiked(post.id)}
+                saved={postSaved}
+                onLike={() => toggleLike(post.id)}
+                onComment={() => setActivePost(post)}
+                onSave={() => { if (saveToDefault(post.id)) setSavePost(post); else onToast("Saved to your posts"); }}
+                onShare={() => setSharePost(post)}
+                onOpen={() => setActivePost(post)}
+                onProductClick={(productId) => { const product = getProductById(productId); if (product) setActiveProduct(product); }}
               />
-              <div className="px-3 pb-3">
-                <p className="font-headline text-base text-midnight">{item.data.name}</p>
-                <p className="mt-1 line-clamp-2 text-[11px] leading-relaxed text-midnight/60">{item.data.caption}</p>
-                {listFirstProduct && <SocialPostProduct product={listFirstProduct} onOpen={() => setActiveProduct(listFirstProduct)} />}
-              </div>
-            </Link>
+            </div>
           );
         })}
       </div>
@@ -241,10 +180,21 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
       {hasMore && <div ref={loadMoreRef} className="flex min-h-20 items-center justify-center text-xs text-text/45">Loading more inspiration…</div>}
 
       {activeProduct && <ProductQuickView product={activeProduct} onClose={() => setActiveProduct(undefined)} onToast={onToast} />}
-      {activeMoment && <MomentQuickView review={activeMoment.review} author={activeMoment.author} onClose={() => setActiveMoment(undefined)} />}
-      {activePost && <PostQuickView post={activePost} onClose={() => setActivePost(undefined)} />}
+      {activePost && (
+        <PostQuickView
+          post={activePost}
+          author={activePost.authorId === "me" ? currentUser : toSocialUser(activePost.authorId, state)}
+          liked={isLiked(activePost.id)}
+          saved={groups.some((group) => group.postIds.includes(activePost.id))}
+          onLike={() => toggleLike(activePost.id)}
+          onSave={() => { if (saveToDefault(activePost.id)) setSavePost(activePost); else onToast("Saved to your posts"); }}
+          onShare={() => setSharePost(activePost)}
+          onProductClick={(productId) => { const product = getProductById(productId); if (product) setActiveProduct(product); }}
+          onClose={() => setActivePost(undefined)}
+        />
+      )}
       {savePost && <SavePostDialog postId={savePost.id} onClose={() => setSavePost(undefined)} onToast={onToast} />}
-      {sharePost && <SharePostDialog postTitle={sharePost.kind === "video" ? sharePost.data.title : sharePost.data.name} onClose={() => setSharePost(undefined)} onToast={onToast} />}
+      {sharePost && <SharePostDialog postTitle={sharePost.caption || "Post"} onClose={() => setSharePost(undefined)} onToast={onToast} />}
     </div>
   );
 }
