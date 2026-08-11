@@ -25,6 +25,8 @@ import {
   applyEditorialTemplate,
   createDrawingElement,
   createProductElement,
+  fillPlaceholderWithProduct,
+  firstPlaceholder,
   createStickerElement,
   createTextElement,
   makeEditorialDrawingPath,
@@ -90,6 +92,7 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeTool, setActiveTool] = useState<PostTool>();
   const [zoom, setZoom] = useState(1);
+  const [pendingSlotId, setPendingSlotId] = useState<string>();
   const [drawSettings, setDrawSettings] = useState<DrawSettings>({ tool: "pen", color: "#030125", width: DRAW_TOOL_PRESETS.pen.width });
   const uploadRef = useRef<HTMLInputElement>(null);
 
@@ -177,15 +180,12 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
   };
 
   const applyTemplate = (templateId: EditorialTemplateId) => {
-    canvas.replaceDesign(applyEditorialTemplate(post.productIds, firstHeadline || "Title", templateId));
-    // Templates arrange products, so applying one to a post that has none looks
-    // empty. Say so and send the author straight to the picker.
-    if (post.productIds.length === 0) {
-      showToast("Add products to fill this layout");
-      setActiveTool("add");
-      return;
-    }
+    const design = applyEditorialTemplate(post.productIds, firstHeadline || "Title", templateId);
+    canvas.replaceDesign(design);
     setActiveTool(undefined);
+    // Unfilled slots are visible and tappable on the canvas, so point at them
+    // rather than forcing the picker open.
+    if (firstPlaceholder(design)) showToast("Tap a slot to add a product");
   };
 
   const changeFormat = (format: EditorialFormat) => {
@@ -219,9 +219,35 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
   };
 
   const addProduct = (productId: string) => {
+    // Prefer the slot the author tapped, then any remaining reserved slot, so a
+    // layout fills in place instead of stacking products on top of it.
+    const target = pendingSlotId
+      ? canvas.design.elements.find((element) => element.id === pendingSlotId && element.type === "placeholder")
+      : firstPlaceholder(canvas.design);
+
+    if (target) {
+      canvas.commit(fillPlaceholderWithProduct(canvas.design, target.id, productId), target.id);
+      setPendingSlotId(undefined);
+      // Close the picker once the layout is full; keep it open while slots remain.
+      if (!firstPlaceholder(fillPlaceholderWithProduct(canvas.design, target.id, productId))) {
+        setActiveTool(undefined);
+      }
+      return;
+    }
+
     // Offset each addition so a run of products does not land in one stack.
     const placed = canvas.design.elements.filter((element) => element.type === "product").length;
     canvas.addElement(createProductElement(productId, placed));
+  };
+
+  /** Tapping a reserved slot opens the picker aimed at that slot. */
+  const handleElementSelect = (elementId: string) => {
+    canvas.setSelectedId(elementId);
+    const element = canvas.design.elements.find((item) => item.id === elementId);
+    if (element?.type === "placeholder") {
+      setPendingSlotId(elementId);
+      setActiveTool("add");
+    }
   };
 
   /** Appends a finished stroke, creating the page's drawing layer on first use. */
@@ -344,8 +370,8 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
                   interactive
                   guides={canvas.snapGuides}
                   canvasRef={canvas.canvasRef}
-                  onElementPointerDown={(event, elementId) => canvas.startInteraction(event, elementId, "drag")}
-                  onElementSelect={canvas.setSelectedId}
+                  onElementPointerDown={(event, elementId) => { canvas.startInteraction(event, elementId, "drag"); handleElementSelect(elementId); }}
+                  onElementSelect={handleElementSelect}
                   onHandlePointerDown={(event, elementId, handle) => canvas.startInteraction(event, elementId, handle)}
                   onCanvasPointerDown={() => canvas.setSelectedId(undefined)}
                 />
@@ -436,7 +462,7 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
       )}
 
       {started && activeTool === "add" && (
-        <AddProductTool onAdd={addProduct} onClose={() => setActiveTool(undefined)} />
+        <AddProductTool onAdd={addProduct} onClose={() => { setPendingSlotId(undefined); setActiveTool(undefined); }} />
       )}
 
       {started && activeTool && !HANDLED_TOOLS.has(activeTool) && (

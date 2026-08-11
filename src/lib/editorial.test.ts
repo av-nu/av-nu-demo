@@ -17,6 +17,8 @@ import {
   createTextElement,
   duplicateEditorialElement,
   editorialFontStack,
+  fillPlaceholderWithProduct,
+  firstPlaceholder,
   eraseDrawingPaths,
   makeEditorialDrawingPath,
   editorialProductIds,
@@ -182,6 +184,57 @@ describe("typography", () => {
     expect(editorialFontStack("playfair")).toContain("--font-playfair");
     expect(editorialFontStack(undefined, "headline")).toContain("--font-headline");
     expect(FONT_CATALOG.map((font) => font.id)).toEqual(expect.arrayContaining(["headline", "sans", "serif", "bebas", "caveat"]));
+  });
+});
+
+describe("layout slots", () => {
+  it("reserves a frame for every slot a layout expects, even with no products", () => {
+    const design = applyEditorialTemplate([], "Empty", "catalog");
+    const placeholders = design.elements.filter((element) => element.type === "placeholder");
+
+    // Without reserved frames an applied layout is indistinguishable from a
+    // blank page, which is what made templates look broken.
+    expect(placeholders).toHaveLength(6);
+    expect(design.elements.some((element) => element.type === "product")).toBe(false);
+  });
+
+  it("fills slots in order and reserves the remainder", () => {
+    const design = applyEditorialTemplate(["p-1", "p-2"], "Partial", "catalog");
+
+    expect(design.elements.filter((element) => element.type === "product")).toHaveLength(2);
+    expect(design.elements.filter((element) => element.type === "placeholder")).toHaveLength(4);
+  });
+
+  it("reserves no frames once every slot has a product", () => {
+    const design = applyEditorialTemplate(["p-1", "p-2"], "Full", "split-two");
+
+    expect(firstPlaceholder(design)).toBeUndefined();
+  });
+
+  it("keeps the frame's geometry when a slot is filled", () => {
+    const design = applyEditorialTemplate([], "Featured", "featured");
+    const slot = firstPlaceholder(design);
+    if (!slot) throw new Error("expected a reserved slot");
+
+    const filled = fillPlaceholderWithProduct(design, slot.id, "p-9");
+    const product = filled.elements.find((element) => element.id === slot.id);
+    if (!product || product.type !== "product") throw new Error("expected the slot to become a product");
+
+    expect(product.productId).toBe("p-9");
+    expect(product.x).toBe(slot.x);
+    expect(product.y).toBe(slot.y);
+    expect(product.width).toBe(slot.width);
+    expect(product.height).toBe(slot.height);
+    expect(product.borderWidth).toBe(slot.borderWidth);
+    expect(editorialProductIds(filled)).toEqual(["p-9"]);
+  });
+
+  it("ignores a fill request for an element that is not a slot", () => {
+    const design = applyEditorialTemplate(["p-1"], "Filled", "fashion-cover");
+    const product = design.elements.find((element) => element.type === "product");
+    if (!product) throw new Error("expected a product element");
+
+    expect(fillPlaceholderWithProduct(design, product.id, "p-2")).toBe(design);
   });
 });
 

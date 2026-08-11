@@ -2,12 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { RotateCw } from "lucide-react";
+import { Plus, RotateCw } from "lucide-react";
 import { useId, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 
 import { mockProducts } from "@/data/mockProducts";
 import { isUnoptimizableSrc, useMediaSrc } from "@/lib/media/useMediaSrc";
-import { EDITORIAL_FORMATS, EDITORIAL_VECTOR_PATHS, editorialFontStack, isEditorialMediaElement, type EditorialElement, type EditorialMediaElement, type EditorialImageMask, type EditorialPageDesign, type EditorialSnapGuides } from "@/lib/editorial";
+import { EDITORIAL_FORMATS, EDITORIAL_VECTOR_PATHS, editorialFontStack, isEditorialFramedElement, isEditorialMediaElement, type EditorialElement, type EditorialMediaElement, type EditorialImageMask, type EditorialPageDesign, type EditorialSnapGuides } from "@/lib/editorial";
 
 function shadowFor(value: "none" | "soft" | "strong") {
   if (value === "strong") return "0 22px 50px rgba(40, 30, 25, 0.28)";
@@ -160,6 +160,19 @@ function elementContent(element: EditorialElement, canvasWidth: number) {
     );
   }
 
+  if (element.type === "placeholder") {
+    // A reserved slot: dashed frame plus an affordance to fill it.
+    return (
+      <div
+        className="flex h-full w-full flex-col items-center justify-center gap-[2cqw] bg-black/[0.03] text-black/40"
+        style={{ outline: "0.5cqw dashed rgba(3,1,37,0.28)", outlineOffset: "-0.5cqw" }}
+      >
+        <Plus style={{ width: "8cqw", height: "8cqw" }} strokeWidth={2} aria-hidden="true" />
+        <span className="font-semibold" style={{ fontSize: "3cqw" }}>Add product</span>
+      </div>
+    );
+  }
+
   if (element.shape === "line") {
     return <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2" style={{ height: `${(Math.max(1, element.strokeWidth || element.height) / canvasWidth) * 100}cqw`, backgroundColor: element.fill }} />;
   }
@@ -204,7 +217,7 @@ export function EditorialRenderer({ design, selectedId, interactive = false, pro
         if (element.hidden) return null;
         const selected = interactive && selectedId === element.id;
         const maskId = `editorial-mask-${rendererId}-${element.id.replace(/[^a-zA-Z0-9_-]/g, "")}`;
-        const media = isEditorialMediaElement(element) ? element : undefined;
+        const media = isEditorialFramedElement(element) ? element : undefined;
         const imageStyle = media ? { ...maskStyle(media.mask, media.borderRadius, dimensions.width, maskId), boxShadow: shadowFor(media.shadow) } : undefined;
         const borderStyle = media && media.mask !== "circle" ? { border: `${(media.borderWidth / dimensions.width) * 100}cqw solid ${media.borderColor}` } : undefined;
         const maskPath = media ? EDITORIAL_VECTOR_PATHS[media.mask] : undefined;

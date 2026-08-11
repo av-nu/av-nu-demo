@@ -10,7 +10,7 @@ export type EditorialTemplateId =
   | "split-two"
   | "triptych"
   | "polaroid-scatter";
-export type EditorialElementType = "product" | "image" | "video" | "text" | "shape" | "sticker" | "drawing";
+export type EditorialElementType = "product" | "image" | "video" | "text" | "shape" | "sticker" | "drawing" | "placeholder";
 export type EditorialTextAlign = "left" | "center" | "right";
 export type EditorialImageFit = "cover" | "contain";
 export type EditorialShapeKind = "rectangle" | "ellipse" | "line" | "heart" | "star" | "clover" | "diamond" | "triangle" | "arch" | "blob";
@@ -106,6 +106,27 @@ export type EditorialShapeElement = EditorialElementBase & {
   borderRadius: number;
 };
 
+/**
+ * A reserved frame in a layout, waiting for a product.
+ *
+ * Structurally matches an image element minus its source so templates can
+ * position slots without caring whether they are filled yet.
+ */
+export type EditorialPlaceholderElement = EditorialElementBase & {
+  type: "placeholder";
+  /** Slot order within the template, used for labelling. */
+  slot: number;
+  fit: EditorialImageFit;
+  cropX: number;
+  cropY: number;
+  zoom: number;
+  borderRadius: number;
+  borderColor: string;
+  borderWidth: number;
+  shadow: "none" | "soft" | "strong";
+  mask: EditorialImageMask;
+};
+
 /** Emoji or icon sticker placed on the canvas. */
 export type EditorialStickerElement = EditorialElementBase & {
   type: "sticker";
@@ -153,13 +174,19 @@ export type EditorialElement =
   | EditorialTextElement
   | EditorialShapeElement
   | EditorialStickerElement
-  | EditorialDrawingElement;
+  | EditorialDrawingElement
+  | EditorialPlaceholderElement;
 
 /** Elements that render media and therefore support masks, crop, and borders. */
 export type EditorialMediaElement = EditorialProductElement | EditorialImageElement | EditorialVideoElement;
 
 export function isEditorialMediaElement(element: EditorialElement): element is EditorialMediaElement {
   return element.type === "product" || element.type === "image" || element.type === "video";
+}
+
+/** Elements drawn inside a framed box: media plus not-yet-filled slots. */
+export function isEditorialFramedElement(element: EditorialElement): element is EditorialMediaElement | EditorialPlaceholderElement {
+  return isEditorialMediaElement(element) || element.type === "placeholder";
 }
 
 export type EditorialPageDesign = {
@@ -399,6 +426,68 @@ export function createShapeElement(shape: EditorialShapeKind = "rectangle"): Edi
   };
 }
 
+export function createPlaceholderElement(index = 0): EditorialPlaceholderElement {
+  return {
+    ...baseElement("placeholder", `Slot ${index + 1}`, { x: 90 + (index % 3) * 250, y: 260 + Math.floor(index / 3) * 330, zIndex: index + 1 }),
+    type: "placeholder",
+    slot: index,
+    fit: "cover",
+    cropX: 50,
+    cropY: 50,
+    zoom: 1,
+    borderRadius: 8,
+    borderColor: "#ffffff",
+    borderWidth: 0,
+    shadow: "none",
+    mask: "rectangle",
+  };
+}
+
+/**
+ * One element per layout slot: the product where the author has supplied one,
+ * otherwise a reserved frame they can fill later.
+ */
+function slotElements(productIds: string[], count: number): Array<EditorialProductElement | EditorialPlaceholderElement> {
+  return Array.from({ length: count }, (_, index) => (
+    productIds[index] ? createProductElement(productIds[index], index) : createPlaceholderElement(index)
+  ));
+}
+
+/** Replaces a reserved frame with a product, keeping the frame's geometry. */
+export function fillPlaceholderWithProduct(design: EditorialPageDesign, placeholderId: string, productId: string): EditorialPageDesign {
+  const placeholder = design.elements.find((element) => element.id === placeholderId);
+  if (!placeholder || placeholder.type !== "placeholder") return design;
+  const product: EditorialProductElement = {
+    ...createProductElement(productId, placeholder.slot),
+    id: placeholder.id,
+    name: placeholder.name,
+    x: placeholder.x,
+    y: placeholder.y,
+    width: placeholder.width,
+    height: placeholder.height,
+    rotation: placeholder.rotation,
+    zIndex: placeholder.zIndex,
+    opacity: placeholder.opacity,
+    fit: placeholder.fit,
+    cropX: placeholder.cropX,
+    cropY: placeholder.cropY,
+    zoom: placeholder.zoom,
+    borderRadius: placeholder.borderRadius,
+    borderColor: placeholder.borderColor,
+    borderWidth: placeholder.borderWidth,
+    shadow: placeholder.shadow,
+    mask: placeholder.mask,
+  };
+  return { ...design, elements: design.elements.map((element) => (element.id === placeholderId ? product : element)) };
+}
+
+/** The first unfilled slot, so newly added products land somewhere sensible. */
+export function firstPlaceholder(design: EditorialPageDesign): EditorialPlaceholderElement | undefined {
+  return design.elements
+    .filter((element): element is EditorialPlaceholderElement => element.type === "placeholder")
+    .sort((a, b) => a.slot - b.slot)[0];
+}
+
 export function createStickerElement(value: string, kind: "emoji" | "icon" = "emoji", options: { src?: string; color?: string } = {}): EditorialStickerElement {
   return {
     ...baseElement("sticker", kind === "emoji" ? "Emoji" : "Icon", { x: 220, y: 240, width: 160, height: 160, zIndex: 60 }),
@@ -457,39 +546,55 @@ function titleElements(title: string, format: EditorialFormat): EditorialTextEle
   ];
 }
 
+/** How many product frames each layout reserves. */
+const TEMPLATE_SLOTS: Record<EditorialTemplateId, number> = {
+  "fashion-cover": 1,
+  "new-arrivals": 3,
+  catalog: 6,
+  "collection-story": 2,
+  "magazine-spread": 5,
+  featured: 4,
+  "hero-stack": 3,
+  "split-two": 2,
+  triptych: 3,
+  "polaroid-scatter": 4,
+};
+
 export function applyEditorialTemplate(productIds: string[], title: string, templateId: EditorialTemplateId): EditorialPageDesign {
   const template = EDITORIAL_TEMPLATES.find((item) => item.id === templateId) ?? EDITORIAL_TEMPLATES[0];
   const format = template.format;
   const dimensions = EDITORIAL_FORMATS[format];
-  const products = productIds.slice(0, 8).map((id, index) => createProductElement(id, index));
+  // Slots are always produced, so a layout applied before any product is chosen
+  // still reads as a layout rather than a blank page.
+  const slots = slotElements(productIds, TEMPLATE_SLOTS[template.id] ?? 4);
   const text = titleElements(title, format);
   let elements: EditorialElement[] = [];
 
   if (template.id === "fashion-cover") {
-    const hero = products[0] ? { ...products[0], x: 90, y: 190, width: 820, height: 900, borderRadius: 0, shadow: "none" as const } : undefined;
-    const issue = { ...createTextElement("NEW SEASON  •  EDITION 01", "subtitle"), x: 68, y: 1120, width: 620, height: 48, fontSize: 18, letterSpacing: 5 };
-    elements = [...text, ...(hero ? [hero] : []), issue];
+    const hero = { ...slots[0], x: 90, y: 190, width: 820, height: 900, borderRadius: 0, shadow: "none" as const };
+    const issue = { ...createTextElement("NEW SEASON  \u2022  EDITION 01", "subtitle"), x: 68, y: 1120, width: 620, height: 48, fontSize: 18, letterSpacing: 5 };
+    elements = [...text, hero, issue];
   } else if (template.id === "new-arrivals") {
-    const first = products[0] ? { ...products[0], x: 60, y: 150, width: 500, height: 560, borderRadius: 0, shadow: "none" as const } : undefined;
-    const second = products[1] ? { ...products[1], x: 620, y: 95, width: 310, height: 380, rotation: 4, borderRadius: 0 } : undefined;
-    const third = products[2] ? { ...products[2], x: 880, y: 330, width: 250, height: 390, rotation: -3, borderRadius: 0 } : undefined;
-    elements = [...text, ...(first ? [first] : []), ...(second ? [second] : []), ...(third ? [third] : []), { ...createTextElement("NEW ARRIVALS", "subtitle"), x: 610, y: 510, width: 450, fontSize: 42, letterSpacing: 8 }];
+    const first = { ...slots[0], x: 60, y: 150, width: 500, height: 560, borderRadius: 0, shadow: "none" as const };
+    const second = { ...slots[1], x: 620, y: 95, width: 310, height: 380, rotation: 4, borderRadius: 0 };
+    const third = { ...slots[2], x: 880, y: 330, width: 250, height: 390, rotation: -3, borderRadius: 0 };
+    elements = [...text, first, second, third, { ...createTextElement("NEW ARRIVALS", "subtitle"), x: 610, y: 510, width: 450, fontSize: 42, letterSpacing: 8 }];
   } else if (template.id === "catalog") {
-    elements = [...text, ...products.slice(0, 6).map((product, index) => ({ ...product, x: 55 + (index % 3) * 380, y: 170 + Math.floor(index / 3) * 300, width: 300, height: 245, borderRadius: 0, shadow: "none" as const }))];
+    elements = [...text, ...slots.map((slot, index) => ({ ...slot, x: 55 + (index % 3) * 380, y: 170 + Math.floor(index / 3) * 300, width: 300, height: 245, borderRadius: 0, shadow: "none" as const }))];
   } else if (template.id === "collection-story") {
-    const first = products[0] ? { ...products[0], x: 56, y: 170, width: 560, height: 760, borderRadius: 0, shadow: "none" as const } : undefined;
-    const second = products[1] ? { ...products[1], x: 660, y: 300, width: 280, height: 360, borderRadius: 0 } : undefined;
-    elements = [...text, ...(first ? [first] : []), ...(second ? [second] : []), { ...createTextElement("A considered edit of pieces chosen for shape, texture, and ease.", "body"), x: 650, y: 700, width: 290, height: 180, fontSize: 24, lineHeight: 1.45 }];
+    const first = { ...slots[0], x: 56, y: 170, width: 560, height: 760, borderRadius: 0, shadow: "none" as const };
+    const second = { ...slots[1], x: 660, y: 300, width: 280, height: 360, borderRadius: 0 };
+    elements = [...text, first, second, { ...createTextElement("A considered edit of pieces chosen for shape, texture, and ease.", "body"), x: 650, y: 700, width: 290, height: 180, fontSize: 24, lineHeight: 1.45 }];
   } else if (template.id === "featured") {
     // Mirrors the long-standing FeaturedGuideArtwork composition: a full-bleed
     // hero, a legibility scrim, the title over the top, and a strip of
     // secondary pieces along the bottom.
-    const hero = products[0] ? { ...products[0], x: 0, y: 0, width: dimensions.width, height: dimensions.height, borderRadius: 0, shadow: "none" as const, fit: "cover" as const } : undefined;
+    const hero = { ...slots[0], x: 0, y: 0, width: dimensions.width, height: dimensions.height, borderRadius: 0, shadow: "none" as const, fit: "cover" as const };
     const scrim = { ...createShapeElement("rectangle"), name: "Scrim", x: 0, y: 0, width: dimensions.width, height: dimensions.height, fill: "rgba(3, 1, 37, 0.42)", borderRadius: 0 };
     const heading = { ...createTextElement(title || "Featured", "title"), x: 56, y: 64, width: dimensions.width - 200, height: 190, fontSize: 76, lineHeight: 0.98, color: "#ffffff" };
-    const caption = { ...createTextElement("A considered edit — the pieces worth knowing.", "body"), x: 56, y: 268, width: dimensions.width - 260, height: 110, fontSize: 24, lineHeight: 1.45, color: "rgba(255,255,255,0.92)" };
-    const strip = products.slice(1, 4).map((product, index) => ({
-      ...product,
+    const caption = { ...createTextElement("A considered edit \u2014 the pieces worth knowing.", "body"), x: 56, y: 268, width: dimensions.width - 260, height: 110, fontSize: 24, lineHeight: 1.45, color: "rgba(255,255,255,0.92)" };
+    const strip = slots.slice(1).map((slot, index) => ({
+      ...slot,
       x: 56 + index * 250,
       y: dimensions.height - 286,
       width: 226,
@@ -499,22 +604,22 @@ export function applyEditorialTemplate(productIds: string[], title: string, temp
       borderWidth: 8,
       shadow: "soft" as const,
     }));
-    elements = [...(hero ? [hero] : []), scrim, heading, caption, ...strip];
+    elements = [hero, scrim, heading, caption, ...strip];
   } else if (template.id === "hero-stack") {
-    const hero = products[0] ? { ...products[0], x: 56, y: 190, width: dimensions.width - 112, height: 620, borderRadius: 18, shadow: "none" as const } : undefined;
-    const pair = products.slice(1, 3).map((product, index) => ({ ...product, x: 56 + index * 452, y: 846, width: 436, height: 340, borderRadius: 18, shadow: "none" as const }));
-    elements = [...text, ...(hero ? [hero] : []), ...pair];
+    const hero = { ...slots[0], x: 56, y: 190, width: dimensions.width - 112, height: 620, borderRadius: 18, shadow: "none" as const };
+    const pair = slots.slice(1).map((slot, index) => ({ ...slot, x: 56 + index * 452, y: 846, width: 436, height: 340, borderRadius: 18, shadow: "none" as const }));
+    elements = [...text, hero, ...pair];
   } else if (template.id === "split-two") {
-    const pair = products.slice(0, 2).map((product, index) => ({ ...product, x: index * (dimensions.width / 2), y: 0, width: dimensions.width / 2, height: dimensions.height, borderRadius: 0, shadow: "none" as const, fit: "cover" as const }));
+    const pair = slots.map((slot, index) => ({ ...slot, x: index * (dimensions.width / 2), y: 0, width: dimensions.width / 2, height: dimensions.height, borderRadius: 0, shadow: "none" as const, fit: "cover" as const }));
     elements = [...pair, { ...createTextElement(title || "Two ways", "title"), x: 60, y: dimensions.height - 190, width: dimensions.width - 120, height: 120, fontSize: 64, color: "#ffffff" }];
   } else if (template.id === "triptych") {
     const columnWidth = dimensions.width / 3;
-    const columns = products.slice(0, 3).map((product, index) => ({ ...product, x: index * columnWidth, y: 0, width: columnWidth, height: dimensions.height, borderRadius: 0, shadow: "none" as const, fit: "cover" as const }));
+    const columns = slots.map((slot, index) => ({ ...slot, x: index * columnWidth, y: 0, width: columnWidth, height: dimensions.height, borderRadius: 0, shadow: "none" as const, fit: "cover" as const }));
     elements = [...columns, { ...createTextElement(title || "THE EDIT", "subtitle"), x: 48, y: dimensions.height - 120, width: dimensions.width - 96, height: 64, fontSize: 34, letterSpacing: 9, color: "#ffffff" }];
   } else if (template.id === "polaroid-scatter") {
     const angles = [-6, 5, -3, 7];
-    const scattered = products.slice(0, 4).map((product, index) => ({
-      ...product,
+    const scattered = slots.map((slot, index) => ({
+      ...slot,
       x: 90 + (index % 2) * 400,
       y: 220 + Math.floor(index / 2) * 430,
       width: 380,
@@ -527,9 +632,9 @@ export function applyEditorialTemplate(productIds: string[], title: string, temp
     }));
     elements = [...text, ...scattered];
   } else {
-    const left = products[0] ? { ...products[0], x: 55, y: 115, width: 690, height: 720, borderRadius: 0, shadow: "none" as const } : undefined;
-    const rightProducts = products.slice(1, 5).map((product, index) => ({ ...product, x: 860 + (index % 2) * 340, y: 170 + Math.floor(index / 2) * 340, width: 270, height: 270, borderRadius: 0, shadow: "none" as const }));
-    elements = [...text, ...(left ? [left] : []), ...rightProducts, { ...createTextElement("THE EDIT", "subtitle"), x: 880, y: 70, width: 500, fontSize: 34, letterSpacing: 9 }];
+    const left = { ...slots[0], x: 55, y: 115, width: 690, height: 720, borderRadius: 0, shadow: "none" as const };
+    const rightProducts = slots.slice(1).map((slot, index) => ({ ...slot, x: 860 + (index % 2) * 340, y: 170 + Math.floor(index / 2) * 340, width: 270, height: 270, borderRadius: 0, shadow: "none" as const }));
+    elements = [...text, left, ...rightProducts, { ...createTextElement("THE EDIT", "subtitle"), x: 880, y: 70, width: 500, fontSize: 34, letterSpacing: 9 }];
   }
 
   return {

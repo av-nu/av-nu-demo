@@ -70,36 +70,83 @@ export function distanceToSegment(point: DrawPoint, a: DrawPoint, b: DrawPoint):
 }
 
 /**
+ * The portion of segment a→b that lies inside the circle, as a sub-interval of
+ * [0, 1], or undefined when the segment stays outside.
+ */
+function segmentCircleInterval(a: DrawPoint, b: DrawPoint, center: DrawPoint, radius: number): [number, number] | undefined {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const fx = a.x - center.x;
+  const fy = a.y - center.y;
+  const lengthSquared = dx * dx + dy * dy;
+
+  if (lengthSquared === 0) {
+    return fx * fx + fy * fy <= radius * radius ? [0, 1] : undefined;
+  }
+
+  const b2 = 2 * (fx * dx + fy * dy);
+  const c = fx * fx + fy * fy - radius * radius;
+  const discriminant = b2 * b2 - 4 * lengthSquared * c;
+  if (discriminant <= 0) return undefined;
+
+  const root = Math.sqrt(discriminant);
+  const enter = Math.max(0, (-b2 - root) / (2 * lengthSquared));
+  const exit = Math.min(1, (-b2 + root) / (2 * lengthSquared));
+  return enter >= exit ? undefined : [enter, exit];
+}
+
+function lerp(a: DrawPoint, b: DrawPoint, t: number): DrawPoint {
+  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+}
+
+/**
  * Splits a stroke around an eraser touch, returning the runs that survive.
  *
- * Tests the eraser against the stroke's *segments*, not just its stored samples:
- * sample spacing varies with drawing speed, so point-only testing misses strokes
- * whose samples happen to fall either side of the eraser.
+ * Clips each span exactly where it crosses the eraser circle rather than
+ * discarding whole samples. Dropping a sample would delete everything between
+ * its neighbours, so the gap grew out to the nearest surviving samples — far
+ * wider than the eraser itself, and wider the faster the stroke was drawn.
  */
 export function splitStrokeByEraser(points: DrawPoint[], center: DrawPoint, radius: number): DrawPoint[][] {
+  const inside = (point: DrawPoint) => Math.hypot(point.x - center.x, point.y - center.y) <= radius;
+
+  if (points.length === 0) return [];
+  if (points.length === 1) return inside(points[0]) ? [] : [points];
+
   const runs: DrawPoint[][] = [];
   let current: DrawPoint[] = [];
+  const push = (point: DrawPoint) => {
+    const last = current[current.length - 1];
+    if (last && Math.hypot(last.x - point.x, last.y - point.y) < 0.01) return;
+    current.push(point);
+  };
   const flush = () => {
     // A single surviving point cannot be drawn as a line, so drop stubs.
     if (current.length > 1) runs.push(current);
     current = [];
   };
 
-  const erased = points.map((point) => Math.hypot(point.x - center.x, point.y - center.y) <= radius);
+  for (let i = 0; i < points.length - 1; i += 1) {
+    const a = points[i];
+    const b = points[i + 1];
+    const interval = segmentCircleInterval(a, b, center, radius);
 
-  for (let i = 0; i < points.length; i += 1) {
-    if (erased[i]) {
-      flush();
+    if (!interval) {
+      push(a);
       continue;
     }
-    current.push(points[i]);
-    const next = points[i + 1];
-    // Cut when the span to the next sample passes under the eraser, even though
-    // neither endpoint does.
-    if (next && !erased[i + 1] && distanceToSegment(center, points[i], next) <= radius) {
-      flush();
+
+    const [enter, exit] = interval;
+    if (enter > 0) {
+      push(a);
+      push(lerp(a, b, enter));
     }
+    flush();
+    if (exit < 1) push(lerp(a, b, exit));
   }
+
+  const last = points[points.length - 1];
+  if (!inside(last)) push(last);
   flush();
 
   return runs;

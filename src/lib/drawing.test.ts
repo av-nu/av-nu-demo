@@ -91,10 +91,20 @@ describe("splitStrokeByEraser", () => {
     expect(runs[0]).toHaveLength(line.length);
   });
 
-  it("drops single-point remnants that cannot be drawn", () => {
+  it("keeps the clipped remainder either side of the eraser", () => {
     const short = [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 20, y: 0 }];
-    // Erasing the middle leaves one point on each side — neither is a line.
-    expect(splitStrokeByEraser(short, { x: 10, y: 0 }, 5)).toEqual([]);
+
+    // Clipping at the circle edge leaves a drawable run on each side, rather
+    // than deleting the neighbouring spans along with the sample.
+    expect(splitStrokeByEraser(short, { x: 10, y: 0 }, 5)).toEqual([
+      [{ x: 0, y: 0 }, { x: 5, y: 0 }],
+      [{ x: 15, y: 0 }, { x: 20, y: 0 }],
+    ]);
+  });
+
+  it("drops remnants too short to draw", () => {
+    // The eraser covers all but a sliver at each end.
+    expect(splitStrokeByEraser([{ x: 0, y: 0 }, { x: 10, y: 0 }], { x: 5, y: 0 }, 20)).toEqual([]);
   });
 });
 
@@ -164,6 +174,34 @@ describe("splitStrokeByEraser with sparse samples", () => {
     // The crossed span is cut, leaving the far side intact.
     expect(runs.length).toBeGreaterThan(0);
     expect(runs.every((run) => run.length > 1)).toBe(true);
+  });
+
+  // The gap must match the eraser, not the sample spacing: discarding whole
+  // samples used to delete everything between their neighbours.
+  it("removes only the eraser's width, however sparse the samples", () => {
+    const radius = 20;
+    const runs = splitStrokeByEraser([{ x: 0, y: 0 }, { x: 1000, y: 0 }], { x: 500, y: 0 }, radius);
+
+    expect(runs).toHaveLength(2);
+    const gapStart = runs[0][runs[0].length - 1].x;
+    const gapEnd = runs[1][0].x;
+    expect(gapEnd - gapStart).toBeCloseTo(radius * 2, 5);
+  });
+
+  it("clips to the circle edge rather than the nearest sample", () => {
+    const dense = Array.from({ length: 21 }, (_, i) => ({ x: i * 50, y: 0 }));
+    const runs = splitStrokeByEraser(dense, { x: 500, y: 0 }, 30);
+
+    expect(runs).toHaveLength(2);
+    expect(runs[0][runs[0].length - 1].x).toBeCloseTo(470, 5);
+    expect(runs[1][0].x).toBeCloseTo(530, 5);
+  });
+
+  it("keeps a stroke that only grazes outside the circle", () => {
+    const runs = splitStrokeByEraser([{ x: 0, y: 100 }, { x: 1000, y: 100 }], { x: 500, y: 0 }, 30);
+
+    expect(runs).toHaveLength(1);
+    expect(runs[0]).toHaveLength(2);
   });
 });
 
