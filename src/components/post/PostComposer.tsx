@@ -16,7 +16,7 @@ import { SelectionBar } from "@/components/post/tools/SelectionBar";
 import { StickersTool } from "@/components/post/tools/StickersTool";
 import { TextTool } from "@/components/post/tools/TextTool";
 import { useToast } from "@/components/ui/Toast";
-import { pointsToPath, splitStrokeByEraser, strokeIntersectsEraser } from "@/lib/drawing";
+import { DRAW_TOOL_PRESETS, pointsToPath, splitStrokeByEraser, strokeIntersectsEraser } from "@/lib/drawing";
 import { mediaStore } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import {
@@ -90,7 +90,7 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeTool, setActiveTool] = useState<PostTool>();
   const [zoom, setZoom] = useState(1);
-  const [drawSettings, setDrawSettings] = useState<DrawSettings>({ tool: "pen", color: "#030125", width: 6 });
+  const [drawSettings, setDrawSettings] = useState<DrawSettings>({ tool: "pen", color: "#030125", width: DRAW_TOOL_PRESETS.pen.width });
   const uploadRef = useRef<HTMLInputElement>(null);
 
   const activePage = post.pages[Math.min(activeIndex, post.pages.length - 1)];

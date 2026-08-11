@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { DRAW_TOOL_PRESETS, pointsToPath, simplifyPoints, splitStrokeByEraser, strokeIntersectsEraser } from "./drawing";
+import { DRAW_TOOL_PRESETS, distanceToSegment, interpolateEraserPath, pointsToPath, simplifyPoints, splitStrokeByEraser, strokeIntersectsEraser } from "./drawing";
 
 describe("simplifyPoints", () => {
   it("drops samples closer than the minimum distance but keeps the endpoint", () => {
@@ -99,11 +99,71 @@ describe("splitStrokeByEraser", () => {
 });
 
 describe("strokeIntersectsEraser", () => {
-  it("detects a hit only when a sample falls inside the radius", () => {
+  it("detects a hit only when the stroke passes inside the radius", () => {
     const points = [{ x: 0, y: 0 }, { x: 50, y: 0 }];
 
     expect(strokeIntersectsEraser(points, { x: 52, y: 0 }, 5)).toBe(true);
     expect(strokeIntersectsEraser(points, { x: 200, y: 0 }, 5)).toBe(false);
+  });
+
+  // The cause of the eraser feeling unreliable: sample spacing varies with
+  // drawing speed, so testing only the stored samples misses strokes whose
+  // samples happen to sit either side of the eraser.
+  it("hits a long span even when neither endpoint is inside the radius", () => {
+    const sparse = [{ x: 0, y: 0 }, { x: 400, y: 0 }];
+
+    expect(strokeIntersectsEraser(sparse, { x: 200, y: 0 }, 10)).toBe(true);
+  });
+
+  it("still misses when the span passes outside the radius", () => {
+    const sparse = [{ x: 0, y: 0 }, { x: 400, y: 0 }];
+
+    expect(strokeIntersectsEraser(sparse, { x: 200, y: 60 }, 10)).toBe(false);
+  });
+});
+
+describe("distanceToSegment", () => {
+  it("measures perpendicular distance to the span", () => {
+    expect(distanceToSegment({ x: 50, y: 30 }, { x: 0, y: 0 }, { x: 100, y: 0 })).toBe(30);
+  });
+
+  it("clamps to the nearer endpoint beyond the span", () => {
+    expect(distanceToSegment({ x: 130, y: 0 }, { x: 0, y: 0 }, { x: 100, y: 0 })).toBe(30);
+  });
+
+  it("handles a zero-length span", () => {
+    expect(distanceToSegment({ x: 3, y: 4 }, { x: 0, y: 0 }, { x: 0, y: 0 })).toBe(5);
+  });
+});
+
+describe("interpolateEraserPath", () => {
+  // Pointer events during a fast drag land far apart; without filling the gap the
+  // eraser jumps straight over strokes.
+  it("fills the gap between distant eraser positions", () => {
+    const path = interpolateEraserPath({ x: 0, y: 0 }, { x: 100, y: 0 }, 10);
+
+    expect(path.length).toBeGreaterThan(5);
+    expect(path[path.length - 1]).toEqual({ x: 100, y: 0 });
+  });
+
+  it("always includes the destination", () => {
+    const path = interpolateEraserPath({ x: 0, y: 0 }, { x: 3, y: 4 }, 10);
+
+    expect(path[path.length - 1]).toEqual({ x: 3, y: 4 });
+  });
+});
+
+describe("splitStrokeByEraser with sparse samples", () => {
+  it("cuts a long span that the eraser crosses mid-way", () => {
+    const runs = splitStrokeByEraser(
+      [{ x: 0, y: 0 }, { x: 400, y: 0 }, { x: 800, y: 0 }],
+      { x: 200, y: 0 },
+      20,
+    );
+
+    // The crossed span is cut, leaving the far side intact.
+    expect(runs.length).toBeGreaterThan(0);
+    expect(runs.every((run) => run.length > 1)).toBe(true);
   });
 });
 

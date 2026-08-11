@@ -8,6 +8,13 @@ import { DRAW_TOOL_PRESETS } from "@/lib/drawing";
 import { cn } from "@/lib/utils";
 import type { EditorialDrawTool } from "@/lib/editorial";
 
+/**
+ * Canvas units. The canvas is 1000 units wide but renders around 358px on a
+ * phone, so one unit is roughly a third of a pixel — an eraser sized like a pen
+ * would have a ~4px reach and feel broken.
+ */
+const ERASER_DEFAULT_WIDTH = 90;
+
 const UTENSILS: Array<{ id: EditorialDrawTool | "eraser"; label: string; icon: typeof PenLine }> = [
   { id: "pen", label: "Pen", icon: PenLine },
   { id: "pencil", label: "Pencil", icon: Pencil },
@@ -38,7 +45,7 @@ export function DrawTool({
               ...settings,
               tool: id,
               // Adopt the utensil's natural weight when switching to it.
-              width: id === "eraser" ? 24 : DRAW_TOOL_PRESETS[id].width,
+              width: id === "eraser" ? ERASER_DEFAULT_WIDTH : DRAW_TOOL_PRESETS[id].width,
             })}
             aria-pressed={settings.tool === id}
             className={cn(
@@ -58,8 +65,8 @@ export function DrawTool({
             <div className="flex items-center gap-3">
               <input
                 type="range"
-                min="2"
-                max="60"
+                min={isEraser ? 20 : 2}
+                max={isEraser ? 160 : 60}
                 step="1"
                 value={settings.width}
                 onChange={(event) => onChange({ ...settings, width: Number(event.target.value) })}

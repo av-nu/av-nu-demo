@@ -2,7 +2,7 @@
 
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
-import { DRAW_TOOL_PRESETS, pointsToPath, simplifyPoints, type DrawPoint } from "@/lib/drawing";
+import { DRAW_TOOL_PRESETS, interpolateEraserPath, pointsToPath, simplifyPoints, type DrawPoint } from "@/lib/drawing";
 import { EDITORIAL_FORMATS, type EditorialDrawTool, type EditorialFormat } from "@/lib/editorial";
 
 export type DrawSettings = {
@@ -32,7 +32,9 @@ export function DrawingSurface({
   const dimensions = EDITORIAL_FORMATS[format];
   const surfaceRef = useRef<HTMLDivElement>(null);
   const [points, setPoints] = useState<DrawPoint[]>([]);
+  const [cursor, setCursor] = useState<DrawPoint>();
   const drawing = useRef(false);
+  const lastErase = useRef<DrawPoint>();
 
   const toCanvasPoint = (event: ReactPointerEvent): DrawPoint | undefined => {
     const rect = surfaceRef.current?.getBoundingClientRect();
@@ -51,6 +53,7 @@ export function DrawingSurface({
     (event.target as Element).setPointerCapture?.(event.pointerId);
     drawing.current = true;
     if (settings.tool === "eraser") {
+      lastErase.current = point;
       onErase(point);
       return;
     }
@@ -58,19 +61,28 @@ export function DrawingSurface({
   };
 
   const handleMove = (event: ReactPointerEvent) => {
-    if (!drawing.current) return;
     const point = toCanvasPoint(event);
     if (!point) return;
     if (settings.tool === "eraser") {
-      onErase(point);
+      // Track the pointer even when not erasing so the cursor ring follows it.
+      setCursor(point);
+      if (!drawing.current) return;
+      const from = lastErase.current;
+      // Test every step between the last position and this one; a fast drag can
+      // otherwise skip straight over a stroke.
+      const path = from ? interpolateEraserPath(from, point, Math.max(2, settings.width / 3)) : [point];
+      path.forEach(onErase);
+      lastErase.current = point;
       return;
     }
+    if (!drawing.current) return;
     setPoints((current) => [...current, point]);
   };
 
   const handleUp = () => {
     if (!drawing.current) return;
     drawing.current = false;
+    lastErase.current = undefined;
     if (settings.tool === "eraser") return;
     // Persist the simplified samples alongside the path so the eraser can split
     // this stroke later.
@@ -80,6 +92,7 @@ export function DrawingSurface({
     if (path) onCommit(path, simplified);
   };
 
+  const isEraser = settings.tool === "eraser";
   const preset = settings.tool === "eraser" ? DRAW_TOOL_PRESETS.pen : DRAW_TOOL_PRESETS[settings.tool];
   const previewPath = points.length > 0 ? pointsToPath(points) : "";
 
@@ -93,8 +106,30 @@ export function DrawingSurface({
       onPointerMove={handleMove}
       onPointerUp={handleUp}
       onPointerCancel={handleUp}
-      onPointerLeave={handleUp}
+      onPointerLeave={() => {
+        handleUp();
+        setCursor(undefined);
+      }}
     >
+      {/* Shows the true erase area, so its reach is never a guess. */}
+      {isEraser && cursor && (
+        <svg
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 h-full w-full"
+          viewBox={`0 0 ${dimensions.width} ${dimensions.height}`}
+          preserveAspectRatio="none"
+        >
+          <circle
+            cx={cursor.x}
+            cy={cursor.y}
+            r={settings.width / 2}
+            fill="rgba(3,1,37,0.06)"
+            stroke="rgba(3,1,37,0.55)"
+            strokeWidth={2}
+            strokeDasharray="6 5"
+          />
+        </svg>
+      )}
       {previewPath && (
         <svg
           aria-hidden="true"

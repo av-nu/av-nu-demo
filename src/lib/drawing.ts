@@ -58,35 +58,81 @@ export function pointsToPath(rawPoints: DrawPoint[], minDistance = 2): string {
   return path;
 }
 
+/** Shortest distance from a point to the segment a→b. */
+export function distanceToSegment(point: DrawPoint, a: DrawPoint, b: DrawPoint): number {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const lengthSquared = dx * dx + dy * dy;
+  if (lengthSquared === 0) return Math.hypot(point.x - a.x, point.y - a.y);
+  // Projection of the point onto the segment, clamped to its ends.
+  const t = Math.max(0, Math.min(1, ((point.x - a.x) * dx + (point.y - a.y) * dy) / lengthSquared));
+  return Math.hypot(point.x - (a.x + t * dx), point.y - (a.y + t * dy));
+}
+
 /**
  * Splits a stroke around an eraser touch, returning the runs that survive.
  *
- * Erasing part of a line has to break it into separate strokes — removing the
- * whole path (which is what whole-stroke erasing does) is rarely what someone
- * dragging an eraser expects.
+ * Tests the eraser against the stroke's *segments*, not just its stored samples:
+ * sample spacing varies with drawing speed, so point-only testing misses strokes
+ * whose samples happen to fall either side of the eraser.
  */
 export function splitStrokeByEraser(points: DrawPoint[], center: DrawPoint, radius: number): DrawPoint[][] {
   const runs: DrawPoint[][] = [];
   let current: DrawPoint[] = [];
+  const flush = () => {
+    // A single surviving point cannot be drawn as a line, so drop stubs.
+    if (current.length > 1) runs.push(current);
+    current = [];
+  };
 
-  for (const point of points) {
-    const erased = Math.hypot(point.x - center.x, point.y - center.y) <= radius;
-    if (erased) {
-      // A single surviving point cannot be drawn as a line, so drop stubs.
-      if (current.length > 1) runs.push(current);
-      current = [];
+  const erased = points.map((point) => Math.hypot(point.x - center.x, point.y - center.y) <= radius);
+
+  for (let i = 0; i < points.length; i += 1) {
+    if (erased[i]) {
+      flush();
       continue;
     }
-    current.push(point);
+    current.push(points[i]);
+    const next = points[i + 1];
+    // Cut when the span to the next sample passes under the eraser, even though
+    // neither endpoint does.
+    if (next && !erased[i + 1] && distanceToSegment(center, points[i], next) <= radius) {
+      flush();
+    }
   }
-  if (current.length > 1) runs.push(current);
+  flush();
 
   return runs;
 }
 
-/** True when the eraser touches any sample in the stroke. */
+/** True when the eraser touches the stroke anywhere along its length. */
 export function strokeIntersectsEraser(points: DrawPoint[], center: DrawPoint, radius: number): boolean {
-  return points.some((point) => Math.hypot(point.x - center.x, point.y - center.y) <= radius);
+  if (points.length === 1) return Math.hypot(points[0].x - center.x, points[0].y - center.y) <= radius;
+  for (let i = 0; i < points.length - 1; i += 1) {
+    if (distanceToSegment(center, points[i], points[i + 1]) <= radius) return true;
+  }
+  return false;
+}
+
+/**
+ * Fills in the gap between two eraser positions.
+ *
+ * Pointer events during a fast drag can be tens of pixels apart, which would let
+ * the eraser jump straight over a stroke without ever testing it.
+ */
+export function interpolateEraserPath(from: DrawPoint, to: DrawPoint, step: number): DrawPoint[] {
+  const distance = Math.hypot(to.x - from.x, to.y - from.y);
+  const steps = Math.floor(distance / Math.max(1, step));
+  if (steps <= 0) return [to];
+  const points: DrawPoint[] = [];
+  for (let i = 1; i <= steps; i += 1) {
+    const t = i / steps;
+    points.push({ x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t });
+  }
+  // Guarantee the destination is tested even when it lands mid-step.
+  const last = points[points.length - 1];
+  if (!last || last.x !== to.x || last.y !== to.y) points.push(to);
+  return points;
 }
 
 export type DrawToolPreset = {
