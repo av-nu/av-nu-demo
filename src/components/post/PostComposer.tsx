@@ -34,6 +34,7 @@ import {
   createTextElement,
   makeEditorialDrawingPath,
   makeEditorialElementId,
+  removeEditorialElement,
   reorderEditorialElement,
   updateEditorialElement,
   type EditorialDrawingElement,
@@ -111,7 +112,16 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
     });
   }, [activeIndex]);
 
-  const canvas = useCanvasDocument({ design: activePage.design, onChange: handleDesignChange });
+  const canvas = useCanvasDocument({
+    design: activePage.design,
+    onChange: handleDesignChange,
+    // Deleting a filled slot should empty its frame, not destroy the layout.
+    // Routed through the hook so the keyboard shortcut behaves like the buttons.
+    removeElement: (design, elementId) => {
+      const element = design.elements.find((item) => item.id === elementId);
+      return element && isSlotElement(element) ? clearSlot(design, elementId) : removeEditorialElement(design, elementId);
+    },
+  });
 
   const startCollage = () => {
     setPost(emptyPost());

@@ -48,29 +48,44 @@ function MediaElementContent({ element }: { element: EditorialMediaElement }) {
     );
   }
 
-  const objectStyle = { objectPosition: `${element.cropX}% ${element.cropY}%`, transform: `scale(${element.zoom})` };
+  // Zoom enlarges the media box rather than transforming it, so the excess can
+  // be panned on *both* axes. `object-fit: cover` alone only ever overflows one
+  // axis, which left the other with no play at all.
+  const zoom = Math.max(1, element.zoom);
+  const overflow = zoom * 100 - 100;
+  const objectStyle: React.CSSProperties = {
+    width: `${zoom * 100}%`,
+    height: `${zoom * 100}%`,
+    left: `${-overflow * (element.cropX / 100)}%`,
+    top: `${-overflow * (element.cropY / 100)}%`,
+    // Still governs the overflow that `cover` itself produces.
+    objectPosition: `${element.cropX}% ${element.cropY}%`,
+  };
   const fitClass = element.fit === "cover" ? "object-cover" : "object-contain";
 
-  if (element.type === "video") {
-    return <video src={src} controls playsInline className={`h-full w-full ${fitClass}`} style={objectStyle} />;
-  }
-
-  // Object URLs and data URLs cannot go through next/image's loader.
-  if (isUnoptimizableSrc(src)) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={element.name} draggable={false} className={`h-full w-full ${fitClass}`} style={objectStyle} />;
-  }
+  // The wrapper carries the zoom and pan so the media itself can simply fill it.
+  const inner: React.CSSProperties = { objectPosition: objectStyle.objectPosition };
 
   return (
-    <Image
-      src={src}
-      alt={element.name}
-      fill
-      sizes="(max-width: 768px) 80vw, 700px"
-      className={fitClass}
-      style={objectStyle}
-      draggable={false}
-    />
+    <span className="absolute" style={{ width: objectStyle.width, height: objectStyle.height, left: objectStyle.left, top: objectStyle.top }}>
+      {element.type === "video" ? (
+        <video src={src} controls playsInline className={`h-full w-full ${fitClass}`} style={inner} />
+      ) : isUnoptimizableSrc(src) ? (
+        // Object URLs and data URLs cannot go through next/image's loader.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={element.name} draggable={false} className={`h-full w-full ${fitClass}`} style={inner} />
+      ) : (
+        <Image
+          src={src}
+          alt={element.name}
+          fill
+          sizes="(max-width: 768px) 80vw, 700px"
+          className={fitClass}
+          style={inner}
+          draggable={false}
+        />
+      )}
+    </span>
   );
 }
 

@@ -52,11 +52,18 @@ export function useCanvasDocument({
   design,
   onChange,
   enableShortcuts = true,
+  removeElement = removeEditorialElement,
 }: {
   design: EditorialPageDesign;
   onChange: (design: EditorialPageDesign) => void;
   /** Disable when another surface owns the keyboard (e.g. a modal above). */
   enableShortcuts?: boolean;
+  /**
+   * How an element is removed. Overridable so a surface can define its own
+   * meaning of "remove" — emptying a layout slot rather than deleting its frame,
+   * for instance — and have the keyboard shortcut agree with its buttons.
+   */
+  removeElement?: (design: EditorialPageDesign, elementId: string) => EditorialPageDesign;
 }) {
   const [present, setPresent] = useState(design);
   const [past, setPast] = useState<EditorialPageDesign[]>([]);
@@ -135,9 +142,13 @@ export function useCanvasDocument({
 
   const removeSelected = useCallback(() => {
     if (!selectedId) return;
-    commit(removeEditorialElement(presentRef.current, selectedId));
-    setSelectedId(undefined);
-  }, [commit, selectedId]);
+    const next = removeElement(presentRef.current, selectedId);
+    // A surface may replace rather than delete (a slot becomes an empty frame),
+    // in which case the element is still there and stays selected.
+    const stillPresent = next.elements.some((element) => element.id === selectedId);
+    commit(next, stillPresent ? selectedId : undefined);
+    if (!stillPresent) setSelectedId(undefined);
+  }, [commit, removeElement, selectedId]);
 
   const duplicateSelected = useCallback(() => {
     if (!selectedId) return;

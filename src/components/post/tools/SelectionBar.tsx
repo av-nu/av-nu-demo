@@ -60,19 +60,21 @@ export function SelectionBar({
         <button
           type="button"
           onClick={onReplaceSlot}
-          aria-label="Replace what is in this slot"
-          title="Replace"
-          // Icon-only on narrow screens so the slot label keeps its room.
-          className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full border border-divider/70 px-2.5 text-[11px] font-semibold text-midnight/70 transition-colors hover:border-midnight/30 hover:text-midnight sm:px-3"
+          className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-navy px-3 text-[11px] font-semibold text-white transition-colors hover:bg-navy/90"
         >
           <Repeat2 className="h-4 w-4" />
-          <span className="hidden sm:inline">Replace</span>
+          Replace
         </button>
       )}
       {inSlot && onClearSlot && (
-        <Action label="Empty this slot" onClick={onClearSlot}>
+        <button
+          type="button"
+          onClick={onClearSlot}
+          className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full border border-divider/70 px-3 text-[11px] font-semibold text-midnight/70 transition-colors hover:border-midnight/30 hover:text-midnight"
+        >
           <Eraser className="h-4 w-4" />
-        </Action>
+          Empty
+        </button>
       )}
       <Action label="Bring forward" onClick={() => onReorder("forward")}>
         <ArrowUp className="h-4 w-4" />
@@ -80,12 +82,16 @@ export function SelectionBar({
       <Action label="Send backward" onClick={() => onReorder("backward")}>
         <ArrowDown className="h-4 w-4" />
       </Action>
-      <Action label={element.locked ? "Unlock element" : "Lock element"} onClick={onToggleLock} active={element.locked}>
-        {element.locked ? <Lock className="h-4 w-4" /> : <LockOpen className="h-4 w-4" />}
-      </Action>
-      <Action label="Duplicate element" onClick={onDuplicate}>
-        <Copy className="h-4 w-4" />
-      </Action>
+      {!inSlot && (
+        <>
+          <Action label={element.locked ? "Unlock element" : "Lock element"} onClick={onToggleLock} active={element.locked}>
+            {element.locked ? <Lock className="h-4 w-4" /> : <LockOpen className="h-4 w-4" />}
+          </Action>
+          <Action label="Duplicate element" onClick={onDuplicate}>
+            <Copy className="h-4 w-4" />
+          </Action>
+        </>
+      )}
       {!inSlot && (
         <Action label="Delete element" onClick={onDelete} danger>
           <Trash2 className="h-4 w-4" />
