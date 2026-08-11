@@ -456,7 +456,11 @@ export function createPlaceholderElement(index = 0): EditorialPlaceholderElement
  */
 function slotElements(productIds: string[], count: number): Array<EditorialProductElement | EditorialPlaceholderElement> {
   return Array.from({ length: count }, (_, index) => (
-    productIds[index] ? createProductElement(productIds[index], index) : createPlaceholderElement(index)
+    productIds[index]
+      // `slot` must be set here too, or products supplied up front become loose
+      // elements: resizable, and destroyed rather than emptied on delete.
+      ? { ...createProductElement(productIds[index], index), slot: index }
+      : createPlaceholderElement(index)
   ));
 }
 

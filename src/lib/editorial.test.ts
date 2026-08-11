@@ -232,6 +232,16 @@ describe("layout slots", () => {
     expect(editorialProductIds(filled)).toEqual(["p-9"]);
   });
 
+  it("treats products supplied up front as slots, not loose elements", () => {
+    const design = applyEditorialTemplate(["p-1", "p-2"], "Partial", "catalog");
+    const products = design.elements.filter((element) => element.type === "product");
+
+    // Otherwise they would show resize handles and delete would destroy the frame.
+    expect(products).toHaveLength(2);
+    expect(products.every(isSlotElement)).toBe(true);
+    expect(clearSlot(design, products[0].id)).not.toBe(design);
+  });
+
   it("remembers that a filled element occupies a slot", () => {
     const design = applyEditorialTemplate([], "Featured", "catalog");
     const slot = firstPlaceholder(design);
