@@ -2,11 +2,15 @@
 
 import { EditorialRenderer } from "@/components/looks/editorial/EditorialRenderer";
 import { PostToolPanel, ToolFieldLabel } from "@/components/post/tools/PostToolPanel";
+import { mockProducts } from "@/data/mockProducts";
 import { EDITORIAL_FORMATS, EDITORIAL_TEMPLATES, applyEditorialTemplate, type EditorialFormat, type EditorialTemplateId } from "@/lib/editorial";
 import { cn } from "@/lib/utils";
 
 /** Common preview height, in px, so tiles of differing ratios stay aligned. */
 const PREVIEW_HEIGHT = 84;
+
+/** Catalog products used to illustrate the templates before the post has any. */
+const SAMPLE_PREVIEW_IDS = mockProducts.slice(0, 8).map((product) => product.id);
 
 /**
  * Template picker. Previews are rendered from the real template output so what
@@ -27,8 +31,11 @@ export function LayoutsTool({
   onChangeFormat: (format: EditorialFormat) => void;
   onClose: () => void;
 }) {
-  // Placeholder ids keep the previews legible before any product is added.
-  const previewIds = productIds.length > 0 ? productIds : [];
+  // A new post has no products yet, and rendering the previews from an empty
+  // list makes every template look identical and blank. Fall back to catalog
+  // samples purely for the thumbnails — applying still uses the post's own
+  // products.
+  const previewIds = productIds.length > 0 ? productIds : SAMPLE_PREVIEW_IDS;
 
   return (
     <PostToolPanel title="Layouts" onClose={onClose}>

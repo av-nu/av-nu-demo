@@ -8,6 +8,7 @@ import { useCanvasDocument } from "@/components/canvas/useCanvasDocument";
 import { EditorialRenderer } from "@/components/looks/editorial/EditorialRenderer";
 import { PostPageRail } from "@/components/post/PostPageRail";
 import { PostToolbar, type PostTool } from "@/components/post/PostToolbar";
+import { AddProductTool } from "@/components/post/tools/AddProductTool";
 import { DrawTool } from "@/components/post/tools/DrawTool";
 import { DrawingSurface, type DrawSettings } from "@/components/post/tools/DrawingSurface";
 import { LayoutsTool } from "@/components/post/tools/LayoutsTool";
@@ -15,6 +16,7 @@ import { SelectionBar } from "@/components/post/tools/SelectionBar";
 import { StickersTool } from "@/components/post/tools/StickersTool";
 import { TextTool } from "@/components/post/tools/TextTool";
 import { useToast } from "@/components/ui/Toast";
+import { pointsToPath, splitStrokeByEraser, strokeIntersectsEraser } from "@/lib/drawing";
 import { mediaStore } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import {
@@ -22,10 +24,11 @@ import {
   appendDrawingPath,
   applyEditorialTemplate,
   createDrawingElement,
+  createProductElement,
   createStickerElement,
   createTextElement,
-  eraseDrawingPaths,
   makeEditorialDrawingPath,
+  makeEditorialElementId,
   reorderEditorialElement,
   updateEditorialElement,
   type EditorialDrawingElement,
@@ -47,7 +50,7 @@ import {
 } from "@/lib/post";
 
 /** Tools with a real panel; the rest still show a placeholder. */
-const HANDLED_TOOLS = new Set<PostTool>(["layouts", "text", "pages", "photos", "draw", "stickers"]);
+const HANDLED_TOOLS = new Set<PostTool>(["layouts", "text", "pages", "photos", "draw", "stickers", "add"]);
 
 const ZOOM_MIN = 0.5;
 const ZOOM_MAX = 1.4;
@@ -175,6 +178,14 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
 
   const applyTemplate = (templateId: EditorialTemplateId) => {
     canvas.replaceDesign(applyEditorialTemplate(post.productIds, firstHeadline || "Title", templateId));
+    // Templates arrange products, so applying one to a post that has none looks
+    // empty. Say so and send the author straight to the picker.
+    if (post.productIds.length === 0) {
+      showToast("Add products to fill this layout");
+      setActiveTool("add");
+      return;
+    }
+    setActiveTool(undefined);
   };
 
   const changeFormat = (format: EditorialFormat) => {
@@ -207,12 +218,19 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
     canvas.addElement(createStickerElement(value));
   };
 
+  const addProduct = (productId: string) => {
+    // Offset each addition so a run of products does not land in one stack.
+    const placed = canvas.design.elements.filter((element) => element.type === "product").length;
+    canvas.addElement(createProductElement(productId, placed));
+  };
+
   /** Appends a finished stroke, creating the page's drawing layer on first use. */
-  const commitStroke = (path: string) => {
+  const commitStroke = (path: string, points: Array<{ x: number; y: number }>) => {
     const stroke = makeEditorialDrawingPath(path, {
       color: drawSettings.color,
       width: drawSettings.width,
       tool: drawSettings.tool === "eraser" ? "pen" : drawSettings.tool,
+      points,
     });
     const existing = canvas.design.elements.find((element): element is EditorialDrawingElement => element.type === "drawing");
     if (existing) {
@@ -224,33 +242,32 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
   };
 
   /**
-   * Erases whole strokes. Hit-testing uses the browser's own stroke geometry via
-   * isPointInStroke, so it matches exactly what the user sees.
+   * Erases the part of a stroke under the eraser, splitting it into the runs
+   * that survive rather than deleting the whole line. Strokes authored before
+   * samples were retained can only be removed whole.
    */
   const eraseAt = (point: { x: number; y: number }) => {
     const layer = canvas.design.elements.find((element): element is EditorialDrawingElement => element.type === "drawing");
     if (!layer || layer.paths.length === 0) return;
-    const root = canvas.canvasRef.current;
-    if (!root) return;
+    const radius = drawSettings.width / 2;
 
-    const hits = layer.paths.filter((stroke) => {
-      const node = root.querySelector<SVGPathElement>(`path[data-stroke-id="${stroke.id}"]`);
-      if (!node) return false;
-      const svg = node.ownerSVGElement;
-      if (!svg) return false;
-      const svgPoint = svg.createSVGPoint();
-      svgPoint.x = point.x;
-      svgPoint.y = point.y;
-      // Widen the hit area so thin strokes stay easy to catch on touch.
-      const originalWidth = node.getAttribute("stroke-width");
-      node.setAttribute("stroke-width", String(Math.max(stroke.width, 18)));
-      const hit = node.isPointInStroke(svgPoint);
-      if (originalWidth !== null) node.setAttribute("stroke-width", originalWidth);
-      return hit;
-    }).map((stroke) => stroke.id);
+    let changed = false;
+    const paths = layer.paths.flatMap((stroke) => {
+      if (!stroke.points || stroke.points.length === 0) {
+        return stroke; // No samples retained — leave it alone.
+      }
+      if (!strokeIntersectsEraser(stroke.points, point, radius)) return stroke;
+      changed = true;
+      return splitStrokeByEraser(stroke.points, point, radius).map((run) => ({
+        ...stroke,
+        id: makeEditorialElementId("stroke"),
+        d: pointsToPath(run, 0),
+        points: run,
+      }));
+    });
 
-    if (hits.length === 0) return;
-    canvas.commit(updateEditorialElement(canvas.design, layer.id, eraseDrawingPaths(layer, hits)));
+    if (!changed) return;
+    canvas.commit(updateEditorialElement(canvas.design, layer.id, { ...layer, paths }));
   };
 
   const reorderSelected = (direction: "forward" | "backward") => {
@@ -416,6 +433,10 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
 
       {started && activeTool === "stickers" && (
         <StickersTool onAdd={addSticker} onClose={() => setActiveTool(undefined)} />
+      )}
+
+      {started && activeTool === "add" && (
+        <AddProductTool onAdd={addProduct} onClose={() => setActiveTool(undefined)} />
       )}
 
       {started && activeTool && !HANDLED_TOOLS.has(activeTool) && (

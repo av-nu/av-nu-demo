@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { DRAW_TOOL_PRESETS, pointsToPath, simplifyPoints } from "./drawing";
+import { DRAW_TOOL_PRESETS, pointsToPath, simplifyPoints, splitStrokeByEraser, strokeIntersectsEraser } from "./drawing";
 
 describe("simplifyPoints", () => {
   it("drops samples closer than the minimum distance but keeps the endpoint", () => {
@@ -59,6 +59,51 @@ describe("pointsToPath", () => {
     ]);
 
     expect(path).not.toMatch(/\d\.\d{3,}/);
+  });
+});
+
+describe("splitStrokeByEraser", () => {
+  const line = Array.from({ length: 11 }, (_, i) => ({ x: i * 10, y: 0 }));
+
+  it("splits a stroke into the runs either side of the eraser", () => {
+    const runs = splitStrokeByEraser(line, { x: 50, y: 0 }, 12);
+
+    expect(runs).toHaveLength(2);
+    expect(runs[0][runs[0].length - 1].x).toBeLessThan(50);
+    expect(runs[1][0].x).toBeGreaterThan(50);
+  });
+
+  it("trims from the end without splitting when the eraser hits a tail", () => {
+    const runs = splitStrokeByEraser(line, { x: 100, y: 0 }, 12);
+
+    expect(runs).toHaveLength(1);
+    expect(runs[0][runs[0].length - 1].x).toBeLessThan(100);
+  });
+
+  it("returns nothing when the eraser covers the whole stroke", () => {
+    expect(splitStrokeByEraser(line, { x: 50, y: 0 }, 500)).toEqual([]);
+  });
+
+  it("leaves the stroke intact when the eraser misses", () => {
+    const runs = splitStrokeByEraser(line, { x: 50, y: 400 }, 12);
+
+    expect(runs).toHaveLength(1);
+    expect(runs[0]).toHaveLength(line.length);
+  });
+
+  it("drops single-point remnants that cannot be drawn", () => {
+    const short = [{ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 20, y: 0 }];
+    // Erasing the middle leaves one point on each side — neither is a line.
+    expect(splitStrokeByEraser(short, { x: 10, y: 0 }, 5)).toEqual([]);
+  });
+});
+
+describe("strokeIntersectsEraser", () => {
+  it("detects a hit only when a sample falls inside the radius", () => {
+    const points = [{ x: 0, y: 0 }, { x: 50, y: 0 }];
+
+    expect(strokeIntersectsEraser(points, { x: 52, y: 0 }, 5)).toBe(true);
+    expect(strokeIntersectsEraser(points, { x: 200, y: 0 }, 5)).toBe(false);
   });
 });
 

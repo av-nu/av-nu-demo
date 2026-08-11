@@ -125,6 +125,12 @@ export type EditorialDrawingPath = {
   id: string;
   /** SVG path data in element-local units (viewBox `0 0 width height`). */
   d: string;
+  /**
+   * The samples the path was built from. Retained so the eraser can split a
+   * stroke rather than delete it whole; without them only the rendered `d`
+   * exists and partial erasing is not possible.
+   */
+  points?: Array<{ x: number; y: number }>;
   color: string;
   width: number;
   tool: EditorialDrawTool;
@@ -415,11 +421,15 @@ export function createDrawingElement(format: EditorialFormat = "portrait", paths
   };
 }
 
-export function makeEditorialDrawingPath(d: string, options: { color?: string; width?: number; tool?: EditorialDrawTool; opacity?: number } = {}): EditorialDrawingPath {
+export function makeEditorialDrawingPath(
+  d: string,
+  options: { color?: string; width?: number; tool?: EditorialDrawTool; opacity?: number; points?: Array<{ x: number; y: number }> } = {},
+): EditorialDrawingPath {
   const tool = options.tool ?? "pen";
   return {
     id: makeEditorialElementId("stroke"),
     d,
+    points: options.points,
     color: options.color ?? "#030125",
     width: options.width ?? 8,
     tool,

@@ -38,7 +38,7 @@ export function DrawTool({
               ...settings,
               tool: id,
               // Adopt the utensil's natural weight when switching to it.
-              width: id === "eraser" ? settings.width : DRAW_TOOL_PRESETS[id].width,
+              width: id === "eraser" ? 24 : DRAW_TOOL_PRESETS[id].width,
             })}
             aria-pressed={settings.tool === id}
             className={cn(
@@ -52,10 +52,9 @@ export function DrawTool({
         ))}
       </div>
 
-      {!isEraser && (
-        <>
+      <>
           <div className="mt-3">
-            <ToolFieldLabel>Size</ToolFieldLabel>
+            <ToolFieldLabel>{isEraser ? "Eraser size" : "Size"}</ToolFieldLabel>
             <div className="flex items-center gap-3">
               <input
                 type="range"
@@ -68,22 +67,23 @@ export function DrawTool({
               />
               <span
                 aria-hidden="true"
-                className="shrink-0 rounded-full"
+                className={cn("shrink-0 rounded-full", isEraser && "border border-dashed border-midnight/50")}
                 style={{
                   width: Math.max(4, Math.min(28, settings.width / 2)),
                   height: Math.max(4, Math.min(28, settings.width / 2)),
-                  backgroundColor: settings.color,
+                  backgroundColor: isEraser ? "transparent" : settings.color,
                 }}
               />
             </div>
           </div>
 
-          <div className="mt-3">
-            <ToolFieldLabel>Color</ToolFieldLabel>
-            <ColorSwatches value={settings.color} colors={POST_COLORS} onChange={(color) => onChange({ ...settings, color })} />
-          </div>
+          {!isEraser && (
+            <div className="mt-3">
+              <ToolFieldLabel>Color</ToolFieldLabel>
+              <ColorSwatches value={settings.color} colors={POST_COLORS} onChange={(color) => onChange({ ...settings, color })} />
+            </div>
+          )}
         </>
-      )}
 
       <p className="mt-3 text-[11px] leading-relaxed text-midnight/45">
         {isEraser ? "Drag across a stroke to remove it." : "Draw directly on the canvas."}

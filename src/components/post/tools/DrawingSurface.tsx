@@ -2,7 +2,7 @@
 
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 
-import { DRAW_TOOL_PRESETS, pointsToPath, type DrawPoint } from "@/lib/drawing";
+import { DRAW_TOOL_PRESETS, pointsToPath, simplifyPoints, type DrawPoint } from "@/lib/drawing";
 import { EDITORIAL_FORMATS, type EditorialDrawTool, type EditorialFormat } from "@/lib/editorial";
 
 export type DrawSettings = {
@@ -26,7 +26,7 @@ export function DrawingSurface({
 }: {
   format: EditorialFormat;
   settings: DrawSettings;
-  onCommit: (path: string) => void;
+  onCommit: (path: string, points: DrawPoint[]) => void;
   onErase: (point: DrawPoint) => void;
 }) {
   const dimensions = EDITORIAL_FORMATS[format];
@@ -72,9 +72,12 @@ export function DrawingSurface({
     if (!drawing.current) return;
     drawing.current = false;
     if (settings.tool === "eraser") return;
-    const path = pointsToPath(points);
+    // Persist the simplified samples alongside the path so the eraser can split
+    // this stroke later.
+    const simplified = simplifyPoints(points);
+    const path = pointsToPath(simplified, 0);
     setPoints([]);
-    if (path) onCommit(path);
+    if (path) onCommit(path, simplified);
   };
 
   const preset = settings.tool === "eraser" ? DRAW_TOOL_PRESETS.pen : DRAW_TOOL_PRESETS[settings.tool];

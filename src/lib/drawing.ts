@@ -58,6 +58,37 @@ export function pointsToPath(rawPoints: DrawPoint[], minDistance = 2): string {
   return path;
 }
 
+/**
+ * Splits a stroke around an eraser touch, returning the runs that survive.
+ *
+ * Erasing part of a line has to break it into separate strokes — removing the
+ * whole path (which is what whole-stroke erasing does) is rarely what someone
+ * dragging an eraser expects.
+ */
+export function splitStrokeByEraser(points: DrawPoint[], center: DrawPoint, radius: number): DrawPoint[][] {
+  const runs: DrawPoint[][] = [];
+  let current: DrawPoint[] = [];
+
+  for (const point of points) {
+    const erased = Math.hypot(point.x - center.x, point.y - center.y) <= radius;
+    if (erased) {
+      // A single surviving point cannot be drawn as a line, so drop stubs.
+      if (current.length > 1) runs.push(current);
+      current = [];
+      continue;
+    }
+    current.push(point);
+  }
+  if (current.length > 1) runs.push(current);
+
+  return runs;
+}
+
+/** True when the eraser touches any sample in the stroke. */
+export function strokeIntersectsEraser(points: DrawPoint[], center: DrawPoint, radius: number): boolean {
+  return points.some((point) => Math.hypot(point.x - center.x, point.y - center.y) <= radius);
+}
+
 export type DrawToolPreset = {
   /** Default stroke width, in canvas units. */
   width: number;
