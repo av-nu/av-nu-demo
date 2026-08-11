@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Copy, Eraser, Lock, LockOpen, Repeat2, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Copy, Eraser, Lock, LockOpen, Repeat2, Trash2, ZoomIn, ZoomOut } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { isSlotElement, type EditorialElement } from "@/lib/editorial";
+import { isEditorialMediaElement, isSlotElement, type EditorialElement } from "@/lib/editorial";
 
 /**
  * Actions for the current selection. Sits directly above the tool rail so the
@@ -17,6 +17,7 @@ export function SelectionBar({
   onToggleLock,
   onReplaceSlot,
   onClearSlot,
+  onZoom,
 }: {
   element: EditorialElement;
   onDuplicate: () => void;
@@ -25,13 +26,33 @@ export function SelectionBar({
   onToggleLock: () => void;
   onReplaceSlot?: () => void;
   onClearSlot?: () => void;
+  onZoom?: (zoom: number) => void;
 }) {
   // A filled layout slot gets swap and empty actions, so the layout survives its
   // contents being changed instead of leaving a hole.
   const inSlot = isSlotElement(element);
+  const zoom = isEditorialMediaElement(element) ? element.zoom : 1;
 
   return (
-    <div className="flex w-full min-w-0 shrink-0 items-center gap-1 border-t border-divider/60 bg-surface/40 px-3 py-2">
+    <div className="w-full min-w-0 shrink-0 border-t border-divider/60 bg-surface/40">
+    {inSlot && onZoom && (
+      // Scale within the frame, which pairs with dragging to reframe.
+      <div className="flex items-center gap-3 px-3 pt-2">
+        <ZoomOut className="h-4 w-4 shrink-0 text-midnight/45" />
+        <input
+          type="range"
+          min="1"
+          max="3"
+          step="0.05"
+          value={zoom}
+          onChange={(event) => onZoom(Number(event.target.value))}
+          aria-label="Scale the image inside its slot"
+          className="w-full accent-navy"
+        />
+        <ZoomIn className="h-4 w-4 shrink-0 text-midnight/45" />
+      </div>
+    )}
+    <div className="flex w-full min-w-0 items-center gap-1 px-3 py-2">
       <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-midnight/60">
         {inSlot ? `Slot ${element.slot + 1}` : element.name}
       </span>
@@ -70,6 +91,7 @@ export function SelectionBar({
           <Trash2 className="h-4 w-4" />
         </Action>
       )}
+    </div>
     </div>
   );
 }

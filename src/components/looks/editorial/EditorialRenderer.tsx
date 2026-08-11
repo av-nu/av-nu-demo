@@ -2,12 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Plus, RotateCw } from "lucide-react";
+import { Move, Plus, RotateCw } from "lucide-react";
 import { useId, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 
 import { mockProducts } from "@/data/mockProducts";
 import { isUnoptimizableSrc, useMediaSrc } from "@/lib/media/useMediaSrc";
-import { EDITORIAL_FORMATS, EDITORIAL_VECTOR_PATHS, editorialFontStack, isEditorialFramedElement, isEditorialMediaElement, type EditorialElement, type EditorialMediaElement, type EditorialImageMask, type EditorialPageDesign, type EditorialSnapGuides } from "@/lib/editorial";
+import { EDITORIAL_FORMATS, EDITORIAL_VECTOR_PATHS, editorialFontStack, isEditorialFramedElement, isEditorialMediaElement, isSlotElement, type EditorialElement, type EditorialMediaElement, type EditorialImageMask, type EditorialPageDesign, type EditorialSnapGuides } from "@/lib/editorial";
 
 function shadowFor(value: "none" | "soft" | "strong") {
   if (value === "strong") return "0 22px 50px rgba(40, 30, 25, 0.28)";
@@ -248,7 +248,17 @@ export function EditorialRenderer({ design, selectedId, interactive = false, pro
             {maskPath && <svg aria-hidden="true" className="pointer-events-none absolute h-0 w-0"><defs><clipPath id={maskId} clipPathUnits="objectBoundingBox"><path d={maskPath} /></clipPath></defs></svg>}
             <div className="relative h-full w-full overflow-hidden" style={imageStyle}>{elementContent(element, dimensions.width)}</div>
             {productLinks && element.type === "product" && <Link href={`/product/${element.productId}`} aria-label={`Shop ${element.name}`} className="absolute inset-0 z-[1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" />}
-            {selected && !element.locked && (
+            {/* A slot's frame is owned by the layout, so it offers reframing
+                rather than resize and rotate handles. */}
+            {selected && !element.locked && isSlotElement(element) && (
+              <span className="pointer-events-none absolute inset-x-0 bottom-0 z-[100] flex justify-center pb-[2cqw]">
+                <span className="flex items-center gap-[1cqw] rounded-full bg-black/55 px-[2.5cqw] py-[1cqw] font-semibold text-white" style={{ fontSize: "2.6cqw" }}>
+                  <Move className="inline-block" style={{ width: "3cqw", height: "3cqw" }} />
+                  Drag to reframe
+                </span>
+              </span>
+            )}
+            {selected && !element.locked && !isSlotElement(element) && (
               // Handles are centred on their anchor rather than sitting fully
               // outside the element. The canvas clips overflow, so an element at
               // a canvas edge would otherwise lose its handles completely —

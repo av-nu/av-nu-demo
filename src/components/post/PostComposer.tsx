@@ -281,6 +281,13 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
     if (element?.type === "placeholder") {
       setPendingSlotId(elementId);
       setActiveTool("add");
+      return;
+    }
+    // Selecting something real should reveal its actions, so close the picker —
+    // the selection bar is hidden while a tool panel is open.
+    if (activeTool === "add") {
+      setPendingSlotId(undefined);
+      setActiveTool(undefined);
     }
   };
 
@@ -404,7 +411,13 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
                   interactive
                   guides={canvas.snapGuides}
                   canvasRef={canvas.canvasRef}
-                  onElementPointerDown={(event, elementId) => { canvas.startInteraction(event, elementId, "drag"); handleElementSelect(elementId); }}
+                  onElementPointerDown={(event, elementId) => {
+                    // Dragging inside a layout slot reframes the media; the frame
+                    // itself belongs to the template and stays put.
+                    const target = canvas.design.elements.find((element) => element.id === elementId);
+                    canvas.startInteraction(event, elementId, target && isSlotElement(target) ? "pan" : "drag");
+                    handleElementSelect(elementId);
+                  }}
                   onElementSelect={handleElementSelect}
                   onHandlePointerDown={(event, elementId, handle) => canvas.startInteraction(event, elementId, handle)}
                   onCanvasPointerDown={() => canvas.setSelectedId(undefined)}
@@ -514,6 +527,7 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
           onToggleLock={() => canvas.patchSelected({ locked: !canvas.selected?.locked })}
           onReplaceSlot={replaceSelectedSlot}
           onClearSlot={clearSelectedSlot}
+          onZoom={(zoom) => canvas.patchSelected({ zoom })}
         />
       )}
 

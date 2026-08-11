@@ -8,6 +8,7 @@ import {
   duplicateEditorialElement,
   normalizeEditorialRotation,
   removeEditorialElement,
+  isEditorialMediaElement,
   snapEditorialElement,
   updateEditorialElement,
   type EditorialElement,
@@ -21,7 +22,11 @@ import {
 // Both the legacy editorial builder and the new post composer consume this, so
 // interaction behavior cannot drift between them.
 
-export type CanvasInteractionAction = "drag" | "resize" | "rotate";
+/**
+ * `pan` reframes media inside a fixed box rather than moving the box. Layout
+ * slots use it so the frame stays where the template put it.
+ */
+export type CanvasInteractionAction = "drag" | "resize" | "rotate" | "pan";
 
 type Interaction = {
   action: CanvasInteractionAction;
@@ -38,6 +43,10 @@ type Interaction = {
 const DRAG_THRESHOLD = 3;
 
 const HISTORY_LIMIT = 50;
+
+function clampPercent(value: number) {
+  return Math.max(0, Math.min(100, value));
+}
 
 export function useCanvasDocument({
   design,
@@ -204,6 +213,19 @@ export function useCanvasDocument({
       const dx = (event.clientX - interaction.startX) * scaleX;
       const dy = (event.clientY - interaction.startY) * scaleY;
       let nextElement: EditorialElement;
+
+      if (interaction.action === "pan") {
+        // Reframe the media inside its box. Dragging right should reveal more of
+        // the image's left side, so the object position moves the other way.
+        const source = interaction.element;
+        if (!isEditorialMediaElement(source)) return;
+        const zoom = Math.max(1, source.zoom);
+        const cropX = clampPercent(source.cropX - (dx / Math.max(1, source.width)) * 100 / zoom);
+        const cropY = clampPercent(source.cropY - (dy / Math.max(1, source.height)) * 100 / zoom);
+        nextElement = { ...source, cropX, cropY };
+        applyTransient(updateEditorialElement(presentRef.current, interaction.elementId, nextElement));
+        return;
+      }
 
       if (interaction.action === "drag") {
         const candidate = clampEditorialElement({ ...interaction.element, x: interaction.element.x + dx, y: interaction.element.y + dy }, presentRef.current.format);
