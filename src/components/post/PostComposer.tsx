@@ -7,6 +7,7 @@ import { ArrowRight, ImagePlus, LayoutTemplate, Minus, Redo2, Undo2, X, ZoomIn }
 import { useCanvasDocument } from "@/components/canvas/useCanvasDocument";
 import { EditorialRenderer } from "@/components/looks/editorial/EditorialRenderer";
 import { PostPins } from "@/components/post/PostPins";
+import { PublishSheet } from "@/components/post/PublishSheet";
 import { PostPageRail } from "@/components/post/PostPageRail";
 import { PostToolbar, type PostTool } from "@/components/post/PostToolbar";
 import { AddProductTool } from "@/components/post/tools/AddProductTool";
@@ -20,6 +21,8 @@ import { TextTool } from "@/components/post/tools/TextTool";
 import { useToast } from "@/components/ui/Toast";
 import { DRAW_TOOL_PRESETS, pointsToPath, splitStrokeByEraser, strokeIntersectsEraser } from "@/lib/drawing";
 import { mediaStore } from "@/lib/media";
+import { socialService } from "@/lib/social";
+import type { FaveVisibility } from "@/data/faves";
 import { cn } from "@/lib/utils";
 import {
   EDITORIAL_FORMATS,
@@ -104,6 +107,9 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
   const [activeTool, setActiveTool] = useState<PostTool>();
   const [zoom, setZoom] = useState(1);
   const [pendingSlotId, setPendingSlotId] = useState<string>();
+  const [publishOpen, setPublishOpen] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string>();
   const [drawSettings, setDrawSettings] = useState<DrawSettings>({ tool: "pen", color: "#030125", width: DRAW_TOOL_PRESETS.pen.width });
   const uploadRef = useRef<HTMLInputElement>(null);
 
@@ -366,6 +372,20 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
     canvas.commit(reorderEditorialElement(canvas.design, canvas.selectedId, direction), canvas.selectedId);
   };
 
+  const publish = async (caption: string, visibility: FaveVisibility) => {
+    setPublishing(true);
+    setPublishError(undefined);
+    try {
+      await socialService.addPost({ pages: post.pages, format: post.format, caption, visibility, coverPageIndex: post.coverPageIndex });
+      router.push("/");
+    } catch (error) {
+      // Storage failures are surfaced rather than swallowed: losing a post the
+      // author just built is worse than an explicit error.
+      setPublishError(error instanceof Error ? error.message : "That post could not be saved.");
+      setPublishing(false);
+    }
+  };
+
   const close = () => router.push("/");
 
   return (
@@ -404,7 +424,7 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
         <button
           type="button"
           disabled={!started}
-          onClick={() => showToast("Publishing arrives in a later phase")}
+          onClick={() => { setPublishError(undefined); setPublishOpen(true); }}
           className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-navy px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-navy/90 disabled:opacity-40"
         >
           Next
@@ -593,6 +613,15 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
         onChange={(event) => handleUpload(event.target.files?.[0])}
         className="sr-only"
       />
+      {publishOpen && (
+        <PublishSheet
+          post={post}
+          publishing={publishing}
+          error={publishError}
+          onPublish={publish}
+          onClose={() => setPublishOpen(false)}
+        />
+      )}
       <ToastContainer />
     </div>
   );
