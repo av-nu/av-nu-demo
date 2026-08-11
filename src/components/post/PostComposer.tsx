@@ -6,11 +6,13 @@ import { ArrowRight, ImagePlus, LayoutTemplate, Minus, Redo2, Undo2, X, ZoomIn }
 
 import { useCanvasDocument } from "@/components/canvas/useCanvasDocument";
 import { EditorialRenderer } from "@/components/looks/editorial/EditorialRenderer";
+import { PostPins } from "@/components/post/PostPins";
 import { PostPageRail } from "@/components/post/PostPageRail";
 import { PostToolbar, type PostTool } from "@/components/post/PostToolbar";
 import { AddProductTool } from "@/components/post/tools/AddProductTool";
 import { DrawTool } from "@/components/post/tools/DrawTool";
 import { DrawingSurface, type DrawSettings } from "@/components/post/tools/DrawingSurface";
+import { LayersTool } from "@/components/post/tools/LayersTool";
 import { LayoutsTool } from "@/components/post/tools/LayoutsTool";
 import { SelectionBar } from "@/components/post/tools/SelectionBar";
 import { StickersTool } from "@/components/post/tools/StickersTool";
@@ -45,10 +47,14 @@ import {
 } from "@/lib/editorial";
 import {
   addPostPage,
+  addPostPin,
   createBlankPage,
   createMediaPage,
   duplicatePostPage,
+  isMediaPage,
+  movePostPin,
   normalizePost,
+  removePostPin,
   removePostPage,
   reorderPostPage,
   scaleDesignToFormat,
@@ -57,7 +63,7 @@ import {
 } from "@/lib/post";
 
 /** Tools with a real panel; the rest still show a placeholder. */
-const HANDLED_TOOLS = new Set<PostTool>(["layouts", "text", "pages", "photos", "draw", "stickers", "add"]);
+const HANDLED_TOOLS = new Set<PostTool>(["layouts", "text", "pages", "photos", "draw", "stickers", "add", "layers"]);
 
 const ZOOM_MIN = 0.5;
 const ZOOM_MAX = 1.4;
@@ -262,6 +268,14 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
       return;
     }
 
+    // A media page carries its products as pins on the photo rather than as
+    // canvas elements, which is what makes an uploaded shot shoppable.
+    if (isMediaPage(activePage)) {
+      setPost((current) => addPostPin(current, activePage.id, productId));
+      showToast("Tagged — drag the tag to reposition");
+      return;
+    }
+
     // Offset each addition so a run of products does not land in one stack.
     const placed = canvas.design.elements.filter((element) => element.type === "product").length;
     canvas.addElement(createProductElement(productId, placed));
@@ -432,6 +446,12 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
                   onHandlePointerDown={(event, elementId, handle) => canvas.startInteraction(event, elementId, handle)}
                   onCanvasPointerDown={() => canvas.setSelectedId(undefined)}
                 />
+                <PostPins
+                  pins={activePage.pins}
+                  editable
+                  onMove={(pinId, x, y) => setPost((current) => movePostPin(current, activePage.id, pinId, x, y))}
+                  onRemove={(pinId) => setPost((current) => removePostPin(current, activePage.id, pinId))}
+                />
                 {isDrawing && (
                   <DrawingSurface
                     format={post.format}
@@ -518,6 +538,17 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
 
       {started && activeTool === "stickers" && (
         <StickersTool onAdd={addSticker} onClose={() => setActiveTool(undefined)} />
+      )}
+
+      {started && activeTool === "layers" && (
+        <LayersTool
+          design={canvas.design}
+          selectedId={canvas.selectedId}
+          onSelect={canvas.setSelectedId}
+          onReorder={(elementId, direction) => canvas.commit(reorderEditorialElement(canvas.design, elementId, direction), elementId)}
+          onPatch={(elementId, patch) => canvas.commit(updateEditorialElement(canvas.design, elementId, patch), elementId)}
+          onClose={() => setActiveTool(undefined)}
+        />
       )}
 
       {started && activeTool === "add" && (

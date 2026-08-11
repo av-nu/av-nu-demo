@@ -8,6 +8,7 @@ import {
   createMediaPage,
   createPostPage,
   duplicatePostPage,
+  isMediaPage,
   isMultiPagePost,
   movePostPin,
   normalizePost,
@@ -274,5 +275,24 @@ describe("media pages", () => {
   it("uses a video element for video uploads", () => {
     const page = createMediaPage("idb:video-1", "video");
     expect(page.design.elements[0].type).toBe("video");
+  });
+});
+
+describe("isMediaPage", () => {
+  it("recognises an uploaded page: one locked, full-bleed media element", () => {
+    expect(isMediaPage(createMediaPage("idb:image-1", "image", "portrait"))).toBe(true);
+    expect(isMediaPage(createMediaPage("idb:video-1", "video", "portrait"))).toBe(true);
+  });
+
+  it("does not treat a collage as a media page", () => {
+    expect(isMediaPage(createBlankPage("portrait"))).toBe(false);
+    expect(isMediaPage(createPostPage(applyEditorialTemplate(["p-1"], "T", "catalog")))).toBe(false);
+  });
+
+  it("stops being a media page once something is layered on it", () => {
+    const page = createMediaPage("idb:image-1", "image", "portrait");
+    const withText = { ...page, design: { ...page.design, elements: [...page.design.elements, createTextElement("Hi")] } };
+
+    expect(isMediaPage(withText)).toBe(false);
   });
 });

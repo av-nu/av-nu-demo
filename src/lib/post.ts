@@ -183,6 +183,15 @@ export function scaleDesignToFormat(design: EditorialPageDesign, format: Editori
   };
 }
 
+/**
+ * True when a page is an uploaded photo or video rather than a collage: a single
+ * locked, full-bleed media element. Such pages tag products as pins.
+ */
+export function isMediaPage(page: PostPage): boolean {
+  const [first, ...rest] = page.design.elements;
+  return rest.length === 0 && Boolean(first) && first.locked && (first.type === "image" || first.type === "video");
+}
+
 export function postCoverPage(post: Post): PostPage {
   return post.pages[post.coverPageIndex] ?? post.pages[0];
 }
