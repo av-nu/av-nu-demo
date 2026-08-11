@@ -8,17 +8,27 @@ import { useCanvasDocument } from "@/components/canvas/useCanvasDocument";
 import { EditorialRenderer } from "@/components/looks/editorial/EditorialRenderer";
 import { PostPageRail } from "@/components/post/PostPageRail";
 import { PostToolbar, type PostTool } from "@/components/post/PostToolbar";
+import { DrawTool } from "@/components/post/tools/DrawTool";
+import { DrawingSurface, type DrawSettings } from "@/components/post/tools/DrawingSurface";
 import { LayoutsTool } from "@/components/post/tools/LayoutsTool";
 import { SelectionBar } from "@/components/post/tools/SelectionBar";
+import { StickersTool } from "@/components/post/tools/StickersTool";
 import { TextTool } from "@/components/post/tools/TextTool";
 import { useToast } from "@/components/ui/Toast";
 import { mediaStore } from "@/lib/media";
 import { cn } from "@/lib/utils";
 import {
   EDITORIAL_FORMATS,
+  appendDrawingPath,
   applyEditorialTemplate,
+  createDrawingElement,
+  createStickerElement,
   createTextElement,
+  eraseDrawingPaths,
+  makeEditorialDrawingPath,
   reorderEditorialElement,
+  updateEditorialElement,
+  type EditorialDrawingElement,
   type EditorialFormat,
   type EditorialPageDesign,
   type EditorialTemplateId,
@@ -37,7 +47,7 @@ import {
 } from "@/lib/post";
 
 /** Tools with a real panel; the rest still show a placeholder. */
-const HANDLED_TOOLS = new Set<PostTool>(["layouts", "text", "pages", "photos"]);
+const HANDLED_TOOLS = new Set<PostTool>(["layouts", "text", "pages", "photos", "draw", "stickers"]);
 
 const ZOOM_MIN = 0.5;
 const ZOOM_MAX = 1.4;
@@ -77,6 +87,7 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeTool, setActiveTool] = useState<PostTool>();
   const [zoom, setZoom] = useState(1);
+  const [drawSettings, setDrawSettings] = useState<DrawSettings>({ tool: "pen", color: "#030125", width: 6 });
   const uploadRef = useRef<HTMLInputElement>(null);
 
   const activePage = post.pages[Math.min(activeIndex, post.pages.length - 1)];
@@ -150,6 +161,7 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
     setCover: (index: number) => setPost((current) => normalizePost({ ...current, coverPageIndex: index })),
   }), [post.pages.length]);
 
+  const isDrawing = activeTool === "draw";
   const selectedText = canvas.selected?.type === "text" ? canvas.selected : undefined;
   // Templates seed their headline from existing text so re-applying a layout does
   // not silently discard the author's title.
@@ -189,6 +201,56 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
       }));
       return normalizePost({ ...current, format, pages });
     });
+  };
+
+  const addSticker = (value: string) => {
+    canvas.addElement(createStickerElement(value));
+  };
+
+  /** Appends a finished stroke, creating the page's drawing layer on first use. */
+  const commitStroke = (path: string) => {
+    const stroke = makeEditorialDrawingPath(path, {
+      color: drawSettings.color,
+      width: drawSettings.width,
+      tool: drawSettings.tool === "eraser" ? "pen" : drawSettings.tool,
+    });
+    const existing = canvas.design.elements.find((element): element is EditorialDrawingElement => element.type === "drawing");
+    if (existing) {
+      canvas.commit(updateEditorialElement(canvas.design, existing.id, appendDrawingPath(existing, stroke)));
+      return;
+    }
+    const layer = appendDrawingPath(createDrawingElement(post.format), stroke);
+    canvas.commit({ ...canvas.design, elements: [...canvas.design.elements, layer] });
+  };
+
+  /**
+   * Erases whole strokes. Hit-testing uses the browser's own stroke geometry via
+   * isPointInStroke, so it matches exactly what the user sees.
+   */
+  const eraseAt = (point: { x: number; y: number }) => {
+    const layer = canvas.design.elements.find((element): element is EditorialDrawingElement => element.type === "drawing");
+    if (!layer || layer.paths.length === 0) return;
+    const root = canvas.canvasRef.current;
+    if (!root) return;
+
+    const hits = layer.paths.filter((stroke) => {
+      const node = root.querySelector<SVGPathElement>(`path[data-stroke-id="${stroke.id}"]`);
+      if (!node) return false;
+      const svg = node.ownerSVGElement;
+      if (!svg) return false;
+      const svgPoint = svg.createSVGPoint();
+      svgPoint.x = point.x;
+      svgPoint.y = point.y;
+      // Widen the hit area so thin strokes stay easy to catch on touch.
+      const originalWidth = node.getAttribute("stroke-width");
+      node.setAttribute("stroke-width", String(Math.max(stroke.width, 18)));
+      const hit = node.isPointInStroke(svgPoint);
+      if (originalWidth !== null) node.setAttribute("stroke-width", originalWidth);
+      return hit;
+    }).map((stroke) => stroke.id);
+
+    if (hits.length === 0) return;
+    canvas.commit(updateEditorialElement(canvas.design, layer.id, eraseDrawingPaths(layer, hits)));
   };
 
   const reorderSelected = (direction: "forward" | "backward") => {
@@ -257,17 +319,28 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
               className="w-full touch-none"
               style={{ maxWidth: `min(100%, ${420 * zoom}px)` }}
             >
-              <EditorialRenderer
-                design={canvas.design}
-                selectedId={canvas.selectedId}
-                interactive
-                guides={canvas.snapGuides}
-                canvasRef={canvas.canvasRef}
-                onElementPointerDown={(event, elementId) => canvas.startInteraction(event, elementId, "drag")}
-                onElementSelect={canvas.setSelectedId}
-                onHandlePointerDown={(event, elementId, handle) => canvas.startInteraction(event, elementId, handle)}
-                onCanvasPointerDown={() => canvas.setSelectedId(undefined)}
-              />
+              <div className="relative">
+                <EditorialRenderer
+                  design={canvas.design}
+                  // Hide selection chrome while drawing so it does not sit under the strokes.
+                  selectedId={isDrawing ? undefined : canvas.selectedId}
+                  interactive
+                  guides={canvas.snapGuides}
+                  canvasRef={canvas.canvasRef}
+                  onElementPointerDown={(event, elementId) => canvas.startInteraction(event, elementId, "drag")}
+                  onElementSelect={canvas.setSelectedId}
+                  onHandlePointerDown={(event, elementId, handle) => canvas.startInteraction(event, elementId, handle)}
+                  onCanvasPointerDown={() => canvas.setSelectedId(undefined)}
+                />
+                {isDrawing && (
+                  <DrawingSurface
+                    format={post.format}
+                    settings={drawSettings}
+                    onCommit={commitStroke}
+                    onErase={eraseAt}
+                  />
+                )}
+              </div>
             </div>
           ) : (
             <StartChoice
@@ -335,6 +408,14 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
           onPatch={canvas.patchSelected}
           onClose={() => setActiveTool(undefined)}
         />
+      )}
+
+      {started && activeTool === "draw" && (
+        <DrawTool settings={drawSettings} onChange={setDrawSettings} onClose={() => setActiveTool(undefined)} />
+      )}
+
+      {started && activeTool === "stickers" && (
+        <StickersTool onAdd={addSticker} onClose={() => setActiveTool(undefined)} />
       )}
 
       {started && activeTool && !HANDLED_TOOLS.has(activeTool) && (

@@ -144,6 +144,8 @@ function elementContent(element: EditorialElement, canvasWidth: number) {
         {element.paths.map((path) => (
           <path
             key={path.id}
+            // Queried by the eraser, which hit-tests with isPointInStroke.
+            data-stroke-id={path.id}
             d={path.d}
             fill="none"
             stroke={path.color}
@@ -151,6 +153,7 @@ function elementContent(element: EditorialElement, canvasWidth: number) {
             strokeOpacity={path.opacity}
             strokeLinecap={path.tool === "marker" || path.tool === "highlighter" ? "butt" : "round"}
             strokeLinejoin="round"
+            style={path.tool === "highlighter" ? { mixBlendMode: "multiply" } : undefined}
           />
         ))}
       </svg>
@@ -211,7 +214,11 @@ export function EditorialRenderer({ design, selectedId, interactive = false, pro
             role={interactive ? "button" : undefined}
             tabIndex={interactive ? 0 : undefined}
             aria-label={interactive ? `Select ${element.name}` : undefined}
-            className={`absolute outline-none ${interactive ? element.locked ? "cursor-not-allowed" : "cursor-move" : ""} ${selected ? "ring-[3px] ring-sky-500 ring-offset-2 ring-offset-transparent" : ""}`}
+            className={`absolute outline-none ${
+              // A drawing layer spans the whole canvas, so leaving it hit-testable
+              // would swallow every tap and make other elements unselectable.
+              element.type === "drawing" ? "pointer-events-none" : ""
+            } ${interactive ? element.locked ? "cursor-not-allowed" : "cursor-move" : ""} ${selected ? "ring-[3px] ring-sky-500 ring-offset-2 ring-offset-transparent" : ""}`}
             style={{
               left: `${(element.x / dimensions.width) * 100}%`,
               top: `${(element.y / dimensions.height) * 100}%`,
