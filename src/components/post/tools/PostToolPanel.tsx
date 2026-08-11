@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { Plus, X } from "lucide-react";
+import { Star, X } from "lucide-react";
 
 import { useColorPalette } from "@/hooks/useColorPalette";
 
@@ -70,12 +70,15 @@ export function ColorSwatches({
     recordRecent(color);
     onChange(color);
   };
-  // Only offer to save a real colour that is not already a preset or saved.
-  const canSave = showPalette && value !== "transparent" && !colors.includes(value) && !hasColor(value);
+  // Any real colour can be favourited, presets included: hiding the control for
+  // presets meant it was almost never on screen.
+  const isSaved = hasColor(value);
+  const canSave = showPalette && value !== "transparent";
 
   return (
     <div className="min-w-0">
-    <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="flex min-w-0 items-center gap-2">
+    <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {allowTransparent && (
         <button
           type="button"
@@ -113,17 +116,20 @@ export function ColorSwatches({
         />
       </label>
 
-      {showPalette && canSave && (
+    </div>
+      {canSave && (
         <>
           <span aria-hidden="true" className="h-6 w-px shrink-0 bg-divider" />
           <button
             type="button"
-            onClick={() => saveColor(value)}
-            aria-label={`Save ${value} to your palette`}
-            title="Save to palette"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-divider text-midnight/50 transition-colors hover:border-accent hover:text-midnight"
+            onClick={() => (isSaved ? removeColor(value) : saveColor(value))}
+            aria-pressed={isSaved}
+            aria-label={isSaved ? `Remove ${value} from saved colours` : `Save ${value} to your colours`}
+            className={`inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-2.5 text-[11px] font-semibold transition-colors ${isSaved ? "border-navy bg-navy text-white" : "border-divider/70 text-midnight/70 hover:border-midnight/40 hover:text-midnight"}`}
           >
-            <Plus className="h-4 w-4" />
+            <Star className={`h-3.5 w-3.5 ${isSaved ? "fill-current" : ""}`} />
+            {isSaved ? "Saved" : "Save"}
+            <span aria-hidden="true" className="h-3.5 w-3.5 rounded-full border border-white/40" style={{ backgroundColor: value }} />
           </button>
         </>
       )}
@@ -148,7 +154,7 @@ export function ColorSwatches({
         </span>
         {list.length === 0 && (
           <span className="shrink-0 text-[11px] text-midnight/40">
-            {tab === "saved" ? "Save a colour with +" : "No colours used yet"}
+            {tab === "saved" ? "Tap Save to keep a colour" : "No colours used yet"}
           </span>
         )}
         {list.map((color) => {
