@@ -1,6 +1,8 @@
 "use client";
 
-import { X } from "lucide-react";
+import { Plus, X } from "lucide-react";
+
+import { useColorPalette } from "@/hooks/useColorPalette";
 
 /** Shared bottom-sheet shell for every composer tool. */
 export function PostToolPanel({
@@ -41,18 +43,28 @@ export function ToolFieldLabel({ children }: { children: React.ReactNode }) {
   return <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-midnight/40">{children}</p>;
 }
 
-/** Horizontal swatch row shared by the text and draw tools. */
+/**
+ * Horizontal swatch row shared by the text and draw tools, including the
+ * author's saved palette.
+ */
 export function ColorSwatches({
   value,
   onChange,
   colors,
   allowTransparent = false,
+  showPalette = true,
 }: {
   value: string;
   onChange: (color: string) => void;
   colors: string[];
   allowTransparent?: boolean;
+  /** Set false for pickers where a saved palette is not meaningful. */
+  showPalette?: boolean;
 }) {
+  const { colors: saved, saveColor, removeColor, hasColor } = useColorPalette();
+  // Only offer to save a real colour that is not already a preset or saved.
+  const canSave = showPalette && value !== "transparent" && !colors.includes(value) && !hasColor(value);
+
   return (
     <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {allowTransparent && (
@@ -91,6 +103,50 @@ export function ColorSwatches({
           className="absolute inset-0 cursor-pointer opacity-0"
         />
       </label>
+
+      {showPalette && (
+        <>
+          <span aria-hidden="true" className="h-6 w-px shrink-0 bg-divider" />
+          {canSave && (
+            <button
+              type="button"
+              onClick={() => saveColor(value)}
+              aria-label={`Save ${value} to your palette`}
+              title="Save to palette"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-divider text-midnight/50 transition-colors hover:border-accent hover:text-midnight"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          )}
+          {saved.map((color) => {
+            const isActive = value.toLowerCase() === color;
+            return (
+              <span key={color} className="relative shrink-0">
+                <button
+                  type="button"
+                  onClick={() => onChange(color)}
+                  aria-label={`Saved color ${color}`}
+                  aria-pressed={isActive}
+                  className={`block h-8 w-8 rounded-full border-2 transition-transform ${isActive ? "scale-110 border-midnight" : "border-divider/70"}`}
+                  style={{ backgroundColor: color }}
+                />
+                {/* Remove is offered only on the selected swatch, so the row does
+                    not fill with delete affordances. */}
+                {isActive && (
+                  <button
+                    type="button"
+                    onClick={() => removeColor(color)}
+                    aria-label={`Remove ${color} from your palette`}
+                    className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-midnight text-white"
+                  >
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                )}
+              </span>
+            );
+          })}
+        </>
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { applyEditorialTemplate, createProductElement, createTextElement } from "./editorial";
+import { EDITORIAL_FORMATS, applyEditorialTemplate, createDrawingElement, createProductElement, createTextElement } from "./editorial";
 import {
   addPostPage,
   addPostPin,
@@ -16,6 +16,7 @@ import {
   removePostPage,
   removePostPin,
   reorderPostPage,
+  scaleDesignToFormat,
   updatePostPageDesign,
   type Post,
 } from "./post";
@@ -73,6 +74,32 @@ describe("post model", () => {
     expect(post.pages.map((page) => page.design.format)).toEqual(["portrait", "portrait"]);
   });
 
+  // Relabelling the format without rescaling reinterprets coordinates in a
+  // canvas of a different size, pushing elements off the edge.
+  it("rescales geometry when coercing a page onto the post format", () => {
+    const landscape = EDITORIAL_FORMATS.landscape;
+    const portrait = EDITORIAL_FORMATS.portrait;
+    const element = { ...createProductElement("p-1"), x: 1100, y: 700, width: 100, height: 100 };
+    const page = createPostPage({
+      version: 1,
+      format: "landscape",
+      backgroundColor: "#fff",
+      backgroundOpacity: 1,
+      showGuides: true,
+      elements: [element],
+    });
+
+    const post = buildPost({ format: "portrait", pages: [page] });
+    const [scaled] = post.pages[0].design.elements;
+
+    expect(scaled.x).toBeCloseTo(1100 * (portrait.width / landscape.width), 5);
+    expect(scaled.y).toBeCloseTo(700 * (portrait.height / landscape.height), 5);
+    // The element that sat flush to the old canvas edge sits flush to the new one
+    // rather than overflowing it.
+    expect(scaled.x + scaled.width).toBeCloseTo(portrait.width, 5);
+    expect(scaled.y + scaled.height).toBeCloseTo(portrait.height * (800 / landscape.height), 5);
+  });
+
   it("clamps pins to the page and drops duplicate products per page", () => {
     const post = buildPost({
       pages: [createPostPage(createBlankPage("portrait").design, [
@@ -107,6 +134,48 @@ describe("post model", () => {
   it("preserves identity when nothing needs normalizing", () => {
     const post = buildPost();
     expect(normalizePost(post)).toBe(post);
+  });
+});
+
+describe("scaleDesignToFormat", () => {
+  it("returns the same design when the format already matches", () => {
+    const design = applyEditorialTemplate(["p-1"], "Same", "catalog");
+    expect(scaleDesignToFormat(design, "landscape")).toBe(design);
+  });
+
+  it("keeps a full-bleed element full-bleed across formats", () => {
+    const from = EDITORIAL_FORMATS.landscape;
+    const to = EDITORIAL_FORMATS.portrait;
+    const design = {
+      version: 1 as const,
+      format: "landscape" as const,
+      backgroundColor: "#fff",
+      backgroundOpacity: 1,
+      showGuides: true,
+      elements: [{ ...createProductElement("p-1"), x: 0, y: 0, width: from.width, height: from.height }],
+    };
+
+    const [element] = scaleDesignToFormat(design, "portrait").elements;
+
+    expect(element.width).toBeCloseTo(to.width, 5);
+    expect(element.height).toBeCloseTo(to.height, 5);
+  });
+
+  it("moves a drawing's coordinate space with the canvas", () => {
+    const design = {
+      version: 1 as const,
+      format: "landscape" as const,
+      backgroundColor: "#fff",
+      backgroundOpacity: 1,
+      showGuides: true,
+      elements: [createDrawingElement("landscape")],
+    };
+
+    const [element] = scaleDesignToFormat(design, "square").elements;
+    if (element.type !== "drawing") throw new Error("expected a drawing element");
+
+    expect(element.viewBoxWidth).toBe(EDITORIAL_FORMATS.square.width);
+    expect(element.viewBoxHeight).toBe(EDITORIAL_FORMATS.square.height);
   });
 });
 

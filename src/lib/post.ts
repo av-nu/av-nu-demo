@@ -150,6 +150,39 @@ export function postProductIds(pages: PostPage[]): string[] {
   return ids;
 }
 
+/**
+ * Rescales a design's geometry into a different canvas size.
+ *
+ * Coercing the format without this reinterprets coordinates in a canvas of a
+ * different size, pushing elements off the edge — a landscape layout dropped
+ * into a portrait post loses everything past its right-hand side.
+ */
+export function scaleDesignToFormat(design: EditorialPageDesign, format: EditorialFormat): EditorialPageDesign {
+  if (design.format === format) return design;
+  const from = EDITORIAL_FORMATS[design.format];
+  const to = EDITORIAL_FORMATS[format];
+  const scaleX = to.width / from.width;
+  const scaleY = to.height / from.height;
+  return {
+    ...design,
+    format,
+    elements: design.elements.map((element) => {
+      const scaled = {
+        ...element,
+        x: element.x * scaleX,
+        y: element.y * scaleY,
+        width: element.width * scaleX,
+        height: element.height * scaleY,
+      };
+      // Drawings carry their own coordinate space, which must follow the canvas.
+      if (scaled.type === "drawing") {
+        return { ...scaled, viewBoxWidth: to.width, viewBoxHeight: to.height };
+      }
+      return scaled;
+    }),
+  };
+}
+
 export function postCoverPage(post: Post): PostPage {
   return post.pages[post.coverPageIndex] ?? post.pages[0];
 }
@@ -174,8 +207,9 @@ export function normalizePost(post: Post): Post {
 
   const pages = sourcePages.map((page) => {
     const normalizedDesign = normalizeEditorialPage(page.design, [], "");
-    // Every page must share the post format, or the carousel jumps.
-    const design = normalizedDesign.format === format ? normalizedDesign : { ...normalizedDesign, format };
+    // Every page must share the post format, or the carousel jumps — and the
+    // geometry has to be rescaled with it, not just relabelled.
+    const design = scaleDesignToFormat(normalizedDesign, format);
     const seen = new Set<string>();
     const pins: PostProductPin[] = [];
     for (const pin of page.pins ?? []) {

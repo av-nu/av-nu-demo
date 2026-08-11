@@ -47,6 +47,7 @@ import {
   normalizePost,
   removePostPage,
   reorderPostPage,
+  scaleDesignToFormat,
   updatePostPageDesign,
   type Post,
 } from "@/lib/post";
@@ -181,7 +182,25 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
 
   const applyTemplate = (templateId: EditorialTemplateId) => {
     const design = applyEditorialTemplate(post.productIds, firstHeadline || "Title", templateId);
-    canvas.replaceDesign(design);
+
+    if (design.format === post.format) {
+      canvas.replaceDesign(design);
+    } else {
+      // Layouts are composed for a particular shape, so adopt it rather than
+      // squeezing the composition into the current one. Format and design must
+      // change together: applying them separately would let normalisation
+      // rescale the new layout against the old shape.
+      setPost((current) => {
+        const active = current.pages[Math.min(activeIndex, current.pages.length - 1)];
+        const pages = current.pages.map((page) => (
+          page.id === active?.id
+            ? { ...page, design }
+            : { ...page, design: scaleDesignToFormat(page.design, design.format) }
+        ));
+        return normalizePost({ ...current, format: design.format, pages });
+      });
+    }
+
     setActiveTool(undefined);
     // Unfilled slots are visible and tappable on the canvas, so point at them
     // rather than forcing the picker open.
@@ -191,27 +210,11 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
   const changeFormat = (format: EditorialFormat) => {
     if (format === post.format) return;
     // Scale every page so the whole post keeps one shared aspect ratio.
-    setPost((current) => {
-      const previous = EDITORIAL_FORMATS[current.format];
-      const next = EDITORIAL_FORMATS[format];
-      const scaleX = next.width / previous.width;
-      const scaleY = next.height / previous.height;
-      const pages = current.pages.map((page) => ({
-        ...page,
-        design: {
-          ...page.design,
-          format,
-          elements: page.design.elements.map((element) => ({
-            ...element,
-            x: element.x * scaleX,
-            y: element.y * scaleY,
-            width: element.width * scaleX,
-            height: element.height * scaleY,
-          })),
-        },
-      }));
-      return normalizePost({ ...current, format, pages });
-    });
+    setPost((current) => normalizePost({
+      ...current,
+      format,
+      pages: current.pages.map((page) => ({ ...page, design: scaleDesignToFormat(page.design, format) })),
+    }));
   };
 
   const addSticker = (value: string) => {
