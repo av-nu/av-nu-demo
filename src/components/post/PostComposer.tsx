@@ -8,10 +8,22 @@ import { useCanvasDocument } from "@/components/canvas/useCanvasDocument";
 import { EditorialRenderer } from "@/components/looks/editorial/EditorialRenderer";
 import { PostPageRail } from "@/components/post/PostPageRail";
 import { PostToolbar, type PostTool } from "@/components/post/PostToolbar";
+import { LayoutsTool } from "@/components/post/tools/LayoutsTool";
+import { SelectionBar } from "@/components/post/tools/SelectionBar";
+import { TextTool } from "@/components/post/tools/TextTool";
 import { useToast } from "@/components/ui/Toast";
 import { mediaStore } from "@/lib/media";
 import { cn } from "@/lib/utils";
-import type { EditorialFormat, EditorialPageDesign } from "@/lib/editorial";
+import {
+  EDITORIAL_FORMATS,
+  applyEditorialTemplate,
+  createTextElement,
+  reorderEditorialElement,
+  type EditorialFormat,
+  type EditorialPageDesign,
+  type EditorialTemplateId,
+  type EditorialTextElement,
+} from "@/lib/editorial";
 import {
   addPostPage,
   createBlankPage,
@@ -23,6 +35,9 @@ import {
   updatePostPageDesign,
   type Post,
 } from "@/lib/post";
+
+/** Tools with a real panel; the rest still show a placeholder. */
+const HANDLED_TOOLS = new Set<PostTool>(["layouts", "text", "pages", "photos"]);
 
 const ZOOM_MIN = 0.5;
 const ZOOM_MAX = 1.4;
@@ -134,6 +149,52 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
     },
     setCover: (index: number) => setPost((current) => normalizePost({ ...current, coverPageIndex: index })),
   }), [post.pages.length]);
+
+  const selectedText = canvas.selected?.type === "text" ? canvas.selected : undefined;
+  // Templates seed their headline from existing text so re-applying a layout does
+  // not silently discard the author's title.
+  const firstHeadline = canvas.design.elements
+    .find((element): element is EditorialTextElement => element.type === "text")?.content ?? "";
+
+  const addText = () => {
+    canvas.addElement(createTextElement("Your words", "title"));
+    setActiveTool("text");
+  };
+
+  const applyTemplate = (templateId: EditorialTemplateId) => {
+    canvas.replaceDesign(applyEditorialTemplate(post.productIds, firstHeadline || "Title", templateId));
+  };
+
+  const changeFormat = (format: EditorialFormat) => {
+    if (format === post.format) return;
+    // Scale every page so the whole post keeps one shared aspect ratio.
+    setPost((current) => {
+      const previous = EDITORIAL_FORMATS[current.format];
+      const next = EDITORIAL_FORMATS[format];
+      const scaleX = next.width / previous.width;
+      const scaleY = next.height / previous.height;
+      const pages = current.pages.map((page) => ({
+        ...page,
+        design: {
+          ...page.design,
+          format,
+          elements: page.design.elements.map((element) => ({
+            ...element,
+            x: element.x * scaleX,
+            y: element.y * scaleY,
+            width: element.width * scaleX,
+            height: element.height * scaleY,
+          })),
+        },
+      }));
+      return normalizePost({ ...current, format, pages });
+    });
+  };
+
+  const reorderSelected = (direction: "forward" | "backward") => {
+    if (!canvas.selectedId) return;
+    canvas.commit(reorderEditorialElement(canvas.design, canvas.selectedId, direction), canvas.selectedId);
+  };
 
   const close = () => router.push("/");
 
@@ -256,10 +317,40 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
         />
       )}
 
-      {started && activeTool && activeTool !== "pages" && (
+      {started && activeTool === "layouts" && (
+        <LayoutsTool
+          productIds={post.productIds}
+          title={firstHeadline}
+          activeFormat={post.format}
+          onApply={applyTemplate}
+          onChangeFormat={changeFormat}
+          onClose={() => setActiveTool(undefined)}
+        />
+      )}
+
+      {started && activeTool === "text" && (
+        <TextTool
+          selected={selectedText}
+          onAdd={addText}
+          onPatch={canvas.patchSelected}
+          onClose={() => setActiveTool(undefined)}
+        />
+      )}
+
+      {started && activeTool && !HANDLED_TOOLS.has(activeTool) && (
         <div className="w-full min-w-0 shrink-0 border-t border-divider/60 bg-surface/40 px-4 py-4 text-center text-xs text-midnight/55">
-          The {activeTool} tool arrives in the next phase.
+          The {activeTool} tool arrives shortly.
         </div>
+      )}
+
+      {started && canvas.selected && !activeTool && (
+        <SelectionBar
+          element={canvas.selected}
+          onDuplicate={canvas.duplicateSelected}
+          onDelete={canvas.removeSelected}
+          onReorder={reorderSelected}
+          onToggleLock={() => canvas.patchSelected({ locked: !canvas.selected?.locked })}
+        />
       )}
 
       <PostToolbar

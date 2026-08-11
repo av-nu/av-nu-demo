@@ -207,7 +207,8 @@ export const FONT_CATALOG: Array<{ id: EditorialFontId; label: string; category:
   { id: "playfair", label: "Playfair Display", category: "serif", stack: "var(--font-playfair), Georgia, serif" },
   { id: "lora", label: "Lora", category: "serif", stack: "var(--font-lora), Georgia, serif" },
   { id: "dm-serif", label: "DM Serif", category: "serif", stack: "var(--font-dm-serif), Georgia, serif" },
-  { id: "inter", label: "Inter", category: "sans", stack: "var(--font-inter), Arial, sans-serif" },
+  // Reuses the app body face rather than loading Inter a second time.
+  { id: "inter", label: "Inter", category: "sans", stack: "var(--font-body), Arial, sans-serif" },
   { id: "dm-sans", label: "DM Sans", category: "sans", stack: "var(--font-dm-sans), Arial, sans-serif" },
   { id: "space-grotesk", label: "Space Grotesk", category: "sans", stack: "var(--font-space-grotesk), Arial, sans-serif" },
   { id: "work-sans", label: "Work Sans", category: "sans", stack: "var(--font-work-sans), Arial, sans-serif" },
