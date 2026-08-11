@@ -30,7 +30,12 @@ type Interaction = {
   startY: number;
   element: EditorialElement;
   rect: DOMRect;
+  /** Document as it was when the gesture began, pushed to history on first move. */
+  designAtStart: EditorialPageDesign;
 };
+
+/** Movement below this (in px) is treated as a tap, not a drag. */
+const DRAG_THRESHOLD = 3;
 
 const HISTORY_LIMIT = 50;
 
@@ -181,7 +186,19 @@ export function useCanvasDocument({
 
   useEffect(() => {
     if (!interaction) return;
+    let pushedHistory = false;
     const handleMove = (event: PointerEvent) => {
+      // Tapping to select should not create an undo step — and on touch a tap
+      // almost always jitters a pixel or two. Only treat it as an edit once the
+      // pointer has genuinely moved.
+      const movedBy = Math.hypot(event.clientX - interaction.startX, event.clientY - interaction.startY);
+      if (!pushedHistory) {
+        if (movedBy < DRAG_THRESHOLD) return;
+        pushedHistory = true;
+        setPast((current) => [...current.slice(-(HISTORY_LIMIT - 1)), interaction.designAtStart]);
+        setFuture([]);
+      }
+
       const scaleX = dimensions.width / interaction.rect.width;
       const scaleY = dimensions.height / interaction.rect.height;
       const dx = (event.clientX - interaction.startX) * scaleX;
@@ -231,10 +248,17 @@ export function useCanvasDocument({
     if (!element || !rect) return;
     setSelectedId(elementId);
     if (element.locked) return;
-    // Snapshot history at gesture start so one drag is one undo step.
-    setPast((current) => [...current.slice(-(HISTORY_LIMIT - 1)), presentRef.current]);
-    setFuture([]);
-    setInteraction({ action, elementId, startX: event.clientX, startY: event.clientY, element, rect });
+    // History is pushed on the first real movement (see the move handler), so a
+    // gesture is one undo step and a tap is none.
+    setInteraction({
+      action,
+      elementId,
+      startX: event.clientX,
+      startY: event.clientY,
+      element,
+      rect,
+      designAtStart: presentRef.current,
+    });
   }, []);
 
   /** Canvas-space coordinates for a pointer/drop event, clamped to the canvas. */

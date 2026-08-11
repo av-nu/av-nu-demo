@@ -229,10 +229,27 @@ export function EditorialRenderer({ design, selectedId, interactive = false, pro
             <div className="relative h-full w-full overflow-hidden" style={imageStyle}>{elementContent(element, dimensions.width)}</div>
             {productLinks && element.type === "product" && <Link href={`/product/${element.productId}`} aria-label={`Shop ${element.name}`} className="absolute inset-0 z-[1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" />}
             {selected && !element.locked && (
+              // Handles are centred on their anchor rather than sitting fully
+              // outside the element. The canvas clips overflow, so an element at
+              // a canvas edge would otherwise lose its handles completely —
+              // half-overlapping keeps them reachable everywhere. Targets grow on
+              // touch pointers.
               <>
-                <button type="button" aria-label="Resize element" className="absolute -bottom-4 -right-4 z-[100] h-8 w-8 cursor-nwse-resize rounded-full border-2 border-white bg-sky-500 shadow-md sm:-bottom-3 sm:-right-3 sm:h-6 sm:w-6" onPointerDown={(event) => onHandlePointerDown?.(event, element.id, "resize")} />
-                <span className="pointer-events-none absolute -top-10 left-1/2 h-10 w-px -translate-x-1/2 bg-sky-500 sm:-top-8 sm:h-8" />
-                <button type="button" aria-label="Rotate element" title="Rotate element" className="absolute -top-14 left-1/2 z-[100] flex h-9 w-9 -translate-x-1/2 cursor-grab items-center justify-center rounded-full border-2 border-sky-600 bg-white text-sky-700 shadow-[0_3px_8px_rgba(14,116,144,0.28)] sm:-top-11 sm:h-7 sm:w-7" onPointerDown={(event) => onHandlePointerDown?.(event, element.id, "rotate")}><RotateCw className="h-5 w-5 sm:h-4 sm:w-4" strokeWidth={2.75} aria-hidden="true" /></button>
+                <button
+                  type="button"
+                  aria-label="Resize element"
+                  className="absolute bottom-0 right-0 z-[100] h-8 w-8 translate-x-1/2 translate-y-1/2 cursor-nwse-resize rounded-full border-2 border-white bg-sky-500 shadow-md [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11"
+                  onPointerDown={(event) => onHandlePointerDown?.(event, element.id, "resize")}
+                />
+                <button
+                  type="button"
+                  aria-label="Rotate element"
+                  title="Rotate element"
+                  className="absolute left-1/2 top-0 z-[100] flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 cursor-grab items-center justify-center rounded-full border-2 border-sky-600 bg-white text-sky-700 shadow-[0_3px_8px_rgba(14,116,144,0.28)] [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11"
+                  onPointerDown={(event) => onHandlePointerDown?.(event, element.id, "rotate")}
+                >
+                  <RotateCw className="h-4 w-4 [@media(pointer:coarse)]:h-5 [@media(pointer:coarse)]:w-5" strokeWidth={2.75} aria-hidden="true" />
+                </button>
               </>
             )}
           </div>
