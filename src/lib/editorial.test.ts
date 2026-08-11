@@ -17,8 +17,11 @@ import {
   createTextElement,
   duplicateEditorialElement,
   editorialFontStack,
+  clearSlot,
+  fillPlaceholderWithImage,
   fillPlaceholderWithProduct,
   firstPlaceholder,
+  isSlotElement,
   eraseDrawingPaths,
   makeEditorialDrawingPath,
   editorialProductIds,
@@ -227,6 +230,74 @@ describe("layout slots", () => {
     expect(product.height).toBe(slot.height);
     expect(product.borderWidth).toBe(slot.borderWidth);
     expect(editorialProductIds(filled)).toEqual(["p-9"]);
+  });
+
+  it("remembers that a filled element occupies a slot", () => {
+    const design = applyEditorialTemplate([], "Featured", "catalog");
+    const slot = firstPlaceholder(design);
+    if (!slot) throw new Error("expected a reserved slot");
+
+    const filled = fillPlaceholderWithProduct(design, slot.id, "p-9");
+    const element = filled.elements.find((item) => item.id === slot.id);
+    if (!element) throw new Error("expected the filled element");
+
+    expect(isSlotElement(element)).toBe(true);
+  });
+
+  // Without this a filled layout degrades into loose elements: removing a
+  // product would leave a hole with no way back to the frame.
+  it("empties a filled slot back to a reserved frame", () => {
+    const design = applyEditorialTemplate([], "Catalog", "catalog");
+    const slot = firstPlaceholder(design);
+    if (!slot) throw new Error("expected a reserved slot");
+
+    const filled = fillPlaceholderWithProduct(design, slot.id, "p-9");
+    const emptied = clearSlot(filled, slot.id);
+    const restored = emptied.elements.find((item) => item.id === slot.id);
+    if (!restored || restored.type !== "placeholder") throw new Error("expected the frame back");
+
+    expect(restored.slot).toBe(slot.slot);
+    expect(restored.x).toBe(slot.x);
+    expect(restored.width).toBe(slot.width);
+    expect(editorialProductIds(emptied)).toEqual([]);
+  });
+
+  it("keeps the slot where the author moved it", () => {
+    const design = applyEditorialTemplate([], "Catalog", "catalog");
+    const slot = firstPlaceholder(design);
+    if (!slot) throw new Error("expected a reserved slot");
+
+    const filled = fillPlaceholderWithProduct(design, slot.id, "p-9");
+    const moved = updateEditorialElement(filled, slot.id, { x: 500, y: 600 });
+    const emptied = clearSlot(moved, slot.id);
+    const restored = emptied.elements.find((item) => item.id === slot.id);
+    if (!restored || restored.type !== "placeholder") throw new Error("expected the frame back");
+
+    expect(restored.x).toBe(500);
+    expect(restored.y).toBe(600);
+  });
+
+  it("fills a slot with an uploaded image too", () => {
+    const design = applyEditorialTemplate([], "Catalog", "catalog");
+    const slot = firstPlaceholder(design);
+    if (!slot) throw new Error("expected a reserved slot");
+
+    const filled = fillPlaceholderWithImage(design, slot.id, "idb:image-1");
+    const element = filled.elements.find((item) => item.id === slot.id);
+    if (!element || element.type !== "image") throw new Error("expected an image element");
+
+    expect(element.src).toBe("idb:image-1");
+    expect(element.width).toBe(slot.width);
+    expect(isSlotElement(element)).toBe(true);
+  });
+
+  it("leaves a loose element alone when asked to clear it", () => {
+    const design = applyEditorialTemplate([], "Catalog", "catalog");
+    const withLoose = { ...design, elements: [...design.elements, createProductElement("p-loose")] };
+    const loose = withLoose.elements[withLoose.elements.length - 1];
+
+    expect(clearSlot(withLoose, loose.id)).toBe(withLoose);
+    expect(isSlotElement(loose)).toBe(false);
   });
 
   it("ignores a fill request for an element that is not a slot", () => {

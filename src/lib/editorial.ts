@@ -34,6 +34,11 @@ export type EditorialElementBase = {
 export type EditorialProductElement = EditorialElementBase & {
   type: "product";
   productId: string;
+  /**
+   * Set when this element occupies a layout slot. Retained so the frame can be
+   * restored if the product is removed, keeping the layout a layout.
+   */
+  slot?: number;
   fit: EditorialImageFit;
   cropX: number;
   cropY: number;
@@ -48,6 +53,8 @@ export type EditorialProductElement = EditorialElementBase & {
 export type EditorialImageElement = EditorialElementBase & {
   type: "image";
   src: string;
+  /** Set when this element occupies a layout slot (see product element). */
+  slot?: number;
   fit: EditorialImageFit;
   cropX: number;
   cropY: number;
@@ -453,32 +460,73 @@ function slotElements(productIds: string[], count: number): Array<EditorialProdu
   ));
 }
 
+/** Geometry and framing shared between a slot and whatever fills it. */
+function frameOf(element: EditorialElement) {
+  const framed = isEditorialFramedElement(element) ? element : undefined;
+  return {
+    id: element.id,
+    name: element.name,
+    x: element.x,
+    y: element.y,
+    width: element.width,
+    height: element.height,
+    rotation: element.rotation,
+    zIndex: element.zIndex,
+    opacity: element.opacity,
+    fit: framed?.fit ?? ("cover" as const),
+    cropX: framed?.cropX ?? 50,
+    cropY: framed?.cropY ?? 50,
+    zoom: framed?.zoom ?? 1,
+    borderRadius: framed?.borderRadius ?? 0,
+    borderColor: framed?.borderColor ?? "#ffffff",
+    borderWidth: framed?.borderWidth ?? 0,
+    shadow: framed?.shadow ?? ("none" as const),
+    mask: framed?.mask ?? ("rectangle" as const),
+  };
+}
+
 /** Replaces a reserved frame with a product, keeping the frame's geometry. */
 export function fillPlaceholderWithProduct(design: EditorialPageDesign, placeholderId: string, productId: string): EditorialPageDesign {
   const placeholder = design.elements.find((element) => element.id === placeholderId);
   if (!placeholder || placeholder.type !== "placeholder") return design;
   const product: EditorialProductElement = {
     ...createProductElement(productId, placeholder.slot),
-    id: placeholder.id,
-    name: placeholder.name,
-    x: placeholder.x,
-    y: placeholder.y,
-    width: placeholder.width,
-    height: placeholder.height,
-    rotation: placeholder.rotation,
-    zIndex: placeholder.zIndex,
-    opacity: placeholder.opacity,
-    fit: placeholder.fit,
-    cropX: placeholder.cropX,
-    cropY: placeholder.cropY,
-    zoom: placeholder.zoom,
-    borderRadius: placeholder.borderRadius,
-    borderColor: placeholder.borderColor,
-    borderWidth: placeholder.borderWidth,
-    shadow: placeholder.shadow,
-    mask: placeholder.mask,
+    ...frameOf(placeholder),
+    slot: placeholder.slot,
   };
   return { ...design, elements: design.elements.map((element) => (element.id === placeholderId ? product : element)) };
+}
+
+/** Replaces a reserved frame with an uploaded image, keeping the frame. */
+export function fillPlaceholderWithImage(design: EditorialPageDesign, placeholderId: string, src: string): EditorialPageDesign {
+  const placeholder = design.elements.find((element) => element.id === placeholderId);
+  if (!placeholder || placeholder.type !== "placeholder") return design;
+  const image: EditorialImageElement = {
+    ...createImageElement(src),
+    ...frameOf(placeholder),
+    slot: placeholder.slot,
+  };
+  return { ...design, elements: design.elements.map((element) => (element.id === placeholderId ? image : element)) };
+}
+
+/** True for an element that currently occupies a layout slot. */
+export function isSlotElement(element: EditorialElement): element is (EditorialProductElement | EditorialImageElement) & { slot: number } {
+  return (element.type === "product" || element.type === "image") && typeof element.slot === "number";
+}
+
+/**
+ * Empties a filled slot back to a reserved frame, so a layout stays a layout
+ * after its contents are removed rather than degrading into loose elements.
+ */
+export function clearSlot(design: EditorialPageDesign, elementId: string): EditorialPageDesign {
+  const element = design.elements.find((item) => item.id === elementId);
+  if (!element || !isSlotElement(element)) return design;
+  const placeholder: EditorialPlaceholderElement = {
+    ...createPlaceholderElement(element.slot),
+    ...frameOf(element),
+    slot: element.slot,
+  };
+  return { ...design, elements: design.elements.map((item) => (item.id === elementId ? placeholder : item)) };
 }
 
 /** The first unfilled slot, so newly added products land somewhere sensible. */

@@ -25,8 +25,11 @@ import {
   applyEditorialTemplate,
   createDrawingElement,
   createProductElement,
+  clearSlot,
+  fillPlaceholderWithImage,
   fillPlaceholderWithProduct,
   firstPlaceholder,
+  isSlotElement,
   createStickerElement,
   createTextElement,
   makeEditorialDrawingPath,
@@ -123,6 +126,17 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
     try {
       // Media goes to the MediaStore; the design only ever holds a ref.
       const ref = await mediaStore.put(file, kind);
+
+      // An image chosen for a specific slot fills that frame instead of starting
+      // a new page.
+      const slotTarget = pendingSlotId ?? (started ? firstPlaceholder(canvas.design)?.id : undefined);
+      if (kind === "image" && slotTarget && canvas.design.elements.some((element) => element.id === slotTarget && element.type === "placeholder")) {
+        canvas.commit(fillPlaceholderWithImage(canvas.design, slotTarget, ref), slotTarget);
+        setPendingSlotId(undefined);
+        setActiveTool(undefined);
+        return;
+      }
+
       const page = createMediaPage(ref, kind, post.format);
       // Derive the landing page index from the updater's own result so it cannot
       // drift from a stale closure.
@@ -241,6 +255,23 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
     // Offset each addition so a run of products does not land in one stack.
     const placed = canvas.design.elements.filter((element) => element.type === "product").length;
     canvas.addElement(createProductElement(productId, placed));
+  };
+
+  /** Swaps what is in a slot without losing the frame. */
+  const replaceSelectedSlot = () => {
+    const selected = canvas.selected;
+    if (!selected || !isSlotElement(selected)) return;
+    const emptied = clearSlot(canvas.design, selected.id);
+    canvas.commit(emptied, selected.id);
+    setPendingSlotId(selected.id);
+    setActiveTool("add");
+  };
+
+  /** Empties a slot back to its reserved frame rather than deleting it. */
+  const clearSelectedSlot = () => {
+    const selected = canvas.selected;
+    if (!selected || !isSlotElement(selected)) return;
+    canvas.commit(clearSlot(canvas.design, selected.id), selected.id);
   };
 
   /** Tapping a reserved slot opens the picker aimed at that slot. */
@@ -481,6 +512,8 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
           onDelete={canvas.removeSelected}
           onReorder={reorderSelected}
           onToggleLock={() => canvas.patchSelected({ locked: !canvas.selected?.locked })}
+          onReplaceSlot={replaceSelectedSlot}
+          onClearSlot={clearSelectedSlot}
         />
       )}
 

@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Copy, Lock, LockOpen, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Copy, Eraser, Lock, LockOpen, Repeat2, Trash2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import type { EditorialElement } from "@/lib/editorial";
+import { isSlotElement, type EditorialElement } from "@/lib/editorial";
 
 /**
  * Actions for the current selection. Sits directly above the tool rail so the
@@ -15,16 +15,44 @@ export function SelectionBar({
   onDelete,
   onReorder,
   onToggleLock,
+  onReplaceSlot,
+  onClearSlot,
 }: {
   element: EditorialElement;
   onDuplicate: () => void;
   onDelete: () => void;
   onReorder: (direction: "forward" | "backward") => void;
   onToggleLock: () => void;
+  onReplaceSlot?: () => void;
+  onClearSlot?: () => void;
 }) {
+  // A filled layout slot gets swap and empty actions, so the layout survives its
+  // contents being changed instead of leaving a hole.
+  const inSlot = isSlotElement(element);
+
   return (
     <div className="flex w-full min-w-0 shrink-0 items-center gap-1 border-t border-divider/60 bg-surface/40 px-3 py-2">
-      <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-midnight/60">{element.name}</span>
+      <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-midnight/60">
+        {inSlot ? `Slot ${element.slot + 1}` : element.name}
+      </span>
+      {inSlot && onReplaceSlot && (
+        <button
+          type="button"
+          onClick={onReplaceSlot}
+          aria-label="Replace what is in this slot"
+          title="Replace"
+          // Icon-only on narrow screens so the slot label keeps its room.
+          className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full border border-divider/70 px-2.5 text-[11px] font-semibold text-midnight/70 transition-colors hover:border-midnight/30 hover:text-midnight sm:px-3"
+        >
+          <Repeat2 className="h-4 w-4" />
+          <span className="hidden sm:inline">Replace</span>
+        </button>
+      )}
+      {inSlot && onClearSlot && (
+        <Action label="Empty this slot" onClick={onClearSlot}>
+          <Eraser className="h-4 w-4" />
+        </Action>
+      )}
       <Action label="Bring forward" onClick={() => onReorder("forward")}>
         <ArrowUp className="h-4 w-4" />
       </Action>
@@ -37,9 +65,11 @@ export function SelectionBar({
       <Action label="Duplicate element" onClick={onDuplicate}>
         <Copy className="h-4 w-4" />
       </Action>
-      <Action label="Delete element" onClick={onDelete} danger>
-        <Trash2 className="h-4 w-4" />
-      </Action>
+      {!inSlot && (
+        <Action label="Delete element" onClick={onDelete} danger>
+          <Trash2 className="h-4 w-4" />
+        </Action>
+      )}
     </div>
   );
 }
