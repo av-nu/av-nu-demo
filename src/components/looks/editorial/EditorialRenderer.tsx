@@ -273,7 +273,7 @@ export function EditorialRenderer({ design, selectedId, interactive = false, pro
                 </span>
               </span>
             )}
-            {selected && !element.locked && !isSlotElement(element) && (
+            {selected && !element.locked && !isSlotElement(element) && element.type !== "placeholder" && (
               // Handles are centred on their anchor rather than sitting fully
               // outside the element. The canvas clips overflow, so an element at
               // a canvas edge would otherwise lose its handles completely —

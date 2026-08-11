@@ -5,6 +5,8 @@ import { useCallback } from "react";
 import { useLocalStorage } from "./useLocalStorage";
 
 const PALETTE_KEY = "avnu-saved-colors";
+const RECENT_KEY = "avnu-recent-colors";
+const RECENT_LIMIT = 12;
 const PALETTE_LIMIT = 24;
 
 /** Normalizes to lowercase hex so the same colour is not saved twice. */
@@ -24,6 +26,7 @@ function normalizeColor(color: string): string | undefined {
  */
 export function useColorPalette() {
   const [colors, setColors, isHydrated] = useLocalStorage<string[]>(PALETTE_KEY, []);
+  const [recent, setRecent] = useLocalStorage<string[]>(RECENT_KEY, []);
 
   const saveColor = useCallback((color: string) => {
     const value = normalizeColor(color);
@@ -45,7 +48,14 @@ export function useColorPalette() {
     return value ? colors.includes(value) : false;
   }, [colors]);
 
-  return { colors, isHydrated, saveColor, removeColor, hasColor };
+  /** Records a colour as used, so authors can reach back for it without saving. */
+  const recordRecent = useCallback((color: string) => {
+    const value = normalizeColor(color);
+    if (!value) return;
+    setRecent((current) => [value, ...current.filter((item) => item !== value)].slice(0, RECENT_LIMIT));
+  }, [setRecent]);
+
+  return { colors, recent, isHydrated, saveColor, removeColor, hasColor, recordRecent };
 }
 
-export { normalizeColor, PALETTE_LIMIT };
+export { normalizeColor, PALETTE_LIMIT, RECENT_LIMIT };

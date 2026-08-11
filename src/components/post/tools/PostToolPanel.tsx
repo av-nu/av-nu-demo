@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { Plus, X } from "lucide-react";
 
 import { useColorPalette } from "@/hooks/useColorPalette";
@@ -61,7 +63,13 @@ export function ColorSwatches({
   /** Set false for pickers where a saved palette is not meaningful. */
   showPalette?: boolean;
 }) {
-  const { colors: saved, saveColor, removeColor, hasColor } = useColorPalette();
+  const { colors: saved, recent, saveColor, removeColor, hasColor, recordRecent } = useColorPalette();
+  const [tab, setTab] = useState<"saved" | "recent">("saved");
+  const list = tab === "saved" ? saved : recent;
+  const pick = (color: string) => {
+    recordRecent(color);
+    onChange(color);
+  };
   // Only offer to save a real colour that is not already a preset or saved.
   const canSave = showPalette && value !== "transparent" && !colors.includes(value) && !hasColor(value);
 
@@ -83,7 +91,7 @@ export function ColorSwatches({
         <button
           key={color}
           type="button"
-          onClick={() => onChange(color)}
+          onClick={() => pick(color)}
           aria-label={`Color ${color}`}
           aria-pressed={value === color}
           className={`h-8 w-8 shrink-0 rounded-full border-2 transition-transform ${value === color ? "scale-110 border-midnight" : "border-divider/70"}`}
@@ -99,7 +107,7 @@ export function ColorSwatches({
         <input
           type="color"
           value={value === "transparent" ? "#000000" : value}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={(event) => pick(event.target.value)}
           aria-label="Custom color"
           className="absolute inset-0 cursor-pointer opacity-0"
         />
@@ -123,24 +131,41 @@ export function ColorSwatches({
 
     {/* Saved colours sit on their own row: at the end of the preset row they
         scrolled out of sight, so a palette was effectively unreachable. */}
-    {showPalette && saved.length > 0 && (
-      <div className="mt-2 flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.12em] text-midnight/40">Saved</span>
-        {saved.map((color) => {
+    {showPalette && (saved.length > 0 || recent.length > 0) && (
+      <div className="mt-3 flex items-center gap-2 overflow-x-auto pt-2 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <span className="flex shrink-0 overflow-hidden rounded-full border border-divider/70">
+          {(["saved", "recent"] as const).map((id) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setTab(id)}
+              aria-pressed={tab === id}
+              className={`px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] transition-colors ${tab === id ? "bg-navy text-white" : "text-midnight/50 hover:text-midnight"}`}
+            >
+              {id === "saved" ? "Saved" : "Recent"}
+            </button>
+          ))}
+        </span>
+        {list.length === 0 && (
+          <span className="shrink-0 text-[11px] text-midnight/40">
+            {tab === "saved" ? "Save a colour with +" : "No colours used yet"}
+          </span>
+        )}
+        {list.map((color) => {
             const isActive = value.toLowerCase() === color;
             return (
               <span key={color} className="relative shrink-0">
                 <button
                   type="button"
-                  onClick={() => onChange(color)}
-                  aria-label={`Saved color ${color}`}
+                  onClick={() => pick(color)}
+                  aria-label={`${tab === "saved" ? "Saved" : "Recent"} color ${color}`}
                   aria-pressed={isActive}
                   className={`block h-8 w-8 rounded-full border-2 transition-transform ${isActive ? "scale-110 border-midnight" : "border-divider/70"}`}
                   style={{ backgroundColor: color }}
                 />
                 {/* Remove is offered only on the selected swatch, so the row does
                     not fill with delete affordances. */}
-                {isActive && (
+                {isActive && tab === "saved" && (
                   <button
                     type="button"
                     onClick={() => removeColor(color)}
