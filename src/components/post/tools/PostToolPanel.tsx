@@ -66,6 +66,7 @@ export function ColorSwatches({
   const canSave = showPalette && value !== "transparent" && !colors.includes(value) && !hasColor(value);
 
   return (
+    <div className="min-w-0">
     <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {allowTransparent && (
         <button
@@ -104,21 +105,28 @@ export function ColorSwatches({
         />
       </label>
 
-      {showPalette && (
+      {showPalette && canSave && (
         <>
           <span aria-hidden="true" className="h-6 w-px shrink-0 bg-divider" />
-          {canSave && (
-            <button
-              type="button"
-              onClick={() => saveColor(value)}
-              aria-label={`Save ${value} to your palette`}
-              title="Save to palette"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-divider text-midnight/50 transition-colors hover:border-accent hover:text-midnight"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
-          )}
-          {saved.map((color) => {
+          <button
+            type="button"
+            onClick={() => saveColor(value)}
+            aria-label={`Save ${value} to your palette`}
+            title="Save to palette"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-dashed border-divider text-midnight/50 transition-colors hover:border-accent hover:text-midnight"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+        </>
+      )}
+    </div>
+
+    {/* Saved colours sit on their own row: at the end of the preset row they
+        scrolled out of sight, so a palette was effectively unreachable. */}
+    {showPalette && saved.length > 0 && (
+      <div className="mt-2 flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.12em] text-midnight/40">Saved</span>
+        {saved.map((color) => {
             const isActive = value.toLowerCase() === color;
             return (
               <span key={color} className="relative shrink-0">
@@ -144,9 +152,9 @@ export function ColorSwatches({
                 )}
               </span>
             );
-          })}
-        </>
-      )}
+        })}
+      </div>
+    )}
     </div>
   );
 }
