@@ -450,8 +450,10 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
           )}
         </div>
 
-        {started && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center">
+        {/* Hidden while a tool panel is open: the stage shrinks then, leaving this
+            overlay floating over the artwork instead of below it. */}
+        {started && !activeTool && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-end pr-3">
             <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-divider/70 bg-bg/95 px-1.5 py-1 shadow-sm backdrop-blur">
               <button
                 type="button"
