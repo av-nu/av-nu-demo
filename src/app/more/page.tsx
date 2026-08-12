@@ -1,6 +1,10 @@
 "use client";
 
+import { useState } from "react";
+
 import Link from "next/link";
+
+import { resetDemoData } from "@/lib/demoReset";
 import { 
   Info, 
   Truck, 
@@ -116,6 +120,67 @@ export default function MorePage() {
           );
         })}
       </div>
+
+      <DemoResetCard />
+    </div>
+  );
+}
+
+/**
+ * Returns the demo to its seeded state. Kept behind a confirmation because it
+ * discards published posts and uploaded media, which cannot be recovered.
+ */
+function DemoResetCard() {
+  const [confirming, setConfirming] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  return (
+    <div className="mt-8 rounded-xl border border-divider/60 bg-surface/30 p-4">
+      <div className="flex items-center gap-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-bg">
+          <RotateCcw className="h-5 w-5 text-text/60" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-medium text-text">Reset demo data</p>
+          <p className="text-sm text-text/50">
+            Clears posts, faves, orders, and uploads in this browser, back to the seeded demo.
+          </p>
+        </div>
+      </div>
+
+      {confirming ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            disabled={resetting}
+            onClick={async () => {
+              setResetting(true);
+              await resetDemoData();
+              // A full reload is the simplest way to have every hook re-seed.
+              window.location.href = "/";
+            }}
+            className="rounded-full bg-pink px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-pink/90 disabled:opacity-50"
+          >
+            {resetting ? "Resetting…" : "Yes, reset everything"}
+          </button>
+          <button
+            type="button"
+            disabled={resetting}
+            onClick={() => setConfirming(false)}
+            className="rounded-full border border-divider/70 px-4 py-2 text-sm font-semibold text-text/70 transition-colors hover:text-text"
+          >
+            Cancel
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setConfirming(true)}
+          className="mt-4 rounded-full border border-divider/70 px-4 py-2 text-sm font-semibold text-text/70 transition-colors hover:text-text"
+        >
+          Reset demo data
+        </button>
+      )}
     </div>
   );
 }

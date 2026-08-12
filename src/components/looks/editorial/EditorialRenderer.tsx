@@ -83,15 +83,20 @@ function MediaElementContent({ element, staticMedia }: { element: EditorialMedia
 
   // The wrapper carries the zoom and pan so the media itself can simply fill it.
   const inner: React.CSSProperties = { objectPosition: objectStyle.objectPosition };
+  const poster = element.type === "video" ? getVideoPoster(src) : undefined;
 
   return (
     <span className="absolute" style={{ width: objectStyle.width, height: objectStyle.height, left: objectStyle.left, top: objectStyle.top }}>
-      {element.type === "video" ? (
+      {element.type === "video" && staticMedia && poster ? (
+        // A still preview does not need a media element at all. Feeds carried a
+        // dozen of them purely to show one frame, and a poster only paints once
+        // the browser gets round to decoding it.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={poster} alt={element.name} draggable={false} className={`h-full w-full ${fitClass}`} style={inner} />
+      ) : element.type === "video" ? (
         <video
           src={src}
-          // A still preview needs a poster, or the element paints black until
-          // something forces a frame to decode.
-          poster={getVideoPoster(src)}
+          poster={poster}
           controls={!staticMedia}
           playsInline
           muted={staticMedia}

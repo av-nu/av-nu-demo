@@ -1,16 +1,35 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Camera } from "lucide-react";
 
-import { VideoReviewCard } from "@/components/social/VideoReviewCard";
-import { useVideoReviews } from "@/hooks/useVideoReviews";
+import { PostCard } from "@/components/post/PostCard";
+import { PostQuickView } from "@/components/post/PostQuickView";
+import { ProductQuickView } from "@/components/home/ProductQuickView";
+import { useToast } from "@/components/ui/Toast";
+import type { Product } from "@/data/mockProducts";
+import { useFeedPosts } from "@/hooks/useFeedPosts";
+import { useListSocial } from "@/hooks/useListSocial";
 import { useSocialStore } from "@/hooks/useSocialStore";
-import { toSocialUser } from "@/lib/social";
+import { getProductById } from "@/lib/data";
+import { isMediaPage } from "@/lib/post";
+import { socialService, toSocialUser } from "@/lib/social";
 
 export default function MomentsPage() {
   const { state, isHydrated } = useSocialStore();
-  const { publishedMoments } = useVideoReviews();
+  const { showToast, ToastContainer } = useToast();
+  const { isLiked, toggleLike } = useListSocial();
+  const [activePostId, setActivePostId] = useState<string>();
+  const [activeProduct, setActiveProduct] = useState<Product>();
+  const feedPosts = useFeedPosts();
+  // Moments are posts whose page is a single photo or video, which is what the
+  // old moment format was; nothing else distinguished them.
+  const publishedMoments = useMemo(
+    () => feedPosts.filter((post) => post.pages.length === 1 && isMediaPage(post.pages[0])),
+    [feedPosts],
+  );
+  const activePost = activePostId ? publishedMoments.find((post) => post.id === activePostId) : undefined;
 
   if (!isHydrated) {
     return <div className="grid gap-6 sm:grid-cols-2"><div className="h-[28rem] animate-pulse rounded-2xl bg-surface/50" /><div className="h-[28rem] animate-pulse rounded-2xl bg-surface/50" /></div>;
@@ -30,13 +49,26 @@ export default function MomentsPage() {
           </div>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-text/60">Images, videos, and small points of view from the av | nu community.</p>
         </div>
-        <Link href="/create/moment" className="rounded-full bg-ember px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-ember/90">Create a moment</Link>
+        <Link href="/create" className="rounded-full bg-ember px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-ember/90">Create a post</Link>
       </header>
 
       {publishedMoments.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {publishedMoments.map((moment) => (
-            <VideoReviewCard key={moment.id} review={moment} author={toSocialUser(moment.authorId, state)} />
+            <PostCard
+              key={moment.id}
+              post={moment}
+              author={toSocialUser(moment.authorId, state)}
+              liked={isLiked(moment.id)}
+              saved={false}
+              onLike={() => toggleLike(moment.id)}
+              onComment={() => setActivePostId(moment.id)}
+              onSave={() => showToast("Saved to your posts")}
+              onShare={() => showToast("Sharing coming soon")}
+              onOpen={() => setActivePostId(moment.id)}
+              onProductClick={(productId) => { const product = getProductById(productId); if (product) setActiveProduct(product); }}
+              onDelete={moment.authorId === "me" ? () => { void socialService.deletePost(moment.id); showToast("Post deleted"); } : undefined}
+            />
           ))}
         </div>
       ) : (
@@ -44,9 +76,27 @@ export default function MomentsPage() {
           <Camera className="mx-auto h-8 w-8 text-text/30" />
           <h2 className="mt-4 font-headline text-2xl text-text">No published moments yet</h2>
           <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-text/55">Share an image, video, or thought and it will appear here.</p>
-          <Link href="/create/moment" className="mt-5 inline-flex rounded-full bg-text px-5 py-3 text-sm font-semibold text-bg">Create a moment</Link>
+          <Link href="/create" className="mt-5 inline-flex rounded-full bg-text px-5 py-3 text-sm font-semibold text-bg">Create a post</Link>
         </div>
       )}
+
+      {activePost && (
+        <PostQuickView
+          post={activePost}
+          author={toSocialUser(activePost.authorId, state)}
+          liked={isLiked(activePost.id)}
+          saved={false}
+          onLike={() => toggleLike(activePost.id)}
+          onSave={() => showToast("Saved to your posts")}
+          onShare={() => showToast("Sharing coming soon")}
+          onProductClick={(productId) => { const product = getProductById(productId); if (product) setActiveProduct(product); }}
+          onClose={() => setActivePostId(undefined)}
+        />
+      )}
+      {activeProduct && (
+        <ProductQuickView product={activeProduct} onClose={() => setActiveProduct(undefined)} onToast={showToast} />
+      )}
+      <ToastContainer />
     </div>
   );
 }
