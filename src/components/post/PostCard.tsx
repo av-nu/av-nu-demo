@@ -68,7 +68,7 @@ export function PostCard({
       </div>
 
       <button type="button" onClick={onOpen} className="relative block w-full" aria-label="Open post">
-        <EditorialRenderer design={current.design} />
+        <EditorialRenderer design={current.design} staticMedia />
         {showPins && <PostPins pins={current.pins} />}
         {post.pages.length > 1 && (
           <span className="absolute right-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-semibold text-white">

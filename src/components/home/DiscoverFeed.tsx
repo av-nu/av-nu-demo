@@ -64,7 +64,7 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
   const { isLiked, toggleLike } = useListSocial();
   const { groups, saveToDefault } = useSavedPostGroups();
   const { followedBrands, followBrand, unfollowBrand } = useSocialGraph();
-  const { state } = useSocialStore();
+  const { state, isHydrated } = useSocialStore();
   const feedPosts = useFeedPosts();
   const currentUser = toSocialUser("me", state);
   const innerIds = useMemo(() => new Set(contacts.filter((contact) => contact.circle === "inner").map((contact) => contact.id)), []);
@@ -132,7 +132,7 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
             <div className="flex items-center gap-4 overflow-x-auto pb-1">
               <Link href="/connections" className="flex shrink-0 flex-col items-center gap-2"><span className="flex h-16 w-16 items-center justify-center rounded-full border border-divider bg-pink/10 text-burgundy"><Users className="h-5 w-5" /></span><span className="text-[10px] font-semibold text-text/60">My Circle</span></Link>
               {contacts.filter((contact) => contact.circle === "inner").slice(0, 6).map((contact) => <Link key={contact.id} href={`/u/${contact.id}`} className="flex shrink-0 flex-col items-center gap-2"><Avatar user={contact} size="lg" className="h-16 w-16 border-[3px] border-accent/60 p-0.5 text-xs" /><span className="max-w-16 truncate text-[10px] text-text/60">{contact.handle}</span></Link>)}
-              {mockBrands.slice(0, 4).map((brand) => { const isFollowing = followedBrands.includes(brand.id); return <div key={brand.id} className="flex shrink-0 flex-col items-center gap-2"><Link href={`/brand/${brand.id}`} className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-[3px] border-pink/60 bg-white p-2"><Image src={brand.logoMark} alt={brand.name} width={48} height={48} className="h-full w-full object-contain" /></Link><button type="button" onClick={() => isFollowing ? unfollowBrand(brand.id) : followBrand(brand.id)} className={`max-w-20 truncate text-[10px] font-semibold ${isFollowing ? "text-accent" : "text-text/60"}`}>{isFollowing ? "Following" : brand.name}</button></div>; })}
+              {mockBrands.slice(0, 4).map((brand) => { const isFollowing = isHydrated && followedBrands.includes(brand.id); return <div key={brand.id} className="flex shrink-0 flex-col items-center gap-2"><Link href={`/brand/${brand.id}`} className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-[3px] border-pink/60 bg-white p-2"><Image src={brand.logoMark} alt={brand.name} width={48} height={48} className="h-full w-full object-contain" /></Link><button type="button" onClick={() => isFollowing ? unfollowBrand(brand.id) : followBrand(brand.id)} className={`max-w-20 truncate text-[10px] font-semibold ${isFollowing ? "text-accent" : "text-text/60"}`}>{isFollowing ? "Following" : brand.name}</button></div>; })}
             </div>
           </section>
         )}

@@ -42,7 +42,7 @@ function maskStyle(mask: EditorialImageMask, borderRadius: number, canvasWidth: 
  * Media elements resolve their ref through the media store, so this has to be a
  * component rather than a plain render function.
  */
-function MediaElementContent({ element }: { element: EditorialMediaElement }) {
+function MediaElementContent({ element, staticMedia }: { element: EditorialMediaElement; staticMedia?: boolean }) {
   const ref = element.type === "product"
     ? mockProducts.find((product) => product.id === element.productId)?.images[0]
     : element.src;
@@ -82,7 +82,7 @@ function MediaElementContent({ element }: { element: EditorialMediaElement }) {
   return (
     <span className="absolute" style={{ width: objectStyle.width, height: objectStyle.height, left: objectStyle.left, top: objectStyle.top }}>
       {element.type === "video" ? (
-        <video src={src} controls playsInline className={`h-full w-full ${fitClass}`} style={inner} />
+        <video src={src} controls={!staticMedia} playsInline muted={staticMedia} preload="metadata" className={`h-full w-full ${fitClass} ${staticMedia ? "pointer-events-none" : ""}`} style={inner} />
       ) : isUnoptimizableSrc(src) ? (
         // Object URLs and data URLs cannot go through next/image's loader.
         // eslint-disable-next-line @next/next/no-img-element
@@ -102,9 +102,9 @@ function MediaElementContent({ element }: { element: EditorialMediaElement }) {
   );
 }
 
-function elementContent(element: EditorialElement, canvasWidth: number) {
+function elementContent(element: EditorialElement, canvasWidth: number, staticMedia?: boolean) {
   if (isEditorialMediaElement(element)) {
-    return <MediaElementContent element={element} />;
+    return <MediaElementContent element={element} staticMedia={staticMedia} />;
   }
 
   if (element.type === "text") {
@@ -224,9 +224,11 @@ type EditorialRendererProps = {
   onElementSelect?: (elementId: string) => void;
   onHandlePointerDown?: (event: ReactPointerEvent<HTMLButtonElement>, elementId: string, handle: "resize" | "rotate") => void;
   onCanvasPointerDown?: (event: ReactPointerEvent<HTMLDivElement>) => void;
+  /** Renders video as a still preview: no controls, and not hit-testable. */
+  staticMedia?: boolean;
 };
 
-export function EditorialRenderer({ design, selectedId, interactive = false, productLinks = false, guides, canvasRef, onElementPointerDown, onElementSelect, onHandlePointerDown, onCanvasPointerDown }: EditorialRendererProps) {
+export function EditorialRenderer({ design, selectedId, interactive = false, productLinks = false, staticMedia = false, guides, canvasRef, onElementPointerDown, onElementSelect, onHandlePointerDown, onCanvasPointerDown }: EditorialRendererProps) {
   const dimensions = EDITORIAL_FORMATS[design.format];
   const rendererId = useId().replace(/:/g, "");
   const elements = [...design.elements].sort((a, b) => a.zIndex - b.zIndex);
@@ -276,7 +278,7 @@ export function EditorialRenderer({ design, selectedId, interactive = false, pro
             onFocus={() => onElementSelect?.(element.id)}
           >
             {maskPath && <svg aria-hidden="true" className="pointer-events-none absolute h-0 w-0"><defs><clipPath id={maskId} clipPathUnits="objectBoundingBox"><path d={maskPath} /></clipPath></defs></svg>}
-            <div className="relative h-full w-full overflow-hidden" style={imageStyle}>{elementContent(element, dimensions.width)}</div>
+            <div className="relative h-full w-full overflow-hidden" style={imageStyle}>{elementContent(element, dimensions.width, staticMedia)}</div>
             {productLinks && element.type === "product" && <Link href={`/product/${element.productId}`} aria-label={`Shop ${element.name}`} className="absolute inset-0 z-[1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" />}
             {/* A slot's frame is owned by the layout, so it offers reframing
                 rather than resize and rotate handles. */}
