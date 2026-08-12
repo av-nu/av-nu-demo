@@ -2,11 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Move, Plus, RotateCw } from "lucide-react";
+import { ImageOff, Move, Plus, RotateCw } from "lucide-react";
 import { useId, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 
 import { mockProducts } from "@/data/mockProducts";
 import { isUnoptimizableSrc, useMediaSrc } from "@/lib/media/useMediaSrc";
+import { getVideoPoster } from "@/lib/utils";
 import { EDITORIAL_FORMATS, EDITORIAL_VECTOR_PATHS, editorialFontStack, isEditorialFramedElement, isEditorialMediaElement, isSlotElement, type EditorialElement, type EditorialMediaElement, type EditorialImageMask, type EditorialPageDesign, type EditorialSnapGuides } from "@/lib/editorial";
 
 /** Applies an alpha to a hex colour, leaving other notations untouched. */
@@ -48,11 +49,15 @@ function MediaElementContent({ element, staticMedia }: { element: EditorialMedia
     : element.src;
   const { src, status } = useMediaSrc(ref);
 
-  if (status === "loading") return <div className="h-full w-full animate-pulse bg-black/5" />;
+  // Both states have to read on any backdrop. A media page's background is
+  // black, where the old light-on-light treatment was simply invisible — an
+  // unrecoverable upload looked like an empty black post.
+  if (status === "loading") return <div className="h-full w-full animate-pulse bg-white/10" />;
   if (!src) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-black/5 px-2 text-center text-[10px] leading-tight text-black/40">
-        Media unavailable
+      <div className="flex h-full w-full flex-col items-center justify-center gap-[2cqw] bg-midnight/75 px-3 text-center text-white/80">
+        <ImageOff style={{ width: "7cqw", height: "7cqw" }} aria-hidden="true" />
+        <span className="font-semibold leading-tight" style={{ fontSize: "3cqw" }}>Media unavailable</span>
       </div>
     );
   }
@@ -82,7 +87,18 @@ function MediaElementContent({ element, staticMedia }: { element: EditorialMedia
   return (
     <span className="absolute" style={{ width: objectStyle.width, height: objectStyle.height, left: objectStyle.left, top: objectStyle.top }}>
       {element.type === "video" ? (
-        <video src={src} controls={!staticMedia} playsInline muted={staticMedia} preload="metadata" className={`h-full w-full ${fitClass} ${staticMedia ? "pointer-events-none" : ""}`} style={inner} />
+        <video
+          src={src}
+          // A still preview needs a poster, or the element paints black until
+          // something forces a frame to decode.
+          poster={getVideoPoster(src)}
+          controls={!staticMedia}
+          playsInline
+          muted={staticMedia}
+          preload="metadata"
+          className={`h-full w-full ${fitClass} ${staticMedia ? "pointer-events-none" : ""}`}
+          style={inner}
+        />
       ) : isUnoptimizableSrc(src) ? (
         // Object URLs and data URLs cannot go through next/image's loader.
         // eslint-disable-next-line @next/next/no-img-element

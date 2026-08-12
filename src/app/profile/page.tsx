@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -18,21 +19,19 @@ import { PostCard } from "@/components/post/PostCard";
 import { PostQuickView } from "@/components/post/PostQuickView";
 import { useListSocial } from "@/hooks/useListSocial";
 import { ProfileHeader } from "@/components/social/ProfileHeader";
-import { ProfilePostGrid, type ProfilePostFilter } from "@/components/social/ProfilePostGrid";
+import { ProfilePostGrid } from "@/components/social/ProfilePostGrid";
 import { EditProfileDialog } from "@/components/social/EditProfileDialog";
-import { AddPostMenu } from "@/components/social/AddPostMenu";
 import { FindPeopleDialog } from "@/components/social/FindPeopleDialog";
 import { SavedLooksSection } from "@/components/social/SavedLooksSection";
 
 export default function ProfilePage() {
+  const router = useRouter();
   const { state, isHydrated } = useSocialStore();
   const { counts, innerCircle, followedBrands, unfollowBrand } = useSocialGraph();
   const { showToast, ToastContainer } = useToast();
 
   const [editing, setEditing] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [findingPeople, setFindingPeople] = useState(false);
-  const [postFilter, setPostFilter] = useState<ProfilePostFilter>("all");
   const [activePostId, setActivePostId] = useState<string>();
   const [activeProduct, setActiveProduct] = useState<Product>();
   const { isLiked, toggleLike } = useListSocial();
@@ -76,7 +75,7 @@ export default function ProfilePage() {
       >
         <button
           type="button"
-          onClick={() => setUploading(true)}
+          onClick={() => router.push("/create")}
           className="inline-flex items-center gap-1.5 rounded-full bg-navy px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-navy/90"
         >
           <Plus className="h-4 w-4" />
@@ -163,31 +162,8 @@ export default function ProfilePage() {
       <section>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-headline text-lg tracking-tight text-text">Your posts</h2>
-          <div className="flex rounded-full border border-divider/60 bg-surface/40 p-1">
-            {(["all", "moment", "guide", "list"] as ProfilePostFilter[]).map((filter) => <button key={filter} type="button" onClick={() => setPostFilter(filter)} className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize transition-colors ${postFilter === filter ? "bg-text text-bg" : "text-text/50 hover:text-text"}`}>{filter === "all" ? "All" : filter === "moment" ? "Moments" : `${filter}s`}</button>)}
-          </div>
         </div>
-        {myPosts.length > 0 && (
-          // Posts made in the composer, newest first, ahead of legacy content.
-          <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {myPosts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                author={me}
-                liked={isLiked(post.id)}
-                saved={false}
-                onLike={() => toggleLike(post.id)}
-                onComment={() => undefined}
-                onSave={() => undefined}
-                onShare={() => showToast("Sharing coming soon")}
-                onOpen={() => setActivePostId(post.id)}
-                onDelete={() => { void socialService.deletePost(post.id); showToast("Post deleted"); }}
-              />
-            ))}
-          </div>
-        )}
-        <ProfilePostGrid user={me} onToast={showToast} filter={postFilter} />
+        <ProfilePostGrid user={me} onToast={showToast} />
       </section>
 
       {activePost && (
@@ -208,9 +184,6 @@ export default function ProfilePage() {
       )}
       {editing && (
         <EditProfileDialog profile={profile} onClose={() => setEditing(false)} onToast={showToast} />
-      )}
-      {uploading && (
-        <AddPostMenu onClose={() => setUploading(false)} onToast={showToast} />
       )}
       {findingPeople && (
         <FindPeopleDialog onClose={() => setFindingPeople(false)} onToast={showToast} />
