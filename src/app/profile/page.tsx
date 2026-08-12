@@ -37,7 +37,12 @@ export default function ProfilePage() {
   const [activeProduct, setActiveProduct] = useState<Product>();
   const { isLiked, toggleLike } = useListSocial();
   const activePost = activePostId ? state.posts.find((post) => post.id === activePostId) : undefined;
-  const myPosts = useMemo(() => state.posts.filter((post) => post.authorId === "me").sort((a, b) => b.createdAt - a.createdAt), [state.posts]);
+  // Withheld until hydration for the same reason as the feed: stored posts are
+  // not part of the server-rendered markup.
+  const myPosts = useMemo(
+    () => (isHydrated ? state.posts.filter((post) => post.authorId === "me").sort((a, b) => b.createdAt - a.createdAt) : []),
+    [isHydrated, state.posts],
+  );
 
   if (!isHydrated) {
     return (

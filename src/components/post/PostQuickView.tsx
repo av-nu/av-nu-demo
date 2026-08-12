@@ -46,7 +46,7 @@ export function PostQuickView({
 }) {
   const [page, setPage] = useState(post.coverPageIndex);
   const [draft, setDraft] = useState("");
-  const [productsOpen, setProductsOpen] = useState(true);
+  const [productsOpen, setProductsOpen] = useState(false);
   const current = post.pages[Math.min(page, post.pages.length - 1)];
   const products = post.productIds.map(getProductById).filter(Boolean) as NonNullable<ReturnType<typeof getProductById>>[];
 
@@ -123,17 +123,22 @@ export function PostQuickView({
 
                 {products.length > 0 && (
                   <div>
+                    {/* Reads as the post's main call to action rather than a
+                        section label, since shopping is the point of the post. */}
                     <button
                       type="button"
                       onClick={() => setProductsOpen((open) => !open)}
                       aria-expanded={productsOpen}
-                      className="mb-2 flex w-full items-center gap-2"
+                      className="mb-2 flex w-full items-center gap-2.5 rounded-xl border border-navy/25 bg-navy/[0.06] px-3 py-2.5 text-left transition-colors hover:border-navy/40 hover:bg-navy/10"
                     >
-                      <ShoppingBag className="h-3.5 w-3.5 shrink-0 text-midnight/50" />
-                      <span className="min-w-0 flex-1 text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-midnight/40">
-                        Shop this post · {products.length}
+                      <ShoppingBag className="h-4 w-4 shrink-0 text-navy" />
+                      <span className="min-w-0 flex-1 text-sm font-semibold text-navy">
+                        Shop this post
                       </span>
-                      <ChevronDown className={`h-4 w-4 shrink-0 text-midnight/40 transition-transform ${productsOpen ? "rotate-180" : ""}`} />
+                      <span className="shrink-0 rounded-full bg-navy px-2 py-0.5 text-[10px] font-bold text-white">
+                        {products.length}
+                      </span>
+                      <ChevronDown className={`h-4 w-4 shrink-0 text-navy/70 transition-transform ${productsOpen ? "rotate-180" : ""}`} />
                     </button>
                     <ul className={`min-w-0 space-y-2 ${productsOpen ? "" : "hidden"}`}>
                       {products.map((product) => (

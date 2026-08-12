@@ -20,7 +20,7 @@ const LEGACY_EPOCH = 1_735_600_000_000;
  * the feed has a single rendering path. Newest first.
  */
 export function useFeedPosts(): Post[] {
-  const { state } = useSocialStore();
+  const { state, isHydrated } = useSocialStore();
   const { publishedMoments } = useVideoReviews();
 
   const legacy = useMemo(() => {
@@ -32,10 +32,16 @@ export function useFeedPosts(): Post[] {
     return [...videos, ...lists];
   }, []);
 
-  const moments = useMemo(() => publishedMoments.map(videoReviewToPost), [publishedMoments]);
+  // Anything read from local storage is withheld until after hydration. The
+  // server renders the seed state, so including stored posts in the first paint
+  // makes the markup disagree with the server's and React reports a mismatch.
+  const moments = useMemo(
+    () => (isHydrated ? publishedMoments.map(videoReviewToPost) : []),
+    [isHydrated, publishedMoments],
+  );
 
   // The author's own posts take precedence over a seed sharing an id.
-  const authored = state.posts ?? [];
+  const authored = isHydrated ? state.posts ?? [] : [];
 
   return useMemo(() => {
     const byId = new Map<string, Post>();
