@@ -52,6 +52,12 @@ export type Post = {
   coverPageIndex: number;
   /** Derived union of pinned and placed product ids across all pages. */
   productIds: string[];
+  /**
+   * Products attached to the post without a position on the artwork. Pins need
+   * coordinates someone actually chose; inventing them scatters labels over
+   * footage they do not describe.
+   */
+  linkedProductIds?: string[];
   caption: string;
   visibility: FaveVisibility;
   likes: number;
@@ -138,8 +144,8 @@ export function createMediaPage(ref: string, kind: "image" | "video", format: Ed
 // --- derived data ------------------------------------------------------------
 
 /** Product ids placed on the canvas plus those pinned, in page order. */
-export function postProductIds(pages: PostPage[]): string[] {
-  const ids: string[] = [];
+export function postProductIds(pages: PostPage[], linked: string[] = []): string[] {
+  const ids: string[] = [...new Set(linked)];
   for (const page of pages) {
     for (const id of editorialProductIds(page.design)) {
       if (!ids.includes(id)) ids.push(id);
@@ -253,7 +259,7 @@ export function normalizePost(post: Post): Post {
   const coverPageIndex = Number.isInteger(post.coverPageIndex) && post.coverPageIndex >= 0 && post.coverPageIndex < pages.length
     ? post.coverPageIndex
     : 0;
-  const productIds = postProductIds(pages);
+  const productIds = postProductIds(pages, post.linkedProductIds ?? []);
 
   const pagesUnchanged = pages.length === post.pages?.length && pages.every((page, index) => page === post.pages[index]);
   const productIdsUnchanged = productIds.length === post.productIds?.length && productIds.every((id, index) => id === post.productIds[index]);

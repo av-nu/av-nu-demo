@@ -39,11 +39,13 @@ describe("videoReviewToPost", () => {
     expect(post.pages[0].design.elements[0].type).toBe("video");
   });
 
-  it("turns a tagged product into a pin so the post stays shoppable", () => {
+  // Pins need coordinates the author chose. Nothing records where the product
+  // appears in seeded footage, so it is linked instead of pinned somewhere
+  // arbitrary.
+  it("links a tagged product without pinning it to the footage", () => {
     const post = videoReviewToPost(buildReview({ mediaUrl: "/img.jpg", mediaType: "image", productId: "p-7" }));
 
-    expect(post.pages[0].pins).toHaveLength(1);
-    expect(post.pages[0].pins[0].productId).toBe("p-7");
+    expect(post.pages[0].pins).toEqual([]);
     expect(post.productIds).toEqual(["p-7"]);
   });
 
@@ -67,13 +69,15 @@ describe("videoReviewToPost", () => {
 });
 
 describe("spotlightRowToPost", () => {
-  it("pins the featured product plus its supporting grid", () => {
+  it("links the featured product plus its supporting grid, unpinned", () => {
     const [row] = buildSpotlightRows(1);
     const post = spotlightRowToPost(row, "c-mara");
 
     expect(post.authorId).toBe("c-mara");
     expect(post.pages).toHaveLength(1);
-    expect(post.pages[0].pins.length).toBeGreaterThan(1);
+    // Labels scattered over video at invented positions describe nothing.
+    expect(post.pages[0].pins).toEqual([]);
+    expect(post.productIds.length).toBeGreaterThan(1);
     // The featured product leads the derived list.
     expect(post.productIds[0]).toBe(row.featured.id);
   });

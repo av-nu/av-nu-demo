@@ -296,3 +296,20 @@ describe("isMediaPage", () => {
     expect(isMediaPage(withText)).toBe(false);
   });
 });
+
+describe("linked products", () => {
+  it("includes products linked without a position on the artwork", () => {
+    const post = buildPost({ pages: [createMediaPage("idb:video-1", "video", "portrait")], linkedProductIds: ["p-1", "p-2"] });
+
+    expect(post.productIds).toEqual(["p-1", "p-2"]);
+    expect(post.pages[0].pins).toEqual([]);
+  });
+
+  it("does not duplicate a product that is also pinned or placed", () => {
+    const page = createPostPage(applyEditorialTemplate(["p-1"], "T", "fashion-cover"));
+    const post = buildPost({ pages: [page], linkedProductIds: ["p-1", "p-9"] });
+
+    expect(post.productIds.filter((id) => id === "p-1")).toHaveLength(1);
+    expect(post.productIds).toContain("p-9");
+  });
+});

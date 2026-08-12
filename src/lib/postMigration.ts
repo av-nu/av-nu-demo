@@ -20,12 +20,10 @@ import {
 import {
   createMediaPage,
   createPostPage,
-  makePostPinId,
   normalizePost,
   postProductIds,
   type Post,
   type PostPage,
-  type PostProductPin,
 } from "@/lib/post";
 import { MISSING_MEDIA_REF, isExpiredMediaRef, isMissingMediaRef } from "@/lib/media/MediaStore";
 
@@ -47,17 +45,14 @@ export function videoReviewToPost(review: VideoReview): Post {
   const url = review.mediaUrl ?? review.videoUrl;
   const kind: "image" | "video" = review.mediaType === "image" ? "image" : "video";
   const page = createMediaPage(mediaRefFor(url), kind, "portrait");
-  const pins: PostProductPin[] = review.productId
-    ? [{ id: makePostPinId(), productId: review.productId, x: 50, y: 82 }]
-    : [];
-
   return normalizePost({
     id: review.id,
     authorId: review.authorId,
-    pages: [{ ...page, pins }],
+    pages: [page],
     format: "portrait",
     coverPageIndex: 0,
     productIds: [],
+    linkedProductIds: review.productId ? [review.productId] : [],
     caption: review.caption,
     visibility: review.visibility,
     likes: review.likes,
@@ -70,23 +65,19 @@ export function videoReviewToPost(review: VideoReview): Post {
 
 export function spotlightRowToPost(row: SpotlightRow, authorId: string, createdAt = Date.now()): Post {
   const page = createMediaPage(mediaRefFor(row.videoUrl), "video", "portrait");
-  // The featured product leads, then the supporting grid — spread down the page
-  // so the pins do not stack on top of each other.
+  // Linked, not pinned. Seeded footage carries no record of where each product
+  // appears, and scattering labels at invented coordinates covers the video with
+  // tags that describe nothing.
   const tagged = [row.featured, ...row.products].slice(0, 5);
-  const pins: PostProductPin[] = tagged.map((product, index) => ({
-    id: makePostPinId(),
-    productId: product.id,
-    x: index === 0 ? 50 : 24 + (index - 1) * 18,
-    y: index === 0 ? 78 : 34 + ((index - 1) % 2) * 14,
-  }));
 
   return normalizePost({
     id: row.id,
     authorId,
-    pages: [{ ...page, pins }],
+    pages: [page],
     format: "portrait",
     coverPageIndex: 0,
     productIds: [],
+    linkedProductIds: tagged.map((product) => product.id),
     caption: row.title,
     visibility: "public",
     likes: 0,
