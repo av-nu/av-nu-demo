@@ -11,6 +11,8 @@ import type { Post } from "@/lib/post";
 import { useSocialStore } from "./useSocialStore";
 import { useVideoReviews } from "./useVideoReviews";
 
+const LEGACY_EPOCH = 1_735_600_000_000;
+
 /**
  * Every post the feed can show, as one shape.
  *
@@ -23,7 +25,10 @@ export function useFeedPosts(): Post[] {
 
   const legacy = useMemo(() => {
     const videos = buildSpotlightRows(8).map((row, index) => spotlightRowToPost(row, contacts[index % contacts.length]?.id ?? "c-mara"));
-    const lists = communityLists.map((list, index) => communityListToPost(list, Date.now() - index * 5_400_000));
+    // A fixed epoch, not Date.now(): computing timestamps during render gives the
+    // server and the client different values, which reorders the feed and trips
+    // a hydration mismatch.
+    const lists = communityLists.map((list, index) => communityListToPost(list, LEGACY_EPOCH - index * 5_400_000));
     return [...videos, ...lists];
   }, []);
 

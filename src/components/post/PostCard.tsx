@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Trash2 } from "lucide-react";
 
 import { EditorialRenderer } from "@/components/looks/editorial/EditorialRenderer";
 import { PostPins } from "@/components/post/PostPins";
@@ -32,6 +33,7 @@ export function PostCard({
   onOpen,
   onProductClick,
   showPins = false,
+  onDelete,
 }: {
   post: Post;
   author: Pick<SocialUser, "name" | "initials" | "color" | "avatarUrl">;
@@ -45,6 +47,8 @@ export function PostCard({
   onProductClick?: (productId: string) => void;
   /** Tags crowd a feed-sized card; they are meant for the opened post. */
   showPins?: boolean;
+  /** Provided only for the author's own posts. */
+  onDelete?: () => void;
 }) {
   const [page, setPage] = useState(post.coverPageIndex);
   const current = post.pages[Math.min(page, post.pages.length - 1)];
@@ -55,6 +59,16 @@ export function PostCard({
       <div className="flex items-center gap-3 px-3 py-3">
         <Avatar user={author} size="sm" className="h-10 w-10 text-xs" />
         <p className="min-w-0 flex-1 truncate text-sm font-semibold text-midnight">{author.name}</p>
+        {onDelete && (
+          <button
+            type="button"
+            onClick={onDelete}
+            aria-label="Delete post"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-midnight/45 transition-colors hover:bg-surface hover:text-pink"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       <button type="button" onClick={onOpen} className="relative block w-full" aria-label="Open post">

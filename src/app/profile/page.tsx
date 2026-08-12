@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -11,6 +11,10 @@ import { mockBrands } from "@/data/mockBrands";
 import { useSocialGraph } from "@/hooks/useSocialGraph";
 import { useSocialStore } from "@/hooks/useSocialStore";
 import { socialService, toSocialUser } from "@/lib/social";
+import { PostCard } from "@/components/post/PostCard";
+import { PostQuickView } from "@/components/post/PostQuickView";
+import { useListSocial } from "@/hooks/useListSocial";
+import type { Post } from "@/lib/post";
 import { ProfileHeader } from "@/components/social/ProfileHeader";
 import { ProfilePostGrid, type ProfilePostFilter } from "@/components/social/ProfilePostGrid";
 import { EditProfileDialog } from "@/components/social/EditProfileDialog";
@@ -27,6 +31,9 @@ export default function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [findingPeople, setFindingPeople] = useState(false);
   const [postFilter, setPostFilter] = useState<ProfilePostFilter>("all");
+  const [activePost, setActivePost] = useState<Post>();
+  const { isLiked, toggleLike } = useListSocial();
+  const myPosts = useMemo(() => state.posts.filter((post) => post.authorId === "me").sort((a, b) => b.createdAt - a.createdAt), [state.posts]);
 
   if (!isHydrated) {
     return (
@@ -151,9 +158,41 @@ export default function ProfilePage() {
             {(["all", "moment", "guide", "list"] as ProfilePostFilter[]).map((filter) => <button key={filter} type="button" onClick={() => setPostFilter(filter)} className={`rounded-full px-3 py-1.5 text-xs font-semibold capitalize transition-colors ${postFilter === filter ? "bg-text text-bg" : "text-text/50 hover:text-text"}`}>{filter === "all" ? "All" : filter === "moment" ? "Moments" : `${filter}s`}</button>)}
           </div>
         </div>
+        {myPosts.length > 0 && (
+          // Posts made in the composer, newest first, ahead of legacy content.
+          <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {myPosts.map((post) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                author={me}
+                liked={isLiked(post.id)}
+                saved={false}
+                onLike={() => toggleLike(post.id)}
+                onComment={() => undefined}
+                onSave={() => undefined}
+                onShare={() => showToast("Sharing coming soon")}
+                onOpen={() => setActivePost(post)}
+                onDelete={() => { void socialService.deletePost(post.id); showToast("Post deleted"); }}
+              />
+            ))}
+          </div>
+        )}
         <ProfilePostGrid user={me} onToast={showToast} filter={postFilter} />
       </section>
 
+      {activePost && (
+        <PostQuickView
+          post={activePost}
+          author={me}
+          liked={isLiked(activePost.id)}
+          saved={false}
+          onLike={() => toggleLike(activePost.id)}
+          onSave={() => undefined}
+          onShare={() => showToast("Sharing coming soon")}
+          onClose={() => setActivePost(undefined)}
+        />
+      )}
       {editing && (
         <EditProfileDialog profile={profile} onClose={() => setEditing(false)} onToast={showToast} />
       )}

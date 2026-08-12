@@ -1,8 +1,10 @@
 "use client";
 
-import { AlignCenter, AlignLeft, AlignRight, Bold, Italic, Plus } from "lucide-react";
+import { useState } from "react";
 
-import { ColorSwatches, POST_COLORS, PostToolPanel, ToolFieldLabel } from "@/components/post/tools/PostToolPanel";
+import { AlignCenter, AlignLeft, AlignRight, Bold, Highlighter, Italic, Palette, Plus, Type as TypeIcon } from "lucide-react";
+
+import { ColorSwatches, POST_COLORS, PostToolPanel, ToolFieldLabel, ToolSection } from "@/components/post/tools/PostToolPanel";
 import {
   EDITORIAL_HIGHLIGHT_STYLES,
   FONT_CATALOG,
@@ -12,6 +14,8 @@ import {
   type EditorialTextElement,
 } from "@/lib/editorial";
 import { cn } from "@/lib/utils";
+
+type Section = "font" | "style" | "color" | "highlight";
 
 /**
  * Typography controls. With no text selected the panel offers to add some;
@@ -28,6 +32,8 @@ export function TextTool({
   onPatch: (patch: Partial<EditorialTextElement>) => void;
   onClose: () => void;
 }) {
+  const [section, setSection] = useState<Section | undefined>("font");
+
   if (!selected) {
     return (
       <PostToolPanel title="Text" onClose={onClose}>
@@ -69,8 +75,8 @@ export function TextTool({
         />
       </label>
 
-      <div className="mt-3">
-        <ToolFieldLabel>Font</ToolFieldLabel>
+      <ToolSection label="Font" icon={<TypeIcon className="h-3.5 w-3.5" />} open={section === "font"} onToggle={() => setSection(section === "font" ? undefined : "font")}>
+      <div>
         <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {FONT_CATALOG.map((font) => (
             <button
@@ -90,7 +96,10 @@ export function TextTool({
         </div>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-3">
+      </ToolSection>
+
+      <ToolSection label="Size & style" icon={<Bold className="h-3.5 w-3.5" />} open={section === "style"} onToggle={() => setSection(section === "style" ? undefined : "style")}>
+      <div className="grid grid-cols-2 gap-3">
         <label className="block">
           <ToolFieldLabel>Size</ToolFieldLabel>
           <input
@@ -130,13 +139,14 @@ export function TextTool({
         </div>
       </div>
 
-      <div className="mt-3">
-        <ToolFieldLabel>Text color</ToolFieldLabel>
-        <ColorSwatches value={selected.color} colors={POST_COLORS} onChange={(color) => onPatch({ color })} />
-      </div>
+      </ToolSection>
 
-      <div className="mt-3">
-        <ToolFieldLabel>Highlight</ToolFieldLabel>
+      <ToolSection label="Colour" icon={<Palette className="h-3.5 w-3.5" />} open={section === "color"} onToggle={() => setSection(section === "color" ? undefined : "color")}>
+        <ColorSwatches value={selected.color} colors={POST_COLORS} onChange={(color) => onPatch({ color })} />
+      </ToolSection>
+
+      <ToolSection label="Background" icon={<Highlighter className="h-3.5 w-3.5" />} open={section === "highlight"} onToggle={() => setSection(section === "highlight" ? undefined : "highlight")}>
+      <div>
         <div className="mb-2 flex gap-1.5">
           {EDITORIAL_HIGHLIGHT_STYLES.map((style) => (
             <button
@@ -180,6 +190,7 @@ export function TextTool({
           </>
         )}
       </div>
+      </ToolSection>
     </PostToolPanel>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ImagePlus, LayoutTemplate, Minus, Redo2, Undo2, X, ZoomIn } from "lucide-react";
+import { ArrowRight, ImagePlus, LayoutTemplate, Minus, Redo2, ShoppingBag, Undo2, X, ZoomIn } from "lucide-react";
 
 import { useCanvasDocument } from "@/components/canvas/useCanvasDocument";
 import { EditorialRenderer } from "@/components/looks/editorial/EditorialRenderer";
@@ -517,6 +517,7 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
             </div>
           ) : (
             <StartChoice
+              onProducts={() => { setStarted(true); setActiveTool("add"); }}
               onUpload={() => uploadRef.current?.click()}
               onCollage={startCollage}
             />
@@ -605,7 +606,7 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
       )}
 
       {started && activeTool === "add" && (
-        <AddProductTool onAdd={addProduct} onAddMany={addProducts} onClose={() => { setPendingSlotId(undefined); setActiveTool(undefined); }} />
+        <AddProductTool onAdd={addProduct} onAddMany={addProducts} tagsOnly={isMediaPage(activePage)} onClose={() => { setPendingSlotId(undefined); setActiveTool(undefined); }} />
       )}
 
       {started && activeTool && !HANDLED_TOOLS.has(activeTool) && (
@@ -660,14 +661,20 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
   );
 }
 
-function StartChoice({ onUpload, onCollage }: { onUpload: () => void; onCollage: () => void }) {
+function StartChoice({ onProducts, onUpload, onCollage }: { onProducts: () => void; onUpload: () => void; onCollage: () => void }) {
   return (
     <div className="w-full max-w-sm text-center">
       <h1 className="font-headline text-3xl tracking-tight text-midnight">Start your post</h1>
       <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-midnight/55">
-        Share a photo or video, or build a collage from products you love.
+        Add products you love, a photo from your device, or build a collage.
       </p>
       <div className="mt-6 grid gap-3">
+        <StartOption
+          onClick={onProducts}
+          icon={<ShoppingBag className="h-5 w-5" />}
+          title="Add products"
+          description="From your faves, or search the catalog"
+        />
         <StartOption
           onClick={onUpload}
           icon={<ImagePlus className="h-6 w-6" />}

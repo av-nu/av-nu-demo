@@ -25,11 +25,14 @@ const SEARCH_LIMIT = 40;
 export function AddProductTool({
   onAdd,
   onAddMany,
+  tagsOnly = false,
   onClose,
 }: {
   onAdd: (productId: string) => void;
   /** Adds a batch at once; linking several products is the common case. */
   onAddMany?: (productIds: string[]) => void;
+  /** True when the page is a photo, where products are tagged rather than placed. */
+  tagsOnly?: boolean;
   onClose: () => void;
 }) {
   const { favorites } = useFavorites();
@@ -91,6 +94,11 @@ export function AddProductTool({
         </button>
       ) : undefined}
     >
+      <p className="mb-2 text-[11px] leading-relaxed text-midnight/50">
+        {tagsOnly
+          ? "Tags products onto the photo. Tagged products show in the post's shop row."
+          : "Places the product's imagery on the canvas and tags it, so it shows in the post's shop row."}
+      </p>
       <div className="mb-3 flex gap-2">
         <SourceTab active={source === "faves"} onClick={() => setSource("faves")} icon={<Heart className="h-3.5 w-3.5" />}>
           Faves

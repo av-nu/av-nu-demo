@@ -97,6 +97,13 @@ export function spotlightRowToPost(row: SpotlightRow, authorId: string, createdA
 
 // --- community lists (guides / lists) ----------------------------------------
 
+/** Deterministic pick, so conversion is stable between renders and reloads. */
+function stableIndex(seed: string, length: number): number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  return hash % length;
+}
+
 /** Maps a list tile template onto the closest canvas template. */
 function templateForListPage(page: ListPage, format: "standard" | "featured"): EditorialTemplateId {
   if (format === "featured") return "featured";
@@ -104,7 +111,11 @@ function templateForListPage(page: ListPage, format: "standard" | "featured"): E
   if (tiles <= 1) return "hero-stack";
   if (tiles === 2) return "split-two";
   if (tiles === 3) return "triptych";
-  return "catalog";
+  // Everything larger used to become the six-cell grid, so most converted posts
+  // looked identical. Spread them across layouts whose cells suit product shots,
+  // chosen from the page id so a given list always converts the same way.
+  const options: EditorialTemplateId[] = ["polaroid-scatter", "catalog", "hero-stack", "magazine-spread"];
+  return options[stableIndex(page.id ?? page.template ?? "", options.length)];
 }
 
 function designForListPage(page: ListPage, name: string, format: "standard" | "featured"): EditorialPageDesign {

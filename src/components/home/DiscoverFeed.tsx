@@ -20,7 +20,7 @@ import { useSocialGraph } from "@/hooks/useSocialGraph";
 import { useSocialStore } from "@/hooks/useSocialStore";
 import { useFeedPosts } from "@/hooks/useFeedPosts";
 import { getProductById } from "@/lib/data";
-import { toSocialUser } from "@/lib/social";
+import { socialService, toSocialUser } from "@/lib/social";
 
 const DISCOVERY_CATEGORY_ORDER = ["Apparel", "Accessories", "Home & Living", "Beauty", "Wellness", "Outdoors", "Food & Drink", "Pet", "Kids"];
 
@@ -74,6 +74,12 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
       .map((post, index) => ({ kind: "post" as const, id: post.id, index, data: post }));
     const result: Array<(typeof productItems)[number] | (typeof postItems)[number]> = [];
     let postIndex = 0;
+
+    // The author's own posts lead: publishing something and having to hunt for it
+    // reads as though it failed.
+    while (postIndex < postItems.length && postItems[postIndex].data.authorId === "me") {
+      result.push(postItems[postIndex++]);
+    }
 
     productItems.forEach((product, index) => {
       if (index > 0 && index % 4 === 0 && postIndex < postItems.length) result.push(postItems[postIndex++]);
@@ -171,6 +177,7 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
                 onShare={() => setSharePost(post)}
                 onOpen={() => setActivePost(post)}
                 onProductClick={(productId) => { const product = getProductById(productId); if (product) setActiveProduct(product); }}
+                onDelete={post.authorId === "me" ? () => { void socialService.deletePost(post.id); onToast("Post deleted"); } : undefined}
               />
             </div>
           );

@@ -634,7 +634,7 @@ export function applyEditorialTemplate(productIds: string[], title: string, temp
     const third = { ...slots[2], x: 880, y: 330, width: 250, height: 390, rotation: -3, borderRadius: 0 };
     elements = [...text, first, second, third, { ...createTextElement("NEW ARRIVALS", "subtitle"), x: 610, y: 510, width: 450, fontSize: 42, letterSpacing: 8 }];
   } else if (template.id === "catalog") {
-    elements = [...text, ...slots.map((slot, index) => ({ ...slot, x: 55 + (index % 3) * 380, y: 170 + Math.floor(index / 3) * 300, width: 300, height: 245, borderRadius: 0, shadow: "none" as const }))];
+    elements = [...text, ...slots.map((slot, index) => ({ ...slot, x: 55 + (index % 3) * 380, y: 150 + Math.floor(index / 3) * 320, width: 300, height: 300, borderRadius: 0, shadow: "none" as const }))];
   } else if (template.id === "collection-story") {
     const first = { ...slots[0], x: 56, y: 170, width: 560, height: 760, borderRadius: 0, shadow: "none" as const };
     const second = { ...slots[1], x: 660, y: 300, width: 280, height: 360, borderRadius: 0 };
