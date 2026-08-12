@@ -8,7 +8,11 @@ import { cn } from "@/lib/utils";
  * The bottom tool rail. Phase 2 owns the rail, selection state, and layout; the
  * individual tool panels land in Phase 3.
  */
-export type PostTool = "draw" | "text" | "add" | "photos" | "stickers" | "layers" | "layouts" | "pages";
+/**
+ * `image` has no place in the rail: it is opened from a selected image rather
+ * than chosen, since it only means anything with one selected.
+ */
+export type PostTool = "draw" | "text" | "add" | "photos" | "stickers" | "layers" | "layouts" | "pages" | "image";
 
 export const POST_TOOLS: Array<{ id: PostTool; label: string; icon: typeof Brush }> = [
   { id: "draw", label: "Draw", icon: Brush },

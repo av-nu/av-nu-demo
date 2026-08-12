@@ -14,6 +14,7 @@ import { BrandCard } from "@/components/product/BrandCard";
 import { FaveButton } from "@/components/faves/FaveButton";
 import { useUserRatings } from "@/hooks/useUserRatings";
 import { useCart } from "@/hooks/useCart";
+import { BrandFaveButton } from "@/components/brand/BrandFaveButton";
 import { useToast } from "@/components/ui/Toast";
 import { cn } from "@/lib/utils";
 
@@ -173,12 +174,17 @@ export default function ProductPage({ params }: { params: { id: string } }) {
         <div className="flex flex-col">
           <div className="space-y-4">
             {/* Brand name */}
-            <Link
-              href={`/brand/${product.brandId}`}
-              className="text-xs uppercase tracking-wide text-text/50 transition-colors hover:text-accent"
-            >
-              {brand?.name ?? "Brand"}
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                href={`/brand/${product.brandId}`}
+                className="text-xs uppercase tracking-wide text-text/50 transition-colors hover:text-accent"
+              >
+                {brand?.name ?? "Brand"}
+              </Link>
+              {brand && (
+                <BrandFaveButton brandId={brand.id} brandName={brand.name} variant="icon" onToast={showToast} className="h-8 w-8" />
+              )}
+            </div>
 
             {/* Product name */}
             <h1 className="hidden font-headline text-3xl tracking-tight text-text lg:block lg:text-4xl">

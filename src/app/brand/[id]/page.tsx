@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/ProductCard";
 import { getBrandById, getProductsByBrandId } from "@/lib/data";
 import { getVideoPoster } from "@/lib/utils";
+import { BrandFaveButton } from "@/components/brand/BrandFaveButton";
 import { useToast } from "@/components/ui/Toast";
 
 const ITEMS_PER_PAGE = 12;
@@ -158,6 +159,8 @@ export default function BrandPage({ params }: { params: { id: string } }) {
                 {brand.tagline}
               </p>
             </div>
+
+            <BrandFaveButton brandId={brand.id} brandName={brand.name} onToast={showToast} className="mt-3" />
             
             {/* Location badge */}
             <div className="mt-1.5 inline-flex items-center gap-1.5 text-sm text-text/60">

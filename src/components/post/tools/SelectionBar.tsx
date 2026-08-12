@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Copy, Eraser, Lock, LockOpen, Repeat2, Trash2, ZoomIn, ZoomOut } from "lucide-react";
+import { ArrowDown, ArrowUp, Copy, Crop, Eraser, Lock, LockOpen, Repeat2, Trash2, ZoomIn, ZoomOut } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { isEditorialMediaElement, isSlotElement, type EditorialElement } from "@/lib/editorial";
@@ -18,6 +18,7 @@ export function SelectionBar({
   onReplaceSlot,
   onClearSlot,
   onZoom,
+  onAdjust,
 }: {
   element: EditorialElement;
   onDuplicate: () => void;
@@ -27,6 +28,8 @@ export function SelectionBar({
   onReplaceSlot?: () => void;
   onClearSlot?: () => void;
   onZoom?: (zoom: number) => void;
+  /** Offered for a loose image, whose framing is the author's to change. */
+  onAdjust?: () => void;
 }) {
   // A filled layout slot gets swap and empty actions, so the layout survives its
   // contents being changed instead of leaving a hole.
@@ -83,6 +86,16 @@ export function SelectionBar({
       <Action label="Send backward" onClick={() => onReorder("backward")}>
         <ArrowDown className="h-4 w-4" />
       </Action>
+      {onAdjust && (
+        <button
+          type="button"
+          onClick={onAdjust}
+          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-divider/70 px-3 text-[11px] font-semibold text-midnight/70 transition-colors hover:border-midnight/40 hover:text-midnight"
+        >
+          <Crop className="h-3.5 w-3.5" />
+          Adjust
+        </button>
+      )}
       {!inSlot && (
         <>
           <Action label={element.locked ? "Unlock element" : "Lock element"} onClick={onToggleLock} active={element.locked}>

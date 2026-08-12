@@ -3,10 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ImageOff, Move, Plus, RotateCw } from "lucide-react";
-import { useId, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
+import { useEffect, useId, useRef, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 
 import { mockProducts } from "@/data/mockProducts";
 import { isUnoptimizableSrc, useMediaSrc } from "@/lib/media/useMediaSrc";
+import { useVideoSound } from "@/hooks/useVideoSound";
 import { getVideoPoster } from "@/lib/utils";
 import { EDITORIAL_FORMATS, EDITORIAL_VECTOR_PATHS, editorialFontStack, isEditorialFramedElement, isEditorialMediaElement, isSlotElement, type EditorialElement, type EditorialMediaElement, type EditorialImageMask, type EditorialPageDesign, type EditorialSnapGuides } from "@/lib/editorial";
 
@@ -37,6 +38,78 @@ function maskStyle(mask: EditorialImageMask, borderRadius: number, canvasWidth: 
   if (mask === "oval") return { clipPath: "ellipse(50% 50% at 50% 50%)" };
   if (mask === "rounded") return { borderRadius: `${(Math.max(32, borderRadius) / canvasWidth) * 100}cqw` };
   return { borderRadius: `${(borderRadius / canvasWidth) * 100}cqw` };
+}
+
+/** Loops the opening of a clip, so a feed has motion without playing everything. */
+const PREVIEW_LOOP_SECONDS = 4;
+
+/**
+ * Video on a post.
+ *
+ * A preview autoplays muted and loops its first seconds — motion is the point,
+ * not the content. Opened, it plays through with controls and follows the shared
+ * sound preference, and changing the volume there updates that preference so the
+ * next clip opens the same way.
+ */
+function PostVideo({
+  src,
+  poster,
+  name,
+  preview,
+  className,
+  style,
+}: {
+  src: string;
+  poster?: string;
+  name: string;
+  preview: boolean;
+  className: string;
+  style: React.CSSProperties;
+}) {
+  const ref = useRef<HTMLVideoElement>(null);
+  const { muted, setMuted, isHydrated } = useVideoSound();
+
+  // Applied as a property because React does not reflect `muted` to the attribute,
+  // and a preview must stay muted regardless of the preference or it cannot
+  // autoplay at all.
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    node.muted = preview ? true : muted;
+  }, [muted, preview]);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node || !preview) return;
+    const onTime = () => {
+      if (node.currentTime > PREVIEW_LOOP_SECONDS) node.currentTime = 0;
+    };
+    node.addEventListener("timeupdate", onTime);
+    return () => node.removeEventListener("timeupdate", onTime);
+  }, [preview]);
+
+  return (
+    <video
+      ref={ref}
+      src={src}
+      poster={poster}
+      aria-label={name}
+      controls={!preview}
+      autoPlay
+      loop
+      muted
+      playsInline
+      preload="metadata"
+      className={`${className} ${preview ? "pointer-events-none" : ""}`}
+      style={style}
+      onVolumeChange={(event) => {
+        // Carry an explicit unmute to every other clip.
+        if (preview || !isHydrated) return;
+        const next = event.currentTarget.muted;
+        if (next !== muted) setMuted(next);
+      }}
+    />
+  );
 }
 
 /**
@@ -87,23 +160,8 @@ function MediaElementContent({ element, staticMedia }: { element: EditorialMedia
 
   return (
     <span className="absolute" style={{ width: objectStyle.width, height: objectStyle.height, left: objectStyle.left, top: objectStyle.top }}>
-      {element.type === "video" && staticMedia && poster ? (
-        // A still preview does not need a media element at all. Feeds carried a
-        // dozen of them purely to show one frame, and a poster only paints once
-        // the browser gets round to decoding it.
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={poster} alt={element.name} draggable={false} className={`h-full w-full ${fitClass}`} style={inner} />
-      ) : element.type === "video" ? (
-        <video
-          src={src}
-          poster={poster}
-          controls={!staticMedia}
-          playsInline
-          muted={staticMedia}
-          preload="metadata"
-          className={`h-full w-full ${fitClass} ${staticMedia ? "pointer-events-none" : ""}`}
-          style={inner}
-        />
+      {element.type === "video" ? (
+        <PostVideo src={src} poster={poster} name={element.name} preview={Boolean(staticMedia)} className={`h-full w-full ${fitClass}`} style={inner} />
       ) : isUnoptimizableSrc(src) ? (
         // Object URLs and data URLs cannot go through next/image's loader.
         // eslint-disable-next-line @next/next/no-img-element

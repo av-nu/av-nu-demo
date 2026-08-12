@@ -23,6 +23,7 @@ const DEMO_STORAGE_KEYS = [
   "avnu-oms-seed-version",
   "avnu-user-ratings",
   "avnu-auth",
+  "avnu-video-muted",
 ] as const;
 
 /** IndexedDB database holding uploaded media (see MediaStore). */

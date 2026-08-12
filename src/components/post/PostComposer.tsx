@@ -12,6 +12,7 @@ import { PostPageRail } from "@/components/post/PostPageRail";
 import { PostToolbar, type PostTool } from "@/components/post/PostToolbar";
 import { AddProductTool } from "@/components/post/tools/AddProductTool";
 import { DrawTool } from "@/components/post/tools/DrawTool";
+import { ImageTool } from "@/components/post/tools/ImageTool";
 import { DrawingSurface, type DrawSettings } from "@/components/post/tools/DrawingSurface";
 import { LayersTool } from "@/components/post/tools/LayersTool";
 import { LayoutsTool } from "@/components/post/tools/LayoutsTool";
@@ -36,6 +37,7 @@ import {
   firstPlaceholder,
   isSlotElement,
   createStickerElement,
+  isEditorialMediaElement,
   createTextElement,
   makeEditorialDrawingPath,
   makeEditorialElementId,
@@ -67,7 +69,7 @@ import {
 } from "@/lib/post";
 
 /** Tools with a real panel; the rest still show a placeholder. */
-const HANDLED_TOOLS = new Set<PostTool>(["layouts", "text", "pages", "photos", "draw", "stickers", "add", "layers"]);
+const HANDLED_TOOLS = new Set<PostTool>(["layouts", "text", "pages", "photos", "draw", "stickers", "add", "layers", "image"]);
 
 const ZOOM_MIN = 0.5;
 const ZOOM_MAX = 1.4;
@@ -108,6 +110,7 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
   const [activeTool, setActiveTool] = useState<PostTool>();
   const [zoom, setZoom] = useState(1);
   const [pendingSlotId, setPendingSlotId] = useState<string>();
+  const [imageSection, setImageSection] = useState<"shape" | "crop" | undefined>("shape");
   const [publishOpen, setPublishOpen] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string>();
@@ -206,6 +209,12 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
   }), [post.pages.length]);
 
   const isDrawing = activeTool === "draw";
+  // Framing is offered for a loose image only: inside a slot the frame is the
+  // template's, and reframing there is already handled by dragging.
+  const selectedElement = canvas.selected;
+  const adjustableMedia = selectedElement && isEditorialMediaElement(selectedElement) && !isSlotElement(selectedElement)
+    ? selectedElement
+    : undefined;
   const selectedText = canvas.selected?.type === "text" ? canvas.selected : undefined;
   // Templates seed their headline from existing text so re-applying a layout does
   // not silently discard the author's title.
@@ -599,6 +608,16 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
         <StickersTool onAdd={addSticker} onClose={() => setActiveTool(undefined)} />
       )}
 
+      {started && activeTool === "image" && adjustableMedia && (
+        <ImageTool
+          selected={adjustableMedia}
+          section={imageSection}
+          onSection={setImageSection}
+          onPatch={canvas.patchSelected}
+          onClose={() => setActiveTool(undefined)}
+        />
+      )}
+
       {started && activeTool === "layers" && (
         <LayersTool
           design={canvas.design}
@@ -630,6 +649,7 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
           onReplaceSlot={replaceSelectedSlot}
           onClearSlot={clearSelectedSlot}
           onZoom={(zoom) => canvas.patchSelected({ zoom })}
+          onAdjust={adjustableMedia ? () => setActiveTool("image") : undefined}
         />
       )}
 

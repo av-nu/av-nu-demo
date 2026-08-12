@@ -5,6 +5,8 @@ import Link from "next/link";
 import { MapPin, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
+import { BrandFaveButton } from "@/components/brand/BrandFaveButton";
+
 import type { Brand } from "@/data/mockBrands";
 import { getBrandWindowImages } from "@/lib/data";
 
@@ -31,6 +33,7 @@ export function BrandCard({ brand, priority = false }: BrandCardProps) {
       >
         {/* Hero Image */}
         <div className="relative aspect-[16/9] w-full overflow-hidden bg-bg">
+          <BrandFaveButton brandId={brand.id} brandName={brand.name} variant="icon" className="absolute right-2 top-2 z-10" />
           {isHeroSvg ? (
             <img
               src={heroImage}
