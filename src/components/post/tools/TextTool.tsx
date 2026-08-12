@@ -158,12 +158,26 @@ export function TextTool({
           ))}
         </div>
         {selected.highlightStyle !== "none" && (
-          <ColorSwatches
-            value={selected.highlightColor}
-            colors={POST_COLORS}
-            allowTransparent
-            onChange={(highlightColor) => onPatch({ highlightColor })}
-          />
+          <>
+            <ColorSwatches
+              value={selected.highlightColor}
+              colors={POST_COLORS}
+              allowTransparent
+              onChange={(highlightColor) => onPatch({ highlightColor })}
+            />
+            <label className="mt-2 block">
+              <ToolFieldLabel>Background opacity</ToolFieldLabel>
+              <input
+                type="range"
+                min="0.1"
+                max="1"
+                step="0.05"
+                value={selected.highlightOpacity ?? 1}
+                onChange={(event) => onPatch({ highlightOpacity: Number(event.target.value) })}
+                className="w-full accent-navy"
+              />
+            </label>
+          </>
         )}
       </div>
     </PostToolPanel>

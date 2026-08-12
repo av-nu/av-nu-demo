@@ -9,6 +9,15 @@ import { mockProducts } from "@/data/mockProducts";
 import { isUnoptimizableSrc, useMediaSrc } from "@/lib/media/useMediaSrc";
 import { EDITORIAL_FORMATS, EDITORIAL_VECTOR_PATHS, editorialFontStack, isEditorialFramedElement, isEditorialMediaElement, isSlotElement, type EditorialElement, type EditorialMediaElement, type EditorialImageMask, type EditorialPageDesign, type EditorialSnapGuides } from "@/lib/editorial";
 
+/** Applies an alpha to a hex colour, leaving other notations untouched. */
+function withOpacity(color: string, opacity?: number): string {
+  if (opacity === undefined || opacity >= 1) return color;
+  const hex = color.trim();
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return color;
+  const value = Math.round(Math.max(0, Math.min(1, opacity)) * 255).toString(16).padStart(2, "0");
+  return `${hex}${value}`;
+}
+
 function shadowFor(value: "none" | "soft" | "strong") {
   if (value === "strong") return "0 22px 50px rgba(40, 30, 25, 0.28)";
   if (value === "soft") return "0 12px 28px rgba(40, 30, 25, 0.16)";
@@ -51,17 +60,21 @@ function MediaElementContent({ element }: { element: EditorialMediaElement }) {
   // Zoom enlarges the media box rather than transforming it, so the excess can
   // be panned on *both* axes. `object-fit: cover` alone only ever overflows one
   // axis, which left the other with no play at all.
-  const zoom = Math.max(1, element.zoom);
-  const overflow = zoom * 100 - 100;
+  const zoom = Math.max(0.2, Math.min(4, element.zoom));
+  // One offset rule for both directions: zoomed in, the surplus is panned out of
+  // view; zoomed out, the smaller image is positioned within the frame. Zooming
+  // below 1 is what lets the whole photo be seen rather than a fixed crop.
+  const slack = 100 - zoom * 100;
   const objectStyle: React.CSSProperties = {
     width: `${zoom * 100}%`,
     height: `${zoom * 100}%`,
-    left: `${-overflow * (element.cropX / 100)}%`,
-    top: `${-overflow * (element.cropY / 100)}%`,
+    left: `${slack * (element.cropX / 100)}%`,
+    top: `${slack * (element.cropY / 100)}%`,
     // Still governs the overflow that `cover` itself produces.
     objectPosition: `${element.cropX}% ${element.cropY}%`,
   };
-  const fitClass = element.fit === "cover" ? "object-cover" : "object-contain";
+  // Zoomed out the intent is to see the whole frame, which cover would defeat.
+  const fitClass = zoom < 1 || element.fit === "contain" ? "object-contain" : "object-cover";
 
   // The wrapper carries the zoom and pan so the media itself can simply fill it.
   const inner: React.CSSProperties = { objectPosition: objectStyle.objectPosition };
@@ -95,7 +108,9 @@ function elementContent(element: EditorialElement, canvasWidth: number) {
   }
 
   if (element.type === "text") {
-    const highlight = element.highlightStyle && element.highlightStyle !== "none" ? element.highlightColor : undefined;
+    const highlight = element.highlightStyle && element.highlightStyle !== "none"
+      ? withOpacity(element.highlightColor, element.highlightOpacity)
+      : undefined;
     const content = highlight
       ? (
         <span

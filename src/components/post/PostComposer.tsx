@@ -54,6 +54,7 @@ import {
   createBlankPage,
   createMediaPage,
   duplicatePostPage,
+  isFullBleedMedia,
   isMediaPage,
   movePostPin,
   normalizePost,
@@ -287,6 +288,37 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
     canvas.addElement(createProductElement(productId, placed));
   };
 
+  /**
+   * Links several products in one go. Folded into a single design rather than
+   * called per product: each call would otherwise read the same design and the
+   * fills would overwrite one another.
+   */
+  const addProducts = (productIds: string[]) => {
+    if (productIds.length === 0) return;
+
+    if (isMediaPage(activePage)) {
+      setPost((current) => productIds.reduce((next, productId) => addPostPin(next, activePage.id, productId), current));
+      showToast(productIds.length === 1 ? "Tagged — drag the tag to reposition" : `Tagged ${productIds.length} products`);
+      setActiveTool(undefined);
+      return;
+    }
+
+    let design = canvas.design;
+    let target = pendingSlotId;
+    for (const productId of productIds) {
+      const slot = target && design.elements.some((element) => element.id === target && element.type === "placeholder")
+        ? target
+        : firstPlaceholder(design)?.id;
+      design = slot
+        ? fillPlaceholderWithProduct(design, slot, productId)
+        : { ...design, elements: [...design.elements, createProductElement(productId, design.elements.filter((element) => element.type === "product").length)] };
+      target = undefined; // Only the tapped slot is honoured; the rest fill in order.
+    }
+    canvas.commit(design);
+    setPendingSlotId(undefined);
+    setActiveTool(undefined);
+  };
+
   /** Swaps what is in a slot without losing the frame. */
   const replaceSelectedSlot = () => {
     const selected = canvas.selected;
@@ -459,7 +491,8 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
                     // Dragging inside a layout slot reframes the media; the frame
                     // itself belongs to the template and stays put.
                     const target = canvas.design.elements.find((element) => element.id === elementId);
-                    canvas.startInteraction(event, elementId, target && isSlotElement(target) ? "pan" : "drag");
+                    const reframes = target && (isSlotElement(target) || isFullBleedMedia(target, post.format));
+                    canvas.startInteraction(event, elementId, reframes ? "pan" : "drag");
                     handleElementSelect(elementId);
                   }}
                   onElementSelect={handleElementSelect}
@@ -572,7 +605,7 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
       )}
 
       {started && activeTool === "add" && (
-        <AddProductTool onAdd={addProduct} onClose={() => { setPendingSlotId(undefined); setActiveTool(undefined); }} />
+        <AddProductTool onAdd={addProduct} onAddMany={addProducts} onClose={() => { setPendingSlotId(undefined); setActiveTool(undefined); }} />
       )}
 
       {started && activeTool && !HANDLED_TOOLS.has(activeTool) && (

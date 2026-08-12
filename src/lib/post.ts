@@ -16,6 +16,7 @@ import {
   createVideoElement,
   editorialProductIds,
   normalizeEditorialPage,
+  type EditorialElement,
   type EditorialFormat,
   type EditorialPageDesign,
   type EditorialTemplateId,
@@ -190,6 +191,16 @@ export function scaleDesignToFormat(design: EditorialPageDesign, format: Editori
 export function isMediaPage(page: PostPage): boolean {
   const [first, ...rest] = page.design.elements;
   return rest.length === 0 && Boolean(first) && first.locked && (first.type === "image" || first.type === "video");
+}
+
+/**
+ * True when a media element already fills the page. Dragging such an element is
+ * pointless — there is nowhere for the box to go — so it reframes instead.
+ */
+export function isFullBleedMedia(element: EditorialElement, format: EditorialFormat): boolean {
+  if (element.type !== "image" && element.type !== "video") return false;
+  const { width, height } = EDITORIAL_FORMATS[format];
+  return element.x <= 1 && element.y <= 1 && element.width >= width - 1 && element.height >= height - 1;
 }
 
 export function postCoverPage(post: Post): PostPage {

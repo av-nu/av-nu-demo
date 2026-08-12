@@ -92,6 +92,8 @@ export type EditorialTextElement = EditorialElementBase & {
   fontId: EditorialFontId;
   /** Highlight drawn behind the glyphs (distinct from `backgroundColor`). */
   highlightColor: string;
+  /** 0-1. Kept apart from the colour so the swatch still shows the chosen hue. */
+  highlightOpacity?: number;
   highlightStyle: EditorialHighlightStyle;
   fontSize: number;
   fontWeight: 400 | 500 | 600 | 700;

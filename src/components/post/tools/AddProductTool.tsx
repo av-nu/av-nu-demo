@@ -24,9 +24,12 @@ const SEARCH_LIMIT = 40;
  */
 export function AddProductTool({
   onAdd,
+  onAddMany,
   onClose,
 }: {
   onAdd: (productId: string) => void;
+  /** Adds a batch at once; linking several products is the common case. */
+  onAddMany?: (productIds: string[]) => void;
   onClose: () => void;
 }) {
   const { favorites } = useFavorites();
@@ -36,6 +39,7 @@ export function AddProductTool({
   const hasFaves = favorites.length > 0 || lists.some((list) => list.productIds.length > 0 || flattenPages(list.pages).length > 0);
   const [source, setSource] = useState<Source>(hasFaves ? "faves" : "explore");
   const [query, setQuery] = useState("");
+  const [chosen, setChosen] = useState<string[]>([]);
 
   // Everything the user has saved: loose favourites plus every list.
   const faveProducts = useMemo(() => {
@@ -74,7 +78,19 @@ export function AddProductTool({
       : "No products available.";
 
   return (
-    <PostToolPanel title="Add products" onClose={onClose}>
+    <PostToolPanel
+      title="Add products"
+      onClose={onClose}
+      actions={onAddMany && chosen.length > 0 ? (
+        <button
+          type="button"
+          onClick={() => { onAddMany(chosen); setChosen([]); }}
+          className="inline-flex h-8 shrink-0 items-center rounded-full bg-navy px-3 text-[11px] font-semibold text-white transition-colors hover:bg-navy/90"
+        >
+          Add {chosen.length}
+        </button>
+      ) : undefined}
+    >
       <div className="mb-3 flex gap-2">
         <SourceTab active={source === "faves"} onClick={() => setSource("faves")} icon={<Heart className="h-3.5 w-3.5" />}>
           Faves
@@ -110,12 +126,27 @@ export function AddProductTool({
             <li key={product.id}>
               <button
                 type="button"
-                onClick={() => onAdd(product.id)}
+                onClick={() => {
+                  if (!onAddMany) {
+                    onAdd(product.id);
+                    return;
+                  }
+                  setChosen((current) => (current.includes(product.id) ? current.filter((id) => id !== product.id) : [...current, product.id]));
+                }}
+                aria-pressed={chosen.includes(product.id)}
                 className="group block w-full text-left"
                 title={product.name}
               >
-                <span className="relative block aspect-square overflow-hidden rounded-xl border border-divider/60 bg-surface transition-colors group-hover:border-accent">
+                <span className={cn(
+                  "relative block aspect-square overflow-hidden rounded-xl border bg-surface transition-colors",
+                  chosen.includes(product.id) ? "border-navy ring-2 ring-navy" : "border-divider/60 group-hover:border-accent",
+                )}>
                   <Image src={product.images[0]} alt={product.name} fill sizes="120px" className="object-cover" />
+                  {chosen.includes(product.id) && (
+                    <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-navy text-[10px] font-bold text-white">
+                      {chosen.indexOf(product.id) + 1}
+                    </span>
+                  )}
                 </span>
                 <span className="mt-1 block truncate text-[10px] font-medium text-midnight/70">{product.name}</span>
               </button>

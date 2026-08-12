@@ -31,17 +31,18 @@ export function SelectionBar({
   // A filled layout slot gets swap and empty actions, so the layout survives its
   // contents being changed instead of leaving a hole.
   const inSlot = isSlotElement(element);
-  const zoom = isEditorialMediaElement(element) ? element.zoom : 1;
+  const isMedia = isEditorialMediaElement(element);
+  const zoom = isMedia ? element.zoom : 1;
 
   return (
     <div className="w-full min-w-0 shrink-0 border-t border-divider/60 bg-surface/40">
-    {inSlot && onZoom && (
+    {isMedia && onZoom && (
       // Scale within the frame, which pairs with dragging to reframe.
       <div className="flex items-center gap-3 px-3 pt-2">
         <ZoomOut className="h-4 w-4 shrink-0 text-midnight/45" />
         <input
           type="range"
-          min="1"
+          min="0.5"
           max="3"
           step="0.05"
           value={zoom}
