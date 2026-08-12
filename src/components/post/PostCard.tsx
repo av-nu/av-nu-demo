@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { ShoppingBag, Trash2 } from "lucide-react";
 
-import { EditorialRenderer } from "@/components/looks/editorial/EditorialRenderer";
-import { PostPins } from "@/components/post/PostPins";
+import { PostPager } from "@/components/post/PostPager";
 import { Avatar } from "@/components/social/Avatar";
 import { SocialPostActions } from "@/components/social/SocialPostActions";
 import { cn } from "@/lib/utils";
@@ -48,7 +47,6 @@ export function PostCard({
   onDelete?: () => void;
 }) {
   const [page, setPage] = useState(post.coverPageIndex);
-  const current = post.pages[Math.min(page, post.pages.length - 1)];
 
   return (
     <article className="overflow-hidden rounded-2xl border border-divider/50 bg-bg">
@@ -67,32 +65,14 @@ export function PostCard({
         )}
       </div>
 
-      <button type="button" onClick={onOpen} className="relative block w-full" aria-label="Open post">
-        <EditorialRenderer design={current.design} staticMedia />
-        {showPins && <PostPins pins={current.pins} />}
-        {post.pages.length > 1 && (
-          <span className="absolute right-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-semibold text-white">
-            {Math.min(page, post.pages.length - 1) + 1}/{post.pages.length}
-          </span>
-        )}
-      </button>
-
-      {post.pages.length > 1 && (
-        // Dots double as the carousel control, so a multi-page post can be read
-        // without opening it.
-        <div className="flex items-center justify-center gap-1.5 py-2">
-          {post.pages.map((item, index) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setPage(index)}
-              aria-label={`Page ${index + 1}`}
-              aria-current={index === page}
-              className={cn("h-1.5 rounded-full transition-all", index === page ? "w-4 bg-midnight" : "w-1.5 bg-midnight/25")}
-            />
-          ))}
-        </div>
-      )}
+      <PostPager
+        pages={post.pages}
+        index={page}
+        onIndex={setPage}
+        onTap={onOpen}
+        showPins={showPins}
+        staticMedia
+      />
 
       <SocialPostActions liked={liked} saved={saved} onLike={onLike} onComment={onComment} onSave={onSave} onShare={onShare} />
 

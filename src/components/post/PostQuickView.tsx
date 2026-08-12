@@ -6,13 +6,11 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ShoppingBag, X } from "lucide-react";
 
-import { EditorialRenderer } from "@/components/looks/editorial/EditorialRenderer";
-import { PostPins } from "@/components/post/PostPins";
+import { PostPager } from "@/components/post/PostPager";
 import { Avatar } from "@/components/social/Avatar";
 import { SocialPostActions } from "@/components/social/SocialPostActions";
 import { Portal } from "@/components/ui/Portal";
 import { getProductById } from "@/lib/data";
-import { cn } from "@/lib/utils";
 import type { Post } from "@/lib/post";
 import type { SocialUser } from "@/lib/social";
 
@@ -47,7 +45,6 @@ export function PostQuickView({
   const [page, setPage] = useState(post.coverPageIndex);
   const [draft, setDraft] = useState("");
   const [productsOpen, setProductsOpen] = useState(false);
-  const current = post.pages[Math.min(page, post.pages.length - 1)];
   const products = post.productIds.map(getProductById).filter(Boolean) as NonNullable<ReturnType<typeof getProductById>>[];
 
   useEffect(() => {
@@ -91,24 +88,7 @@ export function PostQuickView({
 
             {/* Artwork */}
             <div className="flex shrink-0 flex-col justify-center bg-surface/40 md:w-[58%] md:overflow-hidden">
-              <div className="relative">
-                <EditorialRenderer design={current.design} />
-                <PostPins pins={current.pins} />
-              </div>
-              {post.pages.length > 1 && (
-                <div className="flex items-center justify-center gap-1.5 py-2">
-                  {post.pages.map((item, index) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => setPage(index)}
-                      aria-label={`Page ${index + 1}`}
-                      aria-current={index === page}
-                      className={cn("h-1.5 rounded-full transition-all", index === page ? "w-4 bg-midnight" : "w-1.5 bg-midnight/25")}
-                    />
-                  ))}
-                </div>
-              )}
+              <PostPager pages={post.pages} index={page} onIndex={setPage} showPins />
             </div>
 
             {/* Caption, products, conversation */}
