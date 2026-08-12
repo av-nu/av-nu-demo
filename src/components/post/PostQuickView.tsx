@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { X } from "lucide-react";
+import { ChevronDown, ShoppingBag, X } from "lucide-react";
 
 import { EditorialRenderer } from "@/components/looks/editorial/EditorialRenderer";
 import { PostPins } from "@/components/post/PostPins";
@@ -46,6 +46,7 @@ export function PostQuickView({
 }) {
   const [page, setPage] = useState(post.coverPageIndex);
   const [draft, setDraft] = useState("");
+  const [productsOpen, setProductsOpen] = useState(true);
   const current = post.pages[Math.min(page, post.pages.length - 1)];
   const products = post.productIds.map(getProductById).filter(Boolean) as NonNullable<ReturnType<typeof getProductById>>[];
 
@@ -68,7 +69,7 @@ export function PostQuickView({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-5"
+          className="fixed inset-0 z-[90] flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-5"
         >
           <motion.div
             initial={{ y: 28, opacity: 0 }}
@@ -77,7 +78,7 @@ export function PostQuickView({
             transition={{ type: "spring", stiffness: 360, damping: 32 }}
             onClick={(event) => event.stopPropagation()}
             // Stacks on a phone, two panes from `md` where there is width for a rail.
-            className="relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-3xl bg-bg md:max-h-[86dvh] md:max-w-4xl md:flex-row md:rounded-3xl"
+            className="relative flex max-h-[92dvh] w-full flex-col overflow-y-auto rounded-t-3xl bg-bg md:max-h-[86dvh] md:max-w-4xl md:flex-row md:overflow-hidden md:rounded-3xl"
           >
             <button
               type="button"
@@ -89,7 +90,7 @@ export function PostQuickView({
             </button>
 
             {/* Artwork */}
-            <div className="flex shrink-0 flex-col justify-center overflow-y-auto bg-surface/40 md:w-[58%] md:overflow-hidden">
+            <div className="flex shrink-0 flex-col justify-center bg-surface/40 md:w-[58%] md:overflow-hidden">
               <div className="relative">
                 <EditorialRenderer design={current.design} />
                 <PostPins pins={current.pins} />
@@ -117,15 +118,24 @@ export function PostQuickView({
                 <p className="min-w-0 flex-1 truncate text-sm font-semibold text-midnight">{author.name}</p>
               </div>
 
-              <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-4">
+              <div className="space-y-4 px-4 pb-4 md:min-h-0 md:flex-1 md:overflow-y-auto">
                 {post.caption && <p className="break-words text-sm leading-relaxed text-midnight/90">{post.caption}</p>}
 
                 {products.length > 0 && (
                   <div>
-                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-midnight/40">
-                      Shop this post
-                    </p>
-                    <ul className="min-w-0 space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => setProductsOpen((open) => !open)}
+                      aria-expanded={productsOpen}
+                      className="mb-2 flex w-full items-center gap-2"
+                    >
+                      <ShoppingBag className="h-3.5 w-3.5 shrink-0 text-midnight/50" />
+                      <span className="min-w-0 flex-1 text-left text-[10px] font-semibold uppercase tracking-[0.12em] text-midnight/40">
+                        Shop this post · {products.length}
+                      </span>
+                      <ChevronDown className={`h-4 w-4 shrink-0 text-midnight/40 transition-transform ${productsOpen ? "rotate-180" : ""}`} />
+                    </button>
+                    <ul className={`min-w-0 space-y-2 ${productsOpen ? "" : "hidden"}`}>
                       {products.map((product) => (
                         <li key={product.id} className="min-w-0">
                           <Link

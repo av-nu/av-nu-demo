@@ -11,6 +11,9 @@ import { mockBrands } from "@/data/mockBrands";
 import { useSocialGraph } from "@/hooks/useSocialGraph";
 import { useSocialStore } from "@/hooks/useSocialStore";
 import { socialService, toSocialUser } from "@/lib/social";
+import { ProductQuickView } from "@/components/home/ProductQuickView";
+import type { Product } from "@/data/mockProducts";
+import { getProductById } from "@/lib/data";
 import { PostCard } from "@/components/post/PostCard";
 import { PostQuickView } from "@/components/post/PostQuickView";
 import { useListSocial } from "@/hooks/useListSocial";
@@ -31,6 +34,7 @@ export default function ProfilePage() {
   const [findingPeople, setFindingPeople] = useState(false);
   const [postFilter, setPostFilter] = useState<ProfilePostFilter>("all");
   const [activePostId, setActivePostId] = useState<string>();
+  const [activeProduct, setActiveProduct] = useState<Product>();
   const { isLiked, toggleLike } = useListSocial();
   const activePost = activePostId ? state.posts.find((post) => post.id === activePostId) : undefined;
   const myPosts = useMemo(() => state.posts.filter((post) => post.authorId === "me").sort((a, b) => b.createdAt - a.createdAt), [state.posts]);
@@ -190,8 +194,12 @@ export default function ProfilePage() {
           onLike={() => toggleLike(activePost.id)}
           onSave={() => undefined}
           onShare={() => showToast("Sharing coming soon")}
+          onProductClick={(productId) => { const product = getProductById(productId); if (product) setActiveProduct(product); }}
           onClose={() => setActivePostId(undefined)}
         />
+      )}
+      {activeProduct && (
+        <ProductQuickView product={activeProduct} onClose={() => setActiveProduct(undefined)} onToast={showToast} />
       )}
       {editing && (
         <EditProfileDialog profile={profile} onClose={() => setEditing(false)} onToast={showToast} />
