@@ -50,6 +50,8 @@ export interface SocialService {
    * surface a real error instead of silently losing the user's work.
    */
   addPost(input: NewPost): Promise<string>;
+  /** The author's post with this id, if it exists. */
+  getPost(id: string): Promise<Post | undefined>;
   updatePost(id: string, patch: Partial<Post>): Promise<void>;
   deletePost(id: string): Promise<void>;
 

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-// The lookbook creation entry is replaced by the unified composer.
-export default function CreateLookPage() {
+/** Legacy entry point; the composer is now the single place a post is made. */
+export default function CreateALookRedirect() {
   redirect("/create");
 }

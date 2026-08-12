@@ -316,6 +316,10 @@ class MockSocialService implements SocialService {
     return post.id;
   }
 
+  async getPost(id: string): Promise<Post | undefined> {
+    return this.read().posts.find((post) => post.id === id);
+  }
+
   async updatePost(id: string, patch: Partial<Post>): Promise<void> {
     const state = this.read();
     this.write({

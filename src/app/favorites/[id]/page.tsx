@@ -395,7 +395,7 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
                             <Pencil className="h-3.5 w-3.5" />
                             Edit design
                           </Button>
-                          {list.lookbookId && <Button asChild variant="surface" size="sm"><Link href={`/create-a-look/${list.lookbookId}`}>Edit in Lookbook</Link></Button>}
+                          {list.lookbookId && <Button asChild variant="surface" size="sm"><Link href={`/create/${list.lookbookId}`}>Edit post</Link></Button>}
                         </div>
                       </div>
                     ) : (

@@ -32,7 +32,9 @@ export const AppShell = memo(function AppShell({
   }, []);
 
   const isAdmin = pathname?.startsWith("/admin") ?? false;
-  const isComposer = pathname === "/create";
+  // The composer owns the whole screen, including its edit route, so it opts out
+  // of the shopper chrome rather than layering over it.
+  const isComposer = pathname === "/create" || Boolean(pathname?.startsWith("/create/"));
 
   const useIsomorphicLayoutEffect =
     typeof window !== "undefined" ? useLayoutEffect : useEffect;

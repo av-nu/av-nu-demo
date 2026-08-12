@@ -1,5 +1,6 @@
-import { CreateLookWorkspace } from "@/components/looks/CreateLookWorkspace";
+import { redirect } from "next/navigation";
 
-export default function SavedLookPage({ params }: { params: { id: string } }) {
-  return <CreateLookWorkspace savedLookId={params.id} />;
+/** Legacy edit link; kept so existing URLs still resolve. */
+export default function CreateALookEditRedirect({ params }: { params: { id: string } }) {
+  redirect(`/create/${params.id}`);
 }

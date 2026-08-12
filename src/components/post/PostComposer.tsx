@@ -408,7 +408,12 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
     setPublishing(true);
     setPublishError(undefined);
     try {
-      await socialService.addPost({ pages: post.pages, format: post.format, caption, visibility, coverPageIndex: post.coverPageIndex });
+      const isExisting = initialPost !== undefined && (await socialService.getPost(post.id)) !== undefined;
+      if (isExisting) {
+        await socialService.updatePost(post.id, { pages: post.pages, format: post.format, caption, visibility, coverPageIndex: post.coverPageIndex });
+      } else {
+        await socialService.addPost({ pages: post.pages, format: post.format, caption, visibility, coverPageIndex: post.coverPageIndex });
+      }
       router.push("/");
     } catch (error) {
       // Storage failures are surfaced rather than swallowed: losing a post the
