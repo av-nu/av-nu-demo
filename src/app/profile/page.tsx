@@ -14,7 +14,6 @@ import { socialService, toSocialUser } from "@/lib/social";
 import { PostCard } from "@/components/post/PostCard";
 import { PostQuickView } from "@/components/post/PostQuickView";
 import { useListSocial } from "@/hooks/useListSocial";
-import type { Post } from "@/lib/post";
 import { ProfileHeader } from "@/components/social/ProfileHeader";
 import { ProfilePostGrid, type ProfilePostFilter } from "@/components/social/ProfilePostGrid";
 import { EditProfileDialog } from "@/components/social/EditProfileDialog";
@@ -31,8 +30,9 @@ export default function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [findingPeople, setFindingPeople] = useState(false);
   const [postFilter, setPostFilter] = useState<ProfilePostFilter>("all");
-  const [activePost, setActivePost] = useState<Post>();
+  const [activePostId, setActivePostId] = useState<string>();
   const { isLiked, toggleLike } = useListSocial();
+  const activePost = activePostId ? state.posts.find((post) => post.id === activePostId) : undefined;
   const myPosts = useMemo(() => state.posts.filter((post) => post.authorId === "me").sort((a, b) => b.createdAt - a.createdAt), [state.posts]);
 
   if (!isHydrated) {
@@ -172,7 +172,7 @@ export default function ProfilePage() {
                 onComment={() => undefined}
                 onSave={() => undefined}
                 onShare={() => showToast("Sharing coming soon")}
-                onOpen={() => setActivePost(post)}
+                onOpen={() => setActivePostId(post.id)}
                 onDelete={() => { void socialService.deletePost(post.id); showToast("Post deleted"); }}
               />
             ))}
@@ -190,7 +190,7 @@ export default function ProfilePage() {
           onLike={() => toggleLike(activePost.id)}
           onSave={() => undefined}
           onShare={() => showToast("Sharing coming soon")}
-          onClose={() => setActivePost(undefined)}
+          onClose={() => setActivePostId(undefined)}
         />
       )}
       {editing && (

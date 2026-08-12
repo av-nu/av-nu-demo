@@ -55,7 +55,9 @@ function interleaveProducts(products: Product[]) {
 
 export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }) {
   const [scope, setScope] = useState<"discover" | "inner">("discover");
-  const [activePost, setActivePost] = useState<Post>();
+  // Held by id, not by value: a comment or like has to be reflected in the open
+  // post, and a snapshot would go stale the moment it changed.
+  const [activePostId, setActivePostId] = useState<string>();
   const [activeProduct, setActiveProduct] = useState<Product>();
   const [savePost, setSavePost] = useState<Post>();
   const [sharePost, setSharePost] = useState<Post>();
@@ -66,6 +68,7 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
   const feedPosts = useFeedPosts();
   const currentUser = toSocialUser("me", state);
   const innerIds = useMemo(() => new Set(contacts.filter((contact) => contact.circle === "inner").map((contact) => contact.id)), []);
+  const activePost = activePostId ? feedPosts.find((post) => post.id === activePostId) : undefined;
   const products = useMemo(() => scope === "discover" ? mockProducts : mockProducts.slice(0, 24), [scope]);
   const mixed = useMemo(() => {
     const productItems = interleaveProducts(products).map((product, index) => ({ kind: "product" as const, id: product.id, index, data: product }));
@@ -172,10 +175,10 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
                 liked={isLiked(post.id)}
                 saved={postSaved}
                 onLike={() => toggleLike(post.id)}
-                onComment={() => setActivePost(post)}
+                onComment={() => setActivePostId(post.id)}
                 onSave={() => { if (saveToDefault(post.id)) setSavePost(post); else onToast("Saved to your posts"); }}
                 onShare={() => setSharePost(post)}
-                onOpen={() => setActivePost(post)}
+                onOpen={() => setActivePostId(post.id)}
                 onProductClick={(productId) => { const product = getProductById(productId); if (product) setActiveProduct(product); }}
                 onDelete={post.authorId === "me" ? () => { void socialService.deletePost(post.id); onToast("Post deleted"); } : undefined}
               />
@@ -196,8 +199,13 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
           onLike={() => toggleLike(activePost.id)}
           onSave={() => { if (saveToDefault(activePost.id)) setSavePost(activePost); else onToast("Saved to your posts"); }}
           onShare={() => setSharePost(activePost)}
+          onComment={(text) => {
+            void socialService.updatePost(activePost.id, {
+              comments: [...activePost.comments, { id: `c-${Date.now()}`, authorName: currentUser.name, authorInitials: currentUser.initials, authorColor: currentUser.color, text, createdAt: Date.now() }],
+            });
+          }}
           onProductClick={(productId) => { const product = getProductById(productId); if (product) setActiveProduct(product); }}
-          onClose={() => setActivePost(undefined)}
+          onClose={() => setActivePostId(undefined)}
         />
       )}
       {savePost && <SavePostDialog postId={savePost.id} onClose={() => setSavePost(undefined)} onToast={onToast} />}

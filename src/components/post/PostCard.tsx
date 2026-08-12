@@ -1,15 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { Trash2 } from "lucide-react";
+import { ShoppingBag, Trash2 } from "lucide-react";
 
 import { EditorialRenderer } from "@/components/looks/editorial/EditorialRenderer";
 import { PostPins } from "@/components/post/PostPins";
 import { Avatar } from "@/components/social/Avatar";
 import { SocialPostActions } from "@/components/social/SocialPostActions";
-import { getProductById } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import type { Post } from "@/lib/post";
 import type { SocialUser } from "@/lib/social";
@@ -52,7 +49,6 @@ export function PostCard({
 }) {
   const [page, setPage] = useState(post.coverPageIndex);
   const current = post.pages[Math.min(page, post.pages.length - 1)];
-  const products = post.productIds.map(getProductById).filter(Boolean).slice(0, 6) as NonNullable<ReturnType<typeof getProductById>>[];
 
   return (
     <article className="overflow-hidden rounded-2xl border border-divider/50 bg-bg">
@@ -104,29 +100,14 @@ export function PostCard({
         <p className="text-sm font-semibold text-midnight">{post.likes.toLocaleString()} {post.likes === 1 ? "like" : "likes"}</p>
         {post.caption && <p className="line-clamp-2 text-sm text-midnight/90">{post.caption}</p>}
 
-        {products.length > 0 && (
-          // The shoppable strip: every product in the post, however it was added.
-          <ul className="mt-2 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {products.map((product) => (
-              <li key={product.id} className="shrink-0">
-                <Link
-                  href={`/product/${product.id}`}
-                  onClick={(event) => {
-                    if (!onProductClick) return;
-                    event.preventDefault();
-                    onProductClick(product.id);
-                  }}
-                  className="block w-16"
-                  title={product.name}
-                >
-                  <span className="relative block aspect-square overflow-hidden rounded-lg border border-divider/50 bg-surface">
-                    <Image src={product.images[0]} alt={product.name} fill sizes="64px" className="object-cover" />
-                  </span>
-                  <span className="mt-1 block truncate text-[10px] text-midnight/60">${product.price}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+        {post.productIds.length > 0 && (
+          // A count rather than the products themselves: thumbnails inside a
+          // masonry column fought with the artwork above them. The strip lives on
+          // the opened post, where it has room.
+          <button type="button" onClick={onOpen} className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold text-navy">
+            <ShoppingBag className="h-3.5 w-3.5" />
+            Shop {post.productIds.length} {post.productIds.length === 1 ? "product" : "products"}
+          </button>
         )}
       </div>
     </article>
