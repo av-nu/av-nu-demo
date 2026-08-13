@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 
+// Fixed, because a render-time timestamp is exactly what these guard against.
+const FIXED_TIME = 1_735_689_600_000;
+
 import { communityLists } from "@/data/faves";
 import { buildSpotlightRows } from "@/data/spotlight";
 import { editorialProductIds } from "./editorial";
@@ -71,7 +74,7 @@ describe("videoReviewToPost", () => {
 describe("spotlightRowToPost", () => {
   it("links the featured product plus its supporting grid, unpinned", () => {
     const [row] = buildSpotlightRows(1);
-    const post = spotlightRowToPost(row, "c-mara");
+    const post = spotlightRowToPost(row, "c-mara", FIXED_TIME);
 
     expect(post.authorId).toBe("c-mara");
     expect(post.pages).toHaveLength(1);
@@ -88,7 +91,7 @@ describe("communityListToPost", () => {
     const multiPage = communityLists.find((list) => list.pages.length > 1);
     if (!multiPage) throw new Error("expected a seeded multi-page list");
 
-    const post = communityListToPost(multiPage);
+    const post = communityListToPost(multiPage, FIXED_TIME);
 
     expect(post.pages).toHaveLength(multiPage.pages.length);
     expect(post.likes).toBe(multiPage.likes);
@@ -99,7 +102,7 @@ describe("communityListToPost", () => {
     const featured = communityLists.find((list) => list.format === "featured");
     if (!featured) throw new Error("expected a seeded featured list");
 
-    const post = communityListToPost(featured);
+    const post = communityListToPost(featured, FIXED_TIME);
 
     // The Featured template is portrait and leads with a full-bleed hero.
     expect(post.format).toBe("portrait");
@@ -110,7 +113,7 @@ describe("communityListToPost", () => {
     const list = communityLists.find((item) => item.pages[0].productIds.length > 0);
     if (!list) throw new Error("expected a seeded list with products");
 
-    const post = communityListToPost(list);
+    const post = communityListToPost(list, FIXED_TIME);
 
     expect(post.productIds.length).toBeGreaterThan(0);
     expect(editorialProductIds(post.pages[0].design).length).toBeGreaterThan(0);
@@ -128,7 +131,7 @@ describe("communityListToPost", () => {
     };
     const list = { ...source, format: "standard" as const, pages: [{ ...source.pages[0], editorial: design }] };
 
-    const post = communityListToPost(list);
+    const post = communityListToPost(list, FIXED_TIME);
 
     expect(post.format).toBe("square");
     expect(post.pages[0].design.elements).toHaveLength(0);

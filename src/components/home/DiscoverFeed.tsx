@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { BookOpen, Camera, ListChecks, Plus, Users } from "lucide-react";
+import { ArrowRight, Sparkles, Users } from "lucide-react";
 
 import { PostCard } from "@/components/post/PostCard";
 import { PostQuickView } from "@/components/post/PostQuickView";
@@ -23,13 +23,6 @@ import { getProductById } from "@/lib/data";
 import { socialService, toSocialUser } from "@/lib/social";
 
 const DISCOVERY_CATEGORY_ORDER = ["Apparel", "Accessories", "Home & Living", "Beauty", "Wellness", "Outdoors", "Food & Drink", "Pet", "Kids"];
-
-/** Direct-create shortcuts, each tinted with its designated category color. */
-const CREATE_ACTIONS = [
-  { href: "/create/guide", label: "Guide", icon: BookOpen, className: "border-guide/45 bg-guide/15 hover:bg-guide/25" },
-  { href: "/create/list", label: "List", icon: ListChecks, className: "border-list/55 bg-list/20 hover:bg-list/30" },
-  { href: "/create/moment", label: "Moment", icon: Camera, className: "border-moment/70 bg-moment/40 hover:bg-moment/55" },
-] as const;
 
 function interleaveProducts(products: Product[]) {
   const buckets = new Map(DISCOVERY_CATEGORY_ORDER.map((category) => [category, products.filter((product) => product.category === category)]));
@@ -137,27 +130,24 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
           </section>
         )}
 
-        {/* Five equal segments: Create, Guide, List, Moment, Profile. */}
-        <div className="grid min-h-14 w-full max-w-full min-w-0 grid-cols-5 overflow-hidden rounded-3xl border border-divider bg-white">
-          <span className="flex min-w-0 items-center justify-center gap-1.5 bg-accent px-1.5 py-3 text-[10px] font-semibold text-white sm:px-3 sm:text-xs">
-            <Plus className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">Create</span>
+        {/* One way in. Guides, lists, and moments were separate creation paths;
+            a post covers all three now, so offering them as choices would be
+            offering shapes that no longer exist. */}
+        <Link
+          href="/create"
+          className="group flex min-h-14 w-full max-w-full min-w-0 items-center gap-3 overflow-hidden rounded-3xl border border-accent/30 bg-accent px-4 py-3 text-white transition-colors hover:bg-accent/90"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20">
+            <Sparkles className="h-4.5 w-4.5" />
           </span>
-          {CREATE_ACTIONS.map(({ href, label, icon: Icon, className }) => (
-            <Link
-              key={href}
-              href={href}
-              className={`flex min-w-0 items-center justify-center gap-1 border-l border-white/60 px-1.5 py-3 text-[10px] font-semibold text-midnight transition-colors sm:gap-1.5 sm:px-3 sm:text-xs ${className.replace("border-guide/45 ", "").replace("border-list/55 ", "").replace("border-moment/70 ", "")}`}
-            >
-              <Icon className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">{label}</span>
-            </Link>
-          ))}
-          <Link href="/profile" aria-label="Your profile" className="flex min-w-0 items-center justify-center gap-1.5 border-l border-white/60 bg-burgundy px-1.5 py-3 text-[10px] font-semibold text-white transition-colors hover:opacity-90 sm:gap-2 sm:px-3 sm:text-xs">
-            <Avatar user={currentUser} size="sm" className="h-10 w-10 border-2 border-white bg-white text-burgundy sm:h-8 sm:w-8" />
-            <span className="hidden truncate sm:inline">Profile</span>
-          </Link>
-        </div>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold leading-tight">Create a post</span>
+            <span className="block truncate text-[11px] leading-snug text-white/85">
+              Bring products, photos, and ideas together, and share what you love
+            </span>
+          </span>
+          <ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
+        </Link>
       </div>
 
       <p className="mb-4 mt-8 text-xs italic text-text/50">Inspiration, guides, and reviews from people and brands worth knowing.</p>

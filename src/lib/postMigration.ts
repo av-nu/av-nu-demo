@@ -63,7 +63,12 @@ export function videoReviewToPost(review: VideoReview): Post {
 
 // --- spotlight rows (seeded videos) ------------------------------------------
 
-export function spotlightRowToPost(row: SpotlightRow, authorId: string, createdAt = Date.now()): Post {
+/**
+ * `createdAt` is required rather than defaulted. Defaulting it to Date.now() puts
+ * a render-time value into the feed's sort order, which differs between the server
+ * and the client and shows up as a hydration mismatch.
+ */
+export function spotlightRowToPost(row: SpotlightRow, authorId: string, createdAt: number): Post {
   const page = createMediaPage(mediaRefFor(row.videoUrl), "video", "portrait");
   // Linked, not pinned. Seeded footage carries no record of where each product
   // appears, and scattering labels at invented coordinates covers the video with
@@ -116,7 +121,8 @@ function designForListPage(page: ListPage, name: string, format: "standard" | "f
   return applyEditorialTemplate(page.productIds, name, templateForListPage(page, format));
 }
 
-export function communityListToPost(list: CommunityList, createdAt = Date.now()): Post {
+/** See spotlightRowToPost: the timestamp is the caller's to decide. */
+export function communityListToPost(list: CommunityList, createdAt: number): Post {
   const format = list.format === "featured" ? "featured" : "standard";
   const sourcePages = list.pages?.length ? list.pages : [{ id: `page-${list.id}`, template: 4 as TemplateId, productIds: [] }];
   const pages: PostPage[] = sourcePages.map((page) => createPostPage(designForListPage(page, list.name, format)));

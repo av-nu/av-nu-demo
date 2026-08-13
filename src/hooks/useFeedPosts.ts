@@ -24,7 +24,14 @@ export function useFeedPosts(): Post[] {
   const { publishedMoments } = useVideoReviews();
 
   const legacy = useMemo(() => {
-    const videos = buildSpotlightRows(8).map((row, index) => spotlightRowToPost(row, contacts[index % contacts.length]?.id ?? "c-mara"));
+    // The timestamp must be passed, not defaulted: the migrator falls back to
+    // Date.now(), which differs between the server and the client, reorders the
+    // feed, and lands a different author in the same slot.
+    const videos = buildSpotlightRows(8).map((row, index) => spotlightRowToPost(
+      row,
+      contacts[index % contacts.length]?.id ?? "c-mara",
+      LEGACY_EPOCH - (index + 1) * 3_600_000,
+    ));
     // A fixed epoch, not Date.now(): computing timestamps during render gives the
     // server and the client different values, which reorders the feed and trips
     // a hydration mismatch.

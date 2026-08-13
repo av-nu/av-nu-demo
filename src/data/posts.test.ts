@@ -49,3 +49,26 @@ describe("seed posts", () => {
     expect(collage && isMediaPage(collage.pages[0])).toBe(false);
   });
 });
+
+describe("seed determinism", () => {
+  // The element factories mint ids from the clock. Any such id that reaches the
+  // DOM disagrees between the server's copy and the browser's.
+  it("gives every element and stroke a stable id", () => {
+    for (const post of seedPosts) {
+      for (const page of post.pages) {
+        expect(page.id.startsWith(post.id)).toBe(true);
+        for (const element of page.design.elements) {
+          expect(element.id.startsWith(page.id)).toBe(true);
+          if (element.type === "drawing") {
+            for (const path of element.paths) expect(path.id.startsWith(element.id)).toBe(true);
+          }
+        }
+      }
+    }
+  });
+
+  it("has no id containing a recent timestamp", () => {
+    const ids = seedPosts.flatMap((post) => post.pages.flatMap((page) => page.design.elements.map((element) => element.id)));
+    for (const id of ids) expect(id).not.toMatch(/17\d{11}/);
+  });
+});

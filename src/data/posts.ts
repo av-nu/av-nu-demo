@@ -36,6 +36,32 @@ function layer(design: EditorialPageDesign, extras: EditorialPageDesign["element
   return { ...design, elements: [...design.elements, ...extras.map((element, index) => ({ ...element, zIndex: baseZ + index }))] };
 }
 
+/**
+ * Stamps deterministic ids over a page's contents.
+ *
+ * The element factories mint ids from the clock, which is fine for authoring but
+ * not for seeds: the server and the browser each build their own copy, and any id
+ * that reaches the DOM then disagrees between them.
+ */
+function withStableIds(page: PostPage, postId: string, pageIndex: number): PostPage {
+  return {
+    ...page,
+    id: `${postId}-p${pageIndex}`,
+    design: {
+      ...page.design,
+      elements: page.design.elements.map((element, index) => {
+        const id = `${postId}-p${pageIndex}-e${index}`;
+        if (element.type !== "drawing") return { ...element, id };
+        return {
+          ...element,
+          id,
+          paths: element.paths.map((path, pathIndex) => ({ ...path, id: `${id}-s${pathIndex}` })),
+        };
+      }),
+    },
+  };
+}
+
 function buildPost(
   id: string,
   author: string,
@@ -47,7 +73,7 @@ function buildPost(
   return normalizePost({
     id,
     authorId: author,
-    pages,
+    pages: pages.map((page, index) => withStableIds(page, id, index)),
     format: pages[0]?.design.format ?? "portrait",
     coverPageIndex: 0,
     productIds: [],
