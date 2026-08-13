@@ -40,6 +40,11 @@ export type EditorialProductElement = EditorialElementBase & {
    */
   slot?: number;
   fit: EditorialImageFit;
+  /**
+   * How far the picture extends past its box after a crop, as fractions of the
+   * box. Absent when uncropped.
+   */
+  crop?: { top: number; right: number; bottom: number; left: number };
   cropX: number;
   cropY: number;
   zoom: number;
@@ -56,6 +61,11 @@ export type EditorialImageElement = EditorialElementBase & {
   /** Set when this element occupies a layout slot (see product element). */
   slot?: number;
   fit: EditorialImageFit;
+  /**
+   * How far the picture extends past its box after a crop, as fractions of the
+   * box. Absent when uncropped.
+   */
+  crop?: { top: number; right: number; bottom: number; left: number };
   cropX: number;
   cropY: number;
   zoom: number;
@@ -70,6 +80,11 @@ export type EditorialVideoElement = EditorialElementBase & {
   type: "video";
   src: string;
   fit: EditorialImageFit;
+  /**
+   * How far the picture extends past its box after a crop, as fractions of the
+   * box. Absent when uncropped.
+   */
+  crop?: { top: number; right: number; bottom: number; left: number };
   cropX: number;
   cropY: number;
   zoom: number;
@@ -126,6 +141,11 @@ export type EditorialPlaceholderElement = EditorialElementBase & {
   /** Slot order within the template, used for labelling. */
   slot: number;
   fit: EditorialImageFit;
+  /**
+   * How far the picture extends past its box after a crop, as fractions of the
+   * box. Absent when uncropped.
+   */
+  crop?: { top: number; right: number; bottom: number; left: number };
   cropX: number;
   cropY: number;
   zoom: number;

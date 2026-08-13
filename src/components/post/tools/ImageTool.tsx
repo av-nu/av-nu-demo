@@ -1,6 +1,6 @@
 "use client";
 
-import { Crop, Frame, Maximize } from "lucide-react";
+import { Crop, Frame, Maximize, RotateCcw } from "lucide-react";
 
 import { PostToolPanel, ToolFieldLabel, ToolSection } from "@/components/post/tools/PostToolPanel";
 import { cn } from "@/lib/utils";
@@ -20,12 +20,17 @@ export function ImageTool({
   section,
   onSection,
   onPatch,
+  onStartCrop,
+  onResetCrop,
   onClose,
 }: {
   selected: EditorialMediaElement;
   section: Section | undefined;
   onSection: (section: Section | undefined) => void;
   onPatch: (patch: Partial<EditorialMediaElement>) => void;
+  onStartCrop: () => void;
+  /** Present only once a crop has been taken. */
+  onResetCrop?: () => void;
   onClose: () => void;
 }) {
   const toggle = (next: Section) => onSection(section === next ? undefined : next);
@@ -76,7 +81,30 @@ export function ImageTool({
       </ToolSection>
 
       <ToolSection label="Crop" icon={<Crop className="h-3.5 w-3.5" />} open={section === "crop"} onToggle={() => toggle("crop")}>
-        <label className="block">
+        <button
+          type="button"
+          onClick={onStartCrop}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-navy py-3 text-sm font-semibold text-white transition-colors hover:bg-navy/90"
+        >
+          <Crop className="h-4 w-4" />
+          Crop on the canvas
+        </button>
+        <p className="mt-2 text-[11px] leading-relaxed text-midnight/50">
+          Drag across the image to choose what to keep, then confirm.
+        </p>
+
+        {onResetCrop && (
+          <button
+            type="button"
+            onClick={onResetCrop}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-divider/70 px-3 py-1.5 text-[11px] font-semibold text-midnight/70 transition-colors hover:border-midnight/40 hover:text-midnight"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            Undo crop
+          </button>
+        )}
+
+        <label className="mt-4 block">
           <ToolFieldLabel>Zoom</ToolFieldLabel>
           <input
             type="range"
@@ -88,31 +116,6 @@ export function ImageTool({
             className="w-full accent-navy"
           />
         </label>
-
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <label className="block">
-            <ToolFieldLabel>Across</ToolFieldLabel>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={selected.cropX}
-              onChange={(event) => onPatch({ cropX: Number(event.target.value) })}
-              className="w-full accent-navy"
-            />
-          </label>
-          <label className="block">
-            <ToolFieldLabel>Down</ToolFieldLabel>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={selected.cropY}
-              onChange={(event) => onPatch({ cropY: Number(event.target.value) })}
-              className="w-full accent-navy"
-            />
-          </label>
-        </div>
 
         <div className="mt-3">
           <ToolFieldLabel>Fill</ToolFieldLabel>
@@ -133,9 +136,6 @@ export function ImageTool({
               </button>
             ))}
           </div>
-          <p className="mt-2 text-[11px] leading-relaxed text-midnight/45">
-            Zooming out below 100% also shows the whole picture.
-          </p>
         </div>
       </ToolSection>
     </PostToolPanel>

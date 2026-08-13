@@ -139,6 +139,7 @@ export default function BrandPage({ params }: { params: { id: string } }) {
       <section className="hidden md:block space-y-4">
         {/* Brand info - subtle container with large logo */}
         <div className="flex items-start gap-6 rounded-xl bg-white/40 p-4 shadow-sm">
+          <BrandFaveButton brandId={brand.id} brandName={brand.name} onToast={showToast} className="order-last shrink-0" />
           {/* Large logo */}
           <div className="h-28 w-28 shrink-0 overflow-hidden rounded-2xl border border-divider/30 bg-white p-3 shadow-sm">
             <img
@@ -149,7 +150,7 @@ export default function BrandPage({ params }: { params: { id: string } }) {
           </div>
           
           {/* Content on the right */}
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
             {/* Name and tagline */}
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <h1 className="font-headline text-2xl font-semibold text-text">
@@ -159,8 +160,6 @@ export default function BrandPage({ params }: { params: { id: string } }) {
                 {brand.tagline}
               </p>
             </div>
-
-            <BrandFaveButton brandId={brand.id} brandName={brand.name} onToast={showToast} className="mt-3" />
             
             {/* Location badge */}
             <div className="mt-1.5 inline-flex items-center gap-1.5 text-sm text-text/60">
@@ -272,6 +271,7 @@ export default function BrandPage({ params }: { params: { id: string } }) {
             </h1>
             <p className="text-xs text-text/60 truncate">{brand.tagline}</p>
           </div>
+          <BrandFaveButton brandId={brand.id} brandName={brand.name} variant="icon" onToast={showToast} className="shrink-0" />
         </div>
 
         {/* Three horizontal media containers */}

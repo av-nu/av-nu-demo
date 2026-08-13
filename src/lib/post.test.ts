@@ -313,3 +313,14 @@ describe("linked products", () => {
     expect(post.productIds).toContain("p-9");
   });
 });
+
+describe("media page background", () => {
+  it("keeps video on black, where letterboxing is expected", () => {
+    expect(createMediaPage("idb:video-1", "video", "portrait").design.backgroundColor).toBe("#000000");
+  });
+
+  it("puts a photo on the canvas colour, so rounding reads as a shape", () => {
+    // On black, a rounded corner or a zoomed-out crop looked like a defect.
+    expect(createMediaPage("idb:image-1", "image", "portrait").design.backgroundColor).not.toBe("#000000");
+  });
+});

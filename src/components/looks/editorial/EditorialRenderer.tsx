@@ -8,6 +8,7 @@ import { useEffect, useId, useRef, type PointerEvent as ReactPointerEvent, type 
 import { mockProducts } from "@/data/mockProducts";
 import { isUnoptimizableSrc, useMediaSrc } from "@/lib/media/useMediaSrc";
 import { useVideoSound } from "@/hooks/useVideoSound";
+import { croppedMediaFrame } from "@/lib/crop";
 import { getVideoPoster } from "@/lib/utils";
 import { EDITORIAL_FORMATS, EDITORIAL_VECTOR_PATHS, editorialFontStack, isEditorialFramedElement, isEditorialMediaElement, isSlotElement, type EditorialElement, type EditorialMediaElement, type EditorialImageMask, type EditorialPageDesign, type EditorialSnapGuides } from "@/lib/editorial";
 
@@ -138,16 +139,15 @@ function MediaElementContent({ element, staticMedia }: { element: EditorialMedia
   // Zoom enlarges the media box rather than transforming it, so the excess can
   // be panned on *both* axes. `object-fit: cover` alone only ever overflows one
   // axis, which left the other with no play at all.
+  // Cropped media is anchored by its inset so the picture cannot shift when the
+  // box shrinks around it; uncropped media follows the pan rule.
+  const frame = croppedMediaFrame(element.crop, element.zoom, element.cropX, element.cropY);
   const zoom = Math.max(0.2, Math.min(4, element.zoom));
-  // One offset rule for both directions: zoomed in, the surplus is panned out of
-  // view; zoomed out, the smaller image is positioned within the frame. Zooming
-  // below 1 is what lets the whole photo be seen rather than a fixed crop.
-  const slack = 100 - zoom * 100;
   const objectStyle: React.CSSProperties = {
-    width: `${zoom * 100}%`,
-    height: `${zoom * 100}%`,
-    left: `${slack * (element.cropX / 100)}%`,
-    top: `${slack * (element.cropY / 100)}%`,
+    width: `${frame.width}%`,
+    height: `${frame.height}%`,
+    left: `${frame.left}%`,
+    top: `${frame.top}%`,
     // Still governs the overflow that `cover` itself produces.
     objectPosition: `${element.cropX}% ${element.cropY}%`,
   };

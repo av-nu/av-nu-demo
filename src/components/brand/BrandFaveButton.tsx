@@ -35,11 +35,11 @@ export function BrandFaveButton({
   const toggle = () => {
     if (isFave) {
       unfollowBrand(brandId);
-      onToast?.(`Removed ${brandName} from your brands`);
+      onToast?.(`Removed ${brandName} from your faved brands`);
       return;
     }
     followBrand(brandId);
-    onToast?.(`Added ${brandName} to your brands`);
+    onToast?.(`Faved ${brandName}`);
   };
 
   if (variant === "icon") {
@@ -53,8 +53,8 @@ export function BrandFaveButton({
           toggle();
         }}
         aria-pressed={isFave}
-        aria-label={isFave ? `Remove ${brandName} from your brands` : `Add ${brandName} to your brands`}
-        title={isFave ? "Remove from your brands" : "Add to your brands"}
+        aria-label={isFave ? `Unfave ${brandName}` : `Fave ${brandName}`}
+        title={isFave ? "Unfave brand" : "Fave brand"}
         className={cn(
           "flex h-9 w-9 items-center justify-center rounded-full border border-divider/60 bg-bg/90 shadow-sm backdrop-blur transition-colors",
           isFave ? "text-pink" : "text-midnight/45 hover:text-midnight",
@@ -78,7 +78,7 @@ export function BrandFaveButton({
       )}
     >
       <Heart className={cn("h-4 w-4", isFave && "fill-current")} />
-      {isFave ? "Saved" : "Save brand"}
+      {isFave ? "Faved" : "Fave Brand"}
     </button>
   );
 }

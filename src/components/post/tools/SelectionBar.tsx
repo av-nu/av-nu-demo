@@ -93,7 +93,7 @@ export function SelectionBar({
           className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-divider/70 px-3 text-[11px] font-semibold text-midnight/70 transition-colors hover:border-midnight/40 hover:text-midnight"
         >
           <Crop className="h-3.5 w-3.5" />
-          Adjust
+          Edit image
         </button>
       )}
       {!inSlot && (

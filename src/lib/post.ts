@@ -122,7 +122,10 @@ export function createMediaPage(ref: string, kind: "image" | "video", format: Ed
   return createPostPage({
     version: 1,
     format,
-    backgroundColor: "#000000",
+    // Black suits video, where letterboxing is expected, but on a photo it makes
+    // a rounded corner or a zoomed-out crop look like a defect rather than a
+    // deliberate shape.
+    backgroundColor: kind === "video" ? "#000000" : "#fffdf9",
     backgroundOpacity: 1,
     showGuides: true,
     elements: [{

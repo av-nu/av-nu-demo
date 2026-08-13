@@ -12,6 +12,7 @@ import { PostPageRail } from "@/components/post/PostPageRail";
 import { PostToolbar, type PostTool } from "@/components/post/PostToolbar";
 import { AddProductTool } from "@/components/post/tools/AddProductTool";
 import { DrawTool } from "@/components/post/tools/DrawTool";
+import { CropOverlay } from "@/components/post/tools/CropOverlay";
 import { ImageTool } from "@/components/post/tools/ImageTool";
 import { DrawingSurface, type DrawSettings } from "@/components/post/tools/DrawingSurface";
 import { LayersTool } from "@/components/post/tools/LayersTool";
@@ -20,6 +21,7 @@ import { SelectionBar } from "@/components/post/tools/SelectionBar";
 import { StickersTool } from "@/components/post/tools/StickersTool";
 import { TextTool } from "@/components/post/tools/TextTool";
 import { useToast } from "@/components/ui/Toast";
+import { applyCrop } from "@/lib/crop";
 import { DRAW_TOOL_PRESETS, pointsToPath, splitStrokeByEraser, strokeIntersectsEraser } from "@/lib/drawing";
 import { mediaStore } from "@/lib/media";
 import { socialService } from "@/lib/social";
@@ -111,6 +113,7 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
   const [zoom, setZoom] = useState(1);
   const [pendingSlotId, setPendingSlotId] = useState<string>();
   const [imageSection, setImageSection] = useState<"shape" | "crop" | undefined>("shape");
+  const [cropping, setCropping] = useState(false);
   const [publishOpen, setPublishOpen] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState<string>();
@@ -519,6 +522,17 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
                   onMove={(pinId, x, y) => setPost((current) => movePostPin(current, activePage.id, pinId, x, y))}
                   onRemove={(pinId) => setPost((current) => removePostPin(current, activePage.id, pinId))}
                 />
+                {cropping && adjustableMedia && (
+                  <CropOverlay
+                    element={adjustableMedia}
+                    format={post.format}
+                    onCancel={() => setCropping(false)}
+                    onConfirm={(rect) => {
+                      canvas.patchSelected(applyCrop(adjustableMedia, rect));
+                      setCropping(false);
+                    }}
+                  />
+                )}
                 {isDrawing && (
                   <DrawingSurface
                     format={post.format}
@@ -614,6 +628,8 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
           section={imageSection}
           onSection={setImageSection}
           onPatch={canvas.patchSelected}
+          onStartCrop={() => setCropping(true)}
+          onResetCrop={adjustableMedia.crop ? () => canvas.patchSelected({ crop: undefined }) : undefined}
           onClose={() => setActiveTool(undefined)}
         />
       )}
