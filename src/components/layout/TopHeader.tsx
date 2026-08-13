@@ -12,7 +12,7 @@ const routeConfig: Record<
   "/": { title: "av | nu", subtitle: "A refined marketplace" },
   "/search": { title: "Shop" },
   "/shop": { title: "Shop" },
-  "/create": { title: "Post" },
+  "/create": { title: "Create" },
   "/brands": { title: "" },
   "/window-shopping": { title: "" },
   "/favorites": { title: "" },
