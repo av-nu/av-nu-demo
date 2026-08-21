@@ -36,7 +36,7 @@ const moreLinks = [
   {
     href: "/connections",
     label: "Connections",
-    description: "Inner circle, followers & invitations",
+    description: "Friends, followers & invitations",
     icon: Users,
   },
   {

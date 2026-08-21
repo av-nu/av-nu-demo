@@ -47,10 +47,8 @@ export function ProductQuickView({
   }, [onClose]);
 
   const handleAddToCart = () => {
-    requireAuth("quick-add this product", () => {
-      addToCart(product.id, product.brandId);
-      onToast?.("Added to cart");
-    });
+    addToCart(product.id, product.brandId);
+    onToast?.("Added to cart");
   };
 
   const handleAddToPost = () => {

@@ -322,7 +322,7 @@ export default function BrandPreviewPage() {
           className="flex w-full items-center justify-between rounded-lg border border-divider/30 bg-surface/30 px-3 py-2"
         >
           <span className="text-xs font-medium text-text">
-            {isMobileInfoExpanded ? "Hide details" : "About this maker"}
+            {isMobileInfoExpanded ? "Hide details" : "About the brand"}
           </span>
           {isMobileInfoExpanded ? (
             <ChevronUp className="h-4 w-4 text-text/50" />
@@ -388,7 +388,7 @@ export default function BrandPreviewPage() {
             <Truck className="h-3.5 w-3.5 text-accent" />
             <span className="text-xs font-medium text-accent">
               {brand.freeShippingThreshold > 0
-                ? `Free over $${brand.freeShippingThreshold}`
+                ? `Free shipping over $${brand.freeShippingThreshold}`
                 : "Free shipping"}
             </span>
           </div>

@@ -32,7 +32,7 @@ export default function ConnectionsPage() {
   const [tab, setTab] = useState<Tab>("inner");
 
   const tabs: { id: Tab; label: string; count: number }[] = [
-    { id: "inner", label: "Inner circle", count: innerCircle.length },
+    { id: "inner", label: "Friends", count: innerCircle.length },
     { id: "followers", label: "Followers", count: followers.length },
     { id: "following", label: "Following", count: following.length },
     { id: "invites", label: "Invitations", count: incomingRequests.length },
@@ -54,8 +54,8 @@ export default function ConnectionsPage() {
       </Link>
 
       <div>
-        <h1 className="font-headline text-3xl tracking-tight text-text">Connections</h1>
-        <p className="mt-1 text-sm text-text/50">Manage your inner circle, followers, and invitations</p>
+        <h1 className="font-headline text-3xl tracking-tight text-text">Friends &amp; connections</h1>
+        <p className="mt-1 text-sm text-text/50">Manage your Friends, followers, and invitations</p>
       </div>
 
       {/* Find & add people */}
@@ -95,15 +95,15 @@ export default function ConnectionsPage() {
         <div>
           {tab === "inner" && (
             <List
-              empty="No one in your inner circle yet."
+              empty="No friends yet."
               users={innerCircle}
               renderAction={(id, name) => (
                 <RemoveButton
                   label="Remove"
                   onClick={() => {
-                    if (window.confirm(`Remove ${name} from your inner circle?`)) {
+                    if (window.confirm(`Remove ${name} from your Friends?`)) {
                       removeConnection(id);
-                      showToast(`Removed ${name} from your inner circle`);
+                      showToast(`Removed ${name} from your Friends`);
                     }
                   }}
                 />

@@ -55,7 +55,6 @@ export function BrandsClient({ windows }: { windows: BrandWindowData[] }) {
   return (
     <div className="mx-auto max-w-6xl space-y-7 pb-8">
       <header className="pt-3 sm:pt-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">Meet the makers</p>
         <h1 className="mt-2 font-headline text-3xl tracking-tight text-text sm:text-4xl">Discover brands</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-text/60">Find independent brands by what they make, what they stand for, or just explore.</p>
       </header>

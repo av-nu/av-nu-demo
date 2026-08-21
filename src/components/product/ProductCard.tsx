@@ -50,12 +50,10 @@ export const ProductCard = memo(function ProductCard({
     (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      requireAuth("quick-add this product", () => {
-        addToCart(product.id, product.brandId);
-        onShare?.("Added to cart");
-      });
+      addToCart(product.id, product.brandId);
+      onShare?.("Added to cart");
     },
-    [product.id, product.brandId, addToCart, onShare, requireAuth],
+    [product.id, product.brandId, addToCart, onShare],
   );
 
   return (
