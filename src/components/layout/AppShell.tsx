@@ -5,8 +5,7 @@ import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { LayoutGroup } from "framer-motion";
 import Link from "next/link";
-import { User } from "lucide-react";
-
+import { Avatar } from "@/components/social/Avatar";
 import { BottomTabBar } from "@/components/layout/BottomTabBar";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { SideNav } from "@/components/layout/SideNav";
@@ -14,6 +13,8 @@ import { TopHeader } from "@/components/layout/TopHeader";
 import { NotificationBell } from "@/components/social/NotificationBell";
 import { CartProvider } from "@/hooks/useCart";
 import { AuthProvider } from "@/hooks/useAuth";
+import { useSocialStore } from "@/hooks/useSocialStore";
+import { toSocialUser } from "@/lib/social";
 
 const CartPopover = dynamic(
   () => import("@/components/cart/CartPopover").then((m) => m.CartPopover),
@@ -28,6 +29,8 @@ export const AppShell = memo(function AppShell({
   const [isMounted, setIsMounted] = useState(false);
   const [sideNavCollapsed, setSideNavCollapsed] = useState(false);
   const pathname = usePathname();
+  const { state } = useSocialStore();
+  const profileUser = toSocialUser("me", state);
 
   useEffect(() => {
     setIsMounted(true);
@@ -103,11 +106,11 @@ export const AppShell = memo(function AppShell({
           {isMounted && (
             <>
               <Link href="/profile" aria-label="Profile" className="fixed left-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-surface/85 text-text/70 shadow-sm backdrop-blur transition-colors hover:bg-surface hover:text-text md:hidden">
-                <User className="h-5 w-5" />
+                <Avatar user={profileUser} size="sm" className="h-10 w-10 text-xs" />
               </Link>
               <div className="fixed right-4 top-4 z-50 flex items-center gap-3 md:right-8 md:top-6">
                 <Link href="/profile" aria-label="Profile" className="hidden h-10 w-10 items-center justify-center rounded-full bg-surface/85 text-text/70 shadow-sm backdrop-blur transition-colors hover:bg-surface hover:text-text md:flex">
-                  <User className="h-5 w-5" />
+                  <Avatar user={profileUser} size="sm" className="h-10 w-10 text-xs" />
                 </Link>
                 <NotificationBell />
                 <CartPopover />
