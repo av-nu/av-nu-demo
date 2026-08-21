@@ -96,7 +96,7 @@ export const ProductCard = memo(function ProductCard({
         <button
           type="button"
           onClick={handleQuickAdd}
-          className="absolute bottom-0 left-0 right-0 z-20 flex items-center justify-center gap-1.5 bg-text py-2.5 text-sm font-medium text-bg opacity-0 transition-all duration-200 hover:bg-text/90 group-hover:opacity-100"
+          className="absolute bottom-0 left-0 right-0 z-20 flex items-center justify-center gap-1.5 bg-text py-2.5 text-sm font-medium text-bg opacity-100 transition-all duration-200 hover:bg-text/90 md:pointer-events-none md:opacity-0 md:group-hover:pointer-events-auto md:group-hover:opacity-100"
         >
           <Plus className="h-4 w-4" />
           Quick Add
