@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -42,5 +43,9 @@ export default function EditPostPage() {
     );
   }
 
-  return <PostComposer initialPost={initialPost} initialDraft={draft} />;
+  return (
+    <Suspense fallback={<p className="py-20 text-center text-sm text-text/50">Loading your post…</p>}>
+      <PostComposer initialPost={initialPost} initialDraft={draft} />
+    </Suspense>
+  );
 }
