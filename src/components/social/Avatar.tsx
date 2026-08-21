@@ -29,7 +29,7 @@ export function Avatar({
     return (
       <span className={cn(base, "bg-surface")}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />
+        <img src={user.avatarUrl} alt={user.name} className="block aspect-square h-full w-full rounded-full object-cover" />
       </span>
     );
   }
