@@ -32,6 +32,7 @@ export type SelectedBrandFilters = Partial<Record<BrandFilterGroupId, string[]>>
 export function brandMatchesFilters(metadata: BrandFilterMetadata, selected: SelectedBrandFilters) {
   return (Object.entries(selected) as Array<[BrandFilterGroupId, string[] | undefined]>).every(([group, values]) => {
     if (!values || values.length === 0) return true;
+    if (group === "categories") return values.some((value) => metadata[group].includes(value));
     return values.every((value) => metadata[group].includes(value));
   });
 }
