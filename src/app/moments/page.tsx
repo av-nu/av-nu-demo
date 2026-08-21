@@ -66,7 +66,6 @@ export default function MomentsPage() {
               onSave={() => showToast("Saved to your posts")}
               onShare={() => showToast("Sharing coming soon")}
               onOpen={() => setActivePostId(moment.id)}
-              onProductClick={(productId) => { const product = getProductById(productId); if (product) setActiveProduct(product); }}
               onDelete={moment.authorId === "me" ? () => { void socialService.deletePost(moment.id); showToast("Post deleted"); } : undefined}
             />
           ))}

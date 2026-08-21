@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { PostComposer } from "@/components/post/PostComposer";
 import { useSavedLooks } from "@/hooks/useSavedLooks";
+import { usePostDrafts } from "@/hooks/usePostDrafts";
 import { useSocialStore } from "@/hooks/useSocialStore";
 import { savedLookToPost } from "@/lib/postMigration";
 
@@ -13,19 +15,22 @@ import { savedLookToPost } from "@/lib/postMigration";
  * saved look, which is migrated on read — the stored looks are left untouched, so
  * a bad conversion costs nothing.
  */
-export default function EditPostPage({ params }: { params: { id: string } }) {
+export default function EditPostPage() {
+  const params = useParams<{ id: string }>();
   const { state, isHydrated } = useSocialStore();
   const { looks, isHydrated: looksHydrated } = useSavedLooks();
+  const { drafts, isHydrated: draftsHydrated } = usePostDrafts();
 
-  if (!isHydrated || !looksHydrated) {
+  if (!isHydrated || !looksHydrated || !draftsHydrated) {
     return <p className="py-20 text-center text-sm text-text/50">Loading your post…</p>;
   }
 
+  const draft = drafts.find((item) => item.id === params.id);
   const existing = state.posts.find((post) => post.id === params.id);
   const look = looks.find((item) => item.id === params.id);
   const initialPost = existing ?? (look ? savedLookToPost(look) : undefined);
 
-  if (!initialPost) {
+  if (!initialPost && !draft) {
     return (
       <div className="py-20 text-center">
         <h1 className="font-headline text-3xl">Post not found</h1>
@@ -37,5 +42,5 @@ export default function EditPostPage({ params }: { params: { id: string } }) {
     );
   }
 
-  return <PostComposer initialPost={initialPost} />;
+  return <PostComposer initialPost={initialPost} initialDraft={draft} />;
 }

@@ -12,7 +12,7 @@ import { useListSocial } from "@/hooks/useListSocial";
 import { useSavedPostGroups } from "@/hooks/useSavedPostGroups";
 import { useSocialStore } from "@/hooks/useSocialStore";
 import { getProductById } from "@/lib/data";
-import { socialService, toSocialUser, type SocialUser } from "@/lib/social";
+import { canViewPost, socialService, toSocialUser, type SocialUser } from "@/lib/social";
 
 /**
  * A user's posts, rendered by the same card as the feed.
@@ -38,8 +38,8 @@ export function ProfilePostGrid({
 
   const authorId = isMe ? "me" : user.id;
   const posts = useMemo(
-    () => feedPosts.filter((post) => post.authorId === authorId),
-    [authorId, feedPosts],
+    () => feedPosts.filter((post) => post.authorId === authorId && canViewPost(post, "me", state)),
+    [authorId, feedPosts, state],
   );
   const activePost = activePostId ? posts.find((post) => post.id === activePostId) : undefined;
 
@@ -69,7 +69,6 @@ export function ProfilePostGrid({
             onSave={() => { saveToDefault(post.id); onToast?.("Saved to your posts"); }}
             onShare={() => onToast?.("Sharing coming soon")}
             onOpen={() => setActivePostId(post.id)}
-            onProductClick={(productId) => { const product = getProductById(productId); if (product) setActiveProduct(product); }}
             onDelete={isMe ? () => { void socialService.deletePost(post.id); onToast?.("Post deleted"); } : undefined}
           />
         ))}

@@ -47,7 +47,7 @@ const moreLinks = [
   },
   {
     href: "/favorites",
-    label: "My Faves",
+    label: "Favorites",
     description: "Your lists & saved items",
     icon: Heart,
   },
@@ -143,7 +143,7 @@ function DemoResetCard() {
         <div className="min-w-0 flex-1">
           <p className="font-medium text-text">Reset demo data</p>
           <p className="text-sm text-text/50">
-            Clears posts, faves, orders, and uploads in this browser, back to the seeded demo.
+            Clears posts, favorites, orders, and uploads in this browser, back to the seeded demo.
           </p>
         </div>
       </div>

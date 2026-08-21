@@ -26,7 +26,7 @@ export function PostQuickView({
   onClose,
 }: {
   post: Post;
-  author: Pick<SocialUser, "name" | "initials" | "color" | "avatarUrl">;
+  author: Pick<SocialUser, "id" | "name" | "handle" | "initials" | "color" | "avatarUrl" | "isCurrentUser">;
   liked: boolean;
   saved: boolean;
   onLike: () => void;

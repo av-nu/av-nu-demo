@@ -20,9 +20,9 @@ export const navItems: NavItem[] = [
   { href: "/", label: "Discover", icon: Home },
   { href: "/shop", label: "Shop", icon: Search },
   { href: "/create", label: "Create", icon: Sparkles },
-  { href: "/window-shopping", label: "Brands", icon: Store },
+  { href: "/brands", label: "Brands", icon: Store },
   { href: "/profile", label: "Profile", icon: User },
-  { href: "/favorites", label: "My Faves", icon: Heart },
+  { href: "/favorites", label: "Favorites", icon: Heart },
   { href: "/cart", label: "Cart", icon: ShoppingBag },
 ];
 
@@ -31,7 +31,7 @@ export const mobileNavItems: NavItem[] = [
   { href: "/", label: "Discover", icon: Home },
   { href: "/shop", label: "Shop", icon: Search },
   { href: "/create", label: "Create", icon: Sparkles },
-  { href: "/favorites", label: "My Faves", icon: Heart },
-  { href: "/window-shopping", label: "Brands", icon: Store },
+  { href: "/favorites", label: "Favorites", icon: Heart },
+  { href: "/brands", label: "Brands", icon: Store },
   { href: "/more", label: "More", icon: MoreHorizontal },
 ];

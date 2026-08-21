@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -15,14 +15,12 @@ import { socialService, toSocialUser } from "@/lib/social";
 import { ProductQuickView } from "@/components/home/ProductQuickView";
 import type { Product } from "@/data/mockProducts";
 import { getProductById } from "@/lib/data";
-import { PostCard } from "@/components/post/PostCard";
 import { PostQuickView } from "@/components/post/PostQuickView";
 import { useListSocial } from "@/hooks/useListSocial";
 import { ProfileHeader } from "@/components/social/ProfileHeader";
 import { ProfilePostGrid } from "@/components/social/ProfilePostGrid";
 import { EditProfileDialog } from "@/components/social/EditProfileDialog";
 import { FindPeopleDialog } from "@/components/social/FindPeopleDialog";
-import { SavedLooksSection } from "@/components/social/SavedLooksSection";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -36,13 +34,6 @@ export default function ProfilePage() {
   const [activeProduct, setActiveProduct] = useState<Product>();
   const { isLiked, toggleLike } = useListSocial();
   const activePost = activePostId ? state.posts.find((post) => post.id === activePostId) : undefined;
-  // Withheld until hydration for the same reason as the feed: stored posts are
-  // not part of the server-rendered markup.
-  const myPosts = useMemo(
-    () => (isHydrated ? state.posts.filter((post) => post.authorId === "me").sort((a, b) => b.createdAt - a.createdAt) : []),
-    [isHydrated, state.posts],
-  );
-
   if (!isHydrated) {
     return (
       <div className="space-y-8 animate-pulse">
@@ -70,7 +61,7 @@ export default function ProfilePage() {
         onToggleVisibility={() => {
           const next = profile.visibility === "public" ? "inner-circle" : "public";
           socialService.updateProfile({ visibility: next });
-          showToast(next === "public" ? "Profile is now public" : "Profile limited to inner circle");
+          showToast(next === "public" ? "Profile is now public" : "Profile limited to Friends");
         }}
       >
         <button
@@ -104,7 +95,7 @@ export default function ProfilePage() {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <h2 className="flex items-center gap-2 font-headline text-lg tracking-tight text-text">
               <Users className="h-4 w-4 text-accent" />
-              Your inner circle
+              Your friends
             </h2>
             <button
               type="button"
@@ -121,7 +112,7 @@ export default function ProfilePage() {
         </div>
         {innerCircle.length === 0 ? (
           <p className="rounded-xl border border-dashed border-divider/60 px-4 py-6 text-center text-sm text-text/50">
-            No one in your inner circle yet.
+            No friends yet.
           </p>
         ) : (
           <div className="flex gap-4 overflow-x-auto pb-2">
@@ -147,8 +138,6 @@ export default function ProfilePage() {
           </div>
         )}
       </section>
-
-      <SavedLooksSection />
 
       <section>
         <div className="mb-3 flex items-center justify-between gap-3">

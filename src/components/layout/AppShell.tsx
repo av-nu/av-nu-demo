@@ -4,6 +4,8 @@ import { memo, type ReactNode, useEffect, useLayoutEffect, useState } from "reac
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { LayoutGroup } from "framer-motion";
+import Link from "next/link";
+import { User } from "lucide-react";
 
 import { BottomTabBar } from "@/components/layout/BottomTabBar";
 import { PageTransition } from "@/components/layout/PageTransition";
@@ -97,12 +99,19 @@ export const AppShell = memo(function AppShell({
           {/* Full-width top bar - matches logo header height */}
           <div className="hidden md:block md:fixed md:inset-x-0 md:top-0 md:z-40 md:h-[88px] md:bg-bg/90" style={{ WebkitBackdropFilter: 'blur(8px)', backdropFilter: 'blur(8px)' }} />
 
-          {/* Persistent notifications + cart icons - top right */}
           {isMounted && (
-            <div className="fixed right-4 top-4 z-50 flex items-center gap-2 md:right-8 md:top-6">
-              <NotificationBell />
-              <CartPopover />
-            </div>
+            <>
+              <Link href="/profile" aria-label="Profile" className="fixed left-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-surface/85 text-text/70 shadow-sm backdrop-blur transition-colors hover:bg-surface hover:text-text md:hidden">
+                <User className="h-5 w-5" />
+              </Link>
+              <div className="fixed right-4 top-4 z-50 flex items-center gap-3 md:right-8 md:top-6">
+                <Link href="/profile" aria-label="Profile" className="hidden h-10 w-10 items-center justify-center rounded-full bg-surface/85 text-text/70 shadow-sm backdrop-blur transition-colors hover:bg-surface hover:text-text md:flex">
+                  <User className="h-5 w-5" />
+                </Link>
+                <NotificationBell />
+                <CartPopover />
+              </div>
+            </>
           )}
 
           <div className={`transition-[margin] duration-200 ease-in-out ${sideNavCollapsed ? "md:ml-[72px]" : "md:ml-64"}`}>

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import { ArrowLeft, Gift, ShoppingBag } from "lucide-react";
 
 import { FaveButton } from "@/components/faves/FaveButton";
@@ -9,7 +10,8 @@ import { useToast } from "@/components/ui/Toast";
 import { getBrandById, getProductById } from "@/lib/data";
 import { decodeSharedFaves } from "@/lib/sharedFaves";
 
-export default function SharedFavesPage({ params }: { params: { token: string } }) {
+export default function SharedFavesPage() {
+  const params = useParams<{ token: string }>();
   const { showToast, ToastContainer } = useToast();
   const payload = decodeSharedFaves(params.token);
   const products = payload?.productIds.map(getProductById).filter((product): product is NonNullable<typeof product> => Boolean(product)) ?? [];

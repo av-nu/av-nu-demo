@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "sync:cloudinary": "node scripts/sync-cloudinary-assets.mjs",
     "validate:catalog": "node scripts/validate-catalog-mapping.mjs",

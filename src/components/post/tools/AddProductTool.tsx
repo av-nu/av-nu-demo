@@ -11,21 +11,22 @@ import { useFaveLists } from "@/hooks/useFaveLists";
 import { useFavorites } from "@/hooks/useFavorites";
 import { getBrandById, getProductById } from "@/lib/data";
 import { cn } from "@/lib/utils";
+import { useRequireAuth } from "@/components/auth/AccountInvitationDialog";
 
-type Source = "faves" | "explore" | "search";
+type Source = "explore" | "faves";
 
 const EXPLORE_LIMIT = 40;
-const SEARCH_LIMIT = 40;
 
 /**
- * Product picker for the composer's "+" tool: pull from Faves, browse the
- * catalog, or search it. Selecting a product places it on the canvas, which is
- * what makes the post shoppable.
+ * Product picker for the composer's "+" tool: browse Explore or Favorites and
+ * search the catalog. Selecting a product places it on the canvas, which is what
+ * makes the post shoppable.
  */
 export function AddProductTool({
   onAdd,
   onAddMany,
   tagsOnly = false,
+  variant = "bottom",
   onClose,
 }: {
   onAdd: (productId: string) => void;
@@ -33,14 +34,13 @@ export function AddProductTool({
   onAddMany?: (productIds: string[]) => void;
   /** True when the page is a photo, where products are tagged rather than placed. */
   tagsOnly?: boolean;
+  variant?: "bottom" | "rail";
   onClose: () => void;
 }) {
   const { favorites } = useFavorites();
   const { lists } = useFaveLists();
-  // Opening on an empty Faves tab is a poor first impression, so start on
-  // Explore until the author has actually saved something.
-  const hasFaves = favorites.length > 0 || lists.some((list) => list.productIds.length > 0 || flattenPages(list.pages).length > 0);
-  const [source, setSource] = useState<Source>(hasFaves ? "faves" : "explore");
+  const { requireAuth, invitation } = useRequireAuth();
+  const [source, setSource] = useState<Source>("explore");
   const [query, setQuery] = useState("");
   const [chosen, setChosen] = useState<string[]>([]);
 
@@ -54,40 +54,35 @@ export function AddProductTool({
     return Array.from(ids).map((id) => getProductById(id)).filter(Boolean) as Product[];
   }, [favorites, lists]);
 
-  const exploreProducts = useMemo(() => mockProducts.slice(0, EXPLORE_LIMIT), []);
-
-  const searchResults = useMemo(() => {
+  const exploreProducts = useMemo(() => {
     const term = query.trim().toLowerCase();
-    if (!term) return [];
-    return mockProducts
-      .filter((product) => {
-        const brand = getBrandById(product.brandId)?.name ?? "";
-        return (
-          product.name.toLowerCase().includes(term)
-          || brand.toLowerCase().includes(term)
-          || product.category.toLowerCase().includes(term)
-          || (product.subcategory ?? "").toLowerCase().includes(term)
-        );
-      })
-      .slice(0, SEARCH_LIMIT);
+    const catalog = term ? mockProducts : mockProducts.slice(0, EXPLORE_LIMIT);
+    if (!term) return catalog;
+    return catalog.filter((product) => {
+      const brand = getBrandById(product.brandId)?.name ?? "";
+      return product.name.toLowerCase().includes(term)
+        || brand.toLowerCase().includes(term)
+        || product.category.toLowerCase().includes(term)
+        || (product.subcategory ?? "").toLowerCase().includes(term);
+    }).slice(0, EXPLORE_LIMIT);
   }, [query]);
 
-  const products = source === "faves" ? faveProducts : source === "explore" ? exploreProducts : searchResults;
+  const products = source === "faves" ? faveProducts : exploreProducts;
 
   const emptyMessage = source === "faves"
-    ? "Nothing saved yet — browse the catalog to add products."
-    : source === "search"
-      ? query.trim() ? "No products match that search." : "Search the catalog by product, brand, or category."
-      : "No products available.";
+    ? "Nothing saved yet — browse Explore to add products."
+    : query.trim() ? "No products match that search." : "No products available.";
 
   return (
-    <PostToolPanel
-      title="Add products"
-      onClose={onClose}
+    <>
+        <PostToolPanel
+        title="Add products"
+        variant={variant}
+        onClose={onClose}
       actions={onAddMany && chosen.length > 0 ? (
         <button
           type="button"
-          onClick={() => { onAddMany(chosen); setChosen([]); }}
+          onClick={() => { requireAuth("add products to your post", () => { onAddMany(chosen); setChosen([]); }); }}
           className="inline-flex h-8 shrink-0 items-center rounded-full bg-navy px-3 text-[11px] font-semibold text-white transition-colors hover:bg-navy/90"
         >
           Add {chosen.length}
@@ -100,18 +95,15 @@ export function AddProductTool({
           : "Places the product's imagery on the canvas and tags it, so it shows in the post's shop row."}
       </p>
       <div className="mb-3 flex gap-2">
-        <SourceTab active={source === "faves"} onClick={() => setSource("faves")} icon={<Heart className="h-3.5 w-3.5" />}>
-          Faves
-        </SourceTab>
         <SourceTab active={source === "explore"} onClick={() => setSource("explore")} icon={<Sparkles className="h-3.5 w-3.5" />}>
           Explore
         </SourceTab>
-        <SourceTab active={source === "search"} onClick={() => setSource("search")} icon={<Search className="h-3.5 w-3.5" />}>
-          Search
+        <SourceTab active={source === "faves"} onClick={() => setSource("faves")} icon={<Heart className="h-3.5 w-3.5" />}>
+          Favorites
         </SourceTab>
       </div>
 
-      {source === "search" && (
+      {source === "explore" && (
         <div className="relative mb-3">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-midnight/40" />
           <input
@@ -129,17 +121,19 @@ export function AddProductTool({
           {emptyMessage}
         </p>
       ) : (
-        <ul className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+        <ul className="grid grid-cols-2 gap-3">
           {products.map((product) => (
             <li key={product.id}>
               <button
                 type="button"
                 onClick={() => {
-                  if (!onAddMany) {
-                    onAdd(product.id);
-                    return;
-                  }
-                  setChosen((current) => (current.includes(product.id) ? current.filter((id) => id !== product.id) : [...current, product.id]));
+                  requireAuth("add a product to your post", () => {
+                    if (!onAddMany) {
+                      onAdd(product.id);
+                      return;
+                    }
+                    setChosen((current) => (current.includes(product.id) ? current.filter((id) => id !== product.id) : [...current, product.id]));
+                  });
                 }}
                 aria-pressed={chosen.includes(product.id)}
                 className="group block w-full text-left"
@@ -162,7 +156,9 @@ export function AddProductTool({
           ))}
         </ul>
       )}
-    </PostToolPanel>
+      </PostToolPanel>
+      {invitation}
+    </>
   );
 }
 

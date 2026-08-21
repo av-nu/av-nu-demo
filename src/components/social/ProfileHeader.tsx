@@ -68,7 +68,7 @@ export function ProfileHeader({
                   </>
                 ) : (
                   <>
-                    <Lock className="h-3.5 w-3.5" /> Inner circle
+                    <Lock className="h-3.5 w-3.5" /> Friends
                   </>
                 )}
               </button>
@@ -78,7 +78,7 @@ export function ProfileHeader({
 
           {/* Counts */}
           <div className="mt-3 flex items-center gap-4">
-            <Stat label="Inner circle" value={counts.innerCircle} href={connectionsHref} />
+            <Stat label="Friends" value={counts.innerCircle} href={connectionsHref} />
             <Stat label="Followers" value={counts.followers} href={connectionsHref} />
             <Stat label="Following" value={counts.following} href={connectionsHref} />
           </div>

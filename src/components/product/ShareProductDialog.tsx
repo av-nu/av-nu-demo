@@ -9,21 +9,27 @@ import type { Product } from "@/data/mockProducts";
 import { contacts } from "@/data/social";
 import { Portal } from "@/components/ui/Portal";
 import { useSocialGraph } from "@/hooks/useSocialGraph";
+import { useRequireAuth } from "@/components/auth/AccountInvitationDialog";
 
 export function ShareProductDialog({ product, onClose, onToast }: { product: Product; onClose: () => void; onToast?: (message: string) => void }) {
   const { innerCircle } = useSocialGraph();
+  const { requireAuth, invitation } = useRequireAuth();
   const [email, setEmail] = useState("");
   const [sentTo, setSentTo] = useState<string[]>([]);
 
   const shareWithPerson = (name: string) => {
-    setSentTo((current) => current.includes(name) ? current : [...current, name]);
-    onToast?.(`Shared ${product.name} with ${name}`);
+    requireAuth("share this product", () => {
+      setSentTo((current) => current.includes(name) ? current : [...current, name]);
+      onToast?.(`Shared ${product.name} with ${name}`);
+    });
   };
 
   const shareByEmail = () => {
     if (!email.trim() || !email.includes("@")) return;
-    onToast?.(`Shared ${product.name} by email`);
-    setEmail("");
+    requireAuth("share this product", () => {
+      onToast?.(`Shared ${product.name} by email`);
+      setEmail("");
+    });
   };
 
   return (
@@ -52,6 +58,7 @@ export function ShareProductDialog({ product, onClose, onToast }: { product: Pro
           </motion.div>
         </motion.div>
       </AnimatePresence>
+      {invitation}
     </Portal>
   );
 }

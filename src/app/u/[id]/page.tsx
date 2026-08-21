@@ -8,8 +8,9 @@ import { ChevronLeft, UserMinus } from "lucide-react";
 
 import { useToast } from "@/components/ui/Toast";
 import { useSocialGraph } from "@/hooks/useSocialGraph";
-import { getContactById } from "@/data/social";
 import type { ProfileCounts } from "@/lib/social";
+import { canViewProfile, resolveSocialUser } from "@/lib/social";
+import { useSocialStore } from "@/hooks/useSocialStore";
 import { ProfileHeader } from "@/components/social/ProfileHeader";
 import { ProfilePostGrid } from "@/components/social/ProfilePostGrid";
 import { FollowButton } from "@/components/social/FollowButton";
@@ -32,10 +33,11 @@ export default function UserProfilePage() {
   const router = useRouter();
   const userId = params.id;
 
-  const { isHydrated, getUser, getRelationship, removeFollower } = useSocialGraph();
+  const { isHydrated, getRelationship, removeFollower } = useSocialGraph();
+  const { state } = useSocialStore();
   const { showToast, ToastContainer } = useToast();
 
-  const contact = getContactById(userId);
+  const user = resolveSocialUser(userId, state);
 
   const counts = useMemo(
     () => pseudoCounts(userId, getRelationship(userId).inner === "connected"),
@@ -47,10 +49,10 @@ export default function UserProfilePage() {
     return null;
   }
 
-  if (!contact) {
+  if (!user) {
     return (
       <div className="py-20 text-center">
-        <p className="text-sm text-text/50">This member could not be found.</p>
+        <p className="text-sm text-text/50">This profile is unavailable.</p>
         <Link href="/connections" className="mt-3 inline-block text-sm font-medium text-accent hover:underline">
           Back to connections
         </Link>
@@ -67,7 +69,10 @@ export default function UserProfilePage() {
     );
   }
 
-  const user = getUser(userId);
+  if (!canViewProfile(userId, "me", state)) {
+    return <div className="py-20 text-center"><p className="text-sm text-text/50">This profile is private.</p></div>;
+  }
+
   const rel = getRelationship(userId);
 
   return (

@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Sparkles, Users } from "lucide-react";
+import { Users } from "lucide-react";
 
+import { FeedPromptCard } from "@/components/home/FeedPromptCard";
 import { PostCard } from "@/components/post/PostCard";
+import { PostComposer } from "@/components/post/PostComposer";
+import { useRequireAuth } from "@/components/auth/AccountInvitationDialog";
 import { PostQuickView } from "@/components/post/PostQuickView";
 import type { Post } from "@/lib/post";
 import { ProductQuickView } from "@/components/home/ProductQuickView";
@@ -20,7 +23,8 @@ import { useSocialGraph } from "@/hooks/useSocialGraph";
 import { useSocialStore } from "@/hooks/useSocialStore";
 import { useFeedPosts } from "@/hooks/useFeedPosts";
 import { getProductById } from "@/lib/data";
-import { socialService, toSocialUser } from "@/lib/social";
+import { canViewPost, socialService, toSocialUser } from "@/lib/social";
+import { shouldInsertFeedPrompt } from "@/lib/feedLayout";
 
 const DISCOVERY_CATEGORY_ORDER = ["Apparel", "Accessories", "Home & Living", "Beauty", "Wellness", "Outdoors", "Food & Drink", "Pet", "Kids"];
 
@@ -52,27 +56,29 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
   // post, and a snapshot would go stale the moment it changed.
   const [activePostId, setActivePostId] = useState<string>();
   const [activeProduct, setActiveProduct] = useState<Product>();
+  const [createOpen, setCreateOpen] = useState(false);
   const [savePost, setSavePost] = useState<Post>();
   const [sharePost, setSharePost] = useState<Post>();
   const { isLiked, toggleLike } = useListSocial();
+  const { requireAuth, invitation } = useRequireAuth();
   const { groups, saveToDefault } = useSavedPostGroups();
-  const { followedBrands, followBrand, unfollowBrand } = useSocialGraph();
+  const { followedBrands, following, followBrand, unfollowBrand } = useSocialGraph();
   const { state, isHydrated } = useSocialStore();
   const feedPosts = useFeedPosts();
   const currentUser = toSocialUser("me", state);
-  const innerIds = useMemo(() => new Set(contacts.filter((contact) => contact.circle === "inner").map((contact) => contact.id)), []);
+  const followingIds = useMemo(() => new Set(following.map((person) => person.id)), [following]);
   const activePost = activePostId ? feedPosts.find((post) => post.id === activePostId) : undefined;
   const products = useMemo(() => scope === "discover" ? mockProducts : mockProducts.slice(0, 24), [scope]);
   const mixed = useMemo(() => {
     const productItems = interleaveProducts(products).map((product, index) => ({ kind: "product" as const, id: product.id, index, data: product }));
     const postItems = feedPosts
-      .filter((post) => scope === "discover" || innerIds.has(post.authorId) || post.authorId === "me")
+      .filter((post) => post.visibility !== "private" && canViewPost(post, "me", state) && (scope === "discover" || followingIds.has(post.authorId) || post.authorId === "me"))
       .map((post, index) => ({ kind: "post" as const, id: post.id, index, data: post }));
-    const result: Array<(typeof productItems)[number] | (typeof postItems)[number]> = [];
+    const result: Array<(typeof productItems)[number] | (typeof postItems)[number] | { kind: "prompt"; id: string; index: number }> = [];
     let postIndex = 0;
+    let productCount = 0;
+    let promptIndex = 0;
 
-    // The author's own posts lead: publishing something and having to hunt for it
-    // reads as though it failed.
     while (postIndex < postItems.length && postItems[postIndex].data.authorId === "me") {
       result.push(postItems[postIndex++]);
     }
@@ -80,10 +86,14 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
     productItems.forEach((product, index) => {
       if (index > 0 && index % 4 === 0 && postIndex < postItems.length) result.push(postItems[postIndex++]);
       result.push(product);
+      productCount += 1;
+      if (shouldInsertFeedPrompt(productCount)) {
+        result.push({ kind: "prompt", id: `prompt-${scope}-${productCount}`, index: promptIndex++ });
+      }
     });
 
     return [...result, ...postItems.slice(postIndex)];
-  }, [feedPosts, innerIds, products, scope]);
+  }, [feedPosts, followingIds, products, scope, state]);
   const [visibleCount, setVisibleCount] = useState(24);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const hasMore = visibleCount < mixed.length;
@@ -111,7 +121,7 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
         <h1 className="mt-2 font-headline text-4xl tracking-tight text-midnight sm:text-5xl">Discover something <span className="text-burgundy">nu</span></h1>
         <div className="mx-auto mt-5 flex w-fit rounded-full border border-divider bg-white p-1 shadow-sm">
           <button type="button" onClick={() => setScope("discover")} className={`rounded-full px-5 py-2 text-xs font-semibold transition-colors ${scope === "discover" ? "bg-navy text-white" : "text-text/60"}`}>Discover</button>
-          <button type="button" onClick={() => setScope("inner")} className={`rounded-full px-5 py-2 text-xs font-semibold transition-colors ${scope === "inner" ? "bg-navy text-white" : "text-text/60"}`}>Inner Circle</button>
+          <button type="button" onClick={() => setScope("inner")} className={`rounded-full px-5 py-2 text-xs font-semibold transition-colors ${scope === "inner" ? "bg-navy text-white" : "text-text/60"}`}>Following</button>
         </div>
       </header>
 
@@ -130,35 +140,18 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
           </section>
         )}
 
-        {/* One way in. Guides, lists, and moments were separate creation paths;
-            a post covers all three now, so offering them as choices would be
-            offering shapes that no longer exist. */}
-        <Link
-          href="/create"
-          className="group flex min-h-14 w-full max-w-full min-w-0 items-center gap-3 overflow-hidden rounded-3xl border border-accent/30 bg-accent px-4 py-3 text-white transition-colors hover:bg-accent/90"
-        >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20">
-            <Sparkles className="h-4.5 w-4.5" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold leading-tight">Create a post</span>
-            <span className="block truncate text-[11px] leading-snug text-white/85">
-              Bring products, photos, and ideas together, and share what you love
-            </span>
-          </span>
-          <ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
-        </Link>
+
       </div>
 
-      <p className="mb-4 mt-8 text-xs italic text-text/50">Inspiration, guides, and reviews from people and brands worth knowing.</p>
-      <div className="columns-2 gap-3 md:columns-3 lg:columns-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
         {mixed.slice(0, visibleCount).map((item) => {
-          if (item.kind === "product") return <div key={`product-${item.id}`} className="mb-5 w-full break-inside-avoid cursor-pointer"><ProductCard product={item.data} onShare={onToast} onProductClick={(event) => { event.preventDefault(); setActiveProduct(item.data); }} imageAspect={item.index % 3 === 0 ? "tall" : item.index % 3 === 1 ? "portrait" : "square"} /></div>;
+          if (item.kind === "prompt") return <FeedPromptCard key={item.id} index={item.index} onClick={() => { requireAuth("create a post", () => setCreateOpen(true)); }} />;
+          if (item.kind === "product") return <div key={`product-${item.id}`} className="w-full cursor-pointer"><ProductCard product={item.data} onShare={onToast} onProductClick={(event) => { event.preventDefault(); setActiveProduct(item.data); }} imageAspect="square" /></div>;
           const post = item.data;
           const author = post.authorId === "me" ? currentUser : toSocialUser(post.authorId, state);
           const postSaved = groups.some((group) => group.postIds.includes(post.id));
           return (
-            <div key={`post-${post.id}`} className="mb-5 w-full break-inside-avoid">
+            <div key={`post-${post.id}`} className="w-full">
               <PostCard
                 post={post}
                 author={author}
@@ -169,7 +162,6 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
                 onSave={() => { if (saveToDefault(post.id)) setSavePost(post); else onToast("Saved to your posts"); }}
                 onShare={() => setSharePost(post)}
                 onOpen={() => setActivePostId(post.id)}
-                onProductClick={(productId) => { const product = getProductById(productId); if (product) setActiveProduct(product); }}
                 onDelete={post.authorId === "me" ? () => { void socialService.deletePost(post.id); onToast("Post deleted"); } : undefined}
               />
             </div>
@@ -200,6 +192,8 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
       )}
       {savePost && <SavePostDialog postId={savePost.id} onClose={() => setSavePost(undefined)} onToast={onToast} />}
       {sharePost && <SharePostDialog postTitle={sharePost.caption || "Post"} onClose={() => setSharePost(undefined)} onToast={onToast} />}
+      {createOpen && <PostComposer embedded onClose={() => setCreateOpen(false)} onPublished={() => setCreateOpen(false)} />}
+      {invitation}
     </div>
   );
 }

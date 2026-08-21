@@ -98,7 +98,7 @@ export function PublishListDialog({
             <div className="flex-1 space-y-4 overflow-y-auto p-4">
               {publishable.length === 0 ? (
                 <p className="py-8 text-center text-sm text-text/50">
-                  You don&apos;t have any lists with products yet. Create one in My Faves first.
+                  You don&apos;t have any lists with products yet. Create one in Favorites first.
                 </p>
               ) : (
                 <>

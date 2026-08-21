@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import type { Product } from "@/data/mockProducts";
+import { useRequireAuth } from "@/components/auth/AccountInvitationDialog";
 import { useFavorites } from "@/hooks/useFavorites";
 import { SaveToListDialog } from "@/components/faves/SaveToListDialog";
 
@@ -26,14 +27,15 @@ export function FaveButton({
   variant = "card",
 }: FaveButtonProps) {
   const { isFavorite } = useFavorites();
+  const { requireAuth, invitation } = useRequireAuth();
   const [open, setOpen] = useState(false);
   const saved = isFavorite(product.id);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setOpen(true);
-  }, []);
+    requireAuth("save this product", () => setOpen(true));
+  }, [requireAuth]);
 
   return (
     <>
@@ -70,6 +72,7 @@ export function FaveButton({
           onToast={onToast}
         />
       )}
+      {invitation}
     </>
   );
 }

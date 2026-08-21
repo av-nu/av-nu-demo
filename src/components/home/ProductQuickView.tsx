@@ -3,10 +3,13 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, ArrowUpRight, ShoppingBag, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight, Plus, Send, ShoppingBag, X } from "lucide-react";
 
 import { FaveButton } from "@/components/faves/FaveButton";
+import { ShareProductDialog } from "@/components/product/ShareProductDialog";
+import { useRequireAuth } from "@/components/auth/AccountInvitationDialog";
 import { StarRating } from "@/components/ui/StarRating";
 import { Portal } from "@/components/ui/Portal";
 import { getBrandById } from "@/lib/data";
@@ -22,8 +25,11 @@ export function ProductQuickView({
   onClose: () => void;
   onToast?: (message: string) => void;
 }) {
+  const router = useRouter();
   const [activeImage, setActiveImage] = useState(0);
+  const [shareOpen, setShareOpen] = useState(false);
   const { addToCart } = useCart();
+  const { requireAuth, invitation } = useRequireAuth();
   const brand = getBrandById(product.brandId);
   const images = product.images.length > 0 ? product.images : ["/products/_pool/curated-lifestyle-gLmmY_kGIdU-unsplash2.jpg"];
 
@@ -41,8 +47,17 @@ export function ProductQuickView({
   }, [onClose]);
 
   const handleAddToCart = () => {
-    addToCart(product.id, product.brandId);
-    onToast?.("Added to cart");
+    requireAuth("quick-add this product", () => {
+      addToCart(product.id, product.brandId);
+      onToast?.("Added to cart");
+    });
+  };
+
+  const handleAddToPost = () => {
+    requireAuth("add this product to a post", () => {
+      onClose();
+      router.push(`/create?productId=${encodeURIComponent(product.id)}`);
+    });
   };
 
   return (
@@ -107,6 +122,10 @@ export function ProductQuickView({
                 <p className="mt-6 text-sm leading-relaxed text-text/65">{product.description}</p>
                 {product.colors && product.colors.length > 0 && <div className="mt-5"><p className="text-xs font-semibold uppercase tracking-[0.14em] text-text/45">Color</p><p className="mt-1 text-sm text-text/70">{product.colors.join(", ")}</p></div>}
                 <div className="mt-auto flex flex-col gap-3 pt-8">
+                  <div className="grid grid-cols-2 gap-2">
+                    <button type="button" onClick={handleAddToPost} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-divider/70 px-3 py-3 text-xs font-semibold text-text/75 transition-colors hover:bg-surface hover:text-text"><Plus className="h-4 w-4" />Add to post</button>
+                    <button type="button" onClick={() => requireAuth("share this product", () => setShareOpen(true))} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-divider/70 px-3 py-3 text-xs font-semibold text-text/75 transition-colors hover:bg-surface hover:text-text"><Send className="h-4 w-4" />Share</button>
+                  </div>
                   <button type="button" onClick={handleAddToCart} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-navy px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-navy/90"><ShoppingBag className="h-4 w-4" />Add to cart</button>
                   <Link href={`/product/${product.id}`} onClick={onClose} className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-divider/70 px-4 py-3 text-sm font-semibold text-text/70 transition-colors hover:bg-surface hover:text-text">View full product <ArrowUpRight className="h-4 w-4" /></Link>
                 </div>
@@ -115,6 +134,8 @@ export function ProductQuickView({
           </motion.div>
         </motion.div>
       </AnimatePresence>
+      {shareOpen && <ShareProductDialog product={product} onClose={() => setShareOpen(false)} onToast={onToast} />}
+      {invitation}
     </Portal>
   );
 }

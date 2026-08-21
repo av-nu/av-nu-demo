@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   DndContext,
@@ -86,7 +86,8 @@ function DraggableTrayItem({ productId }: { productId: string }) {
   );
 }
 
-export default function ListDetailPage({ params }: { params: { id: string } }) {
+export default function ListDetailPage() {
+  const params = useParams<{ id: string }>();
   const router = useRouter();
   const {
     lists,
@@ -134,7 +135,7 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
           This list may have been deleted or isn&apos;t available.
         </p>
         <Button asChild className="mt-6">
-          <Link href="/favorites">Back to My Faves</Link>
+          <Link href="/favorites">Back to Favorites</Link>
         </Button>
       </div>
     );
@@ -307,7 +308,7 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
       <Button asChild variant="ghost" size="sm">
         <Link href="/favorites" className="gap-2">
           <ArrowLeft className="h-4 w-4" />
-          My Faves
+          Favorites
         </Link>
       </Button>
 
@@ -491,7 +492,7 @@ export default function ListDetailPage({ params }: { params: { id: string } }) {
 
           {collectionProducts.length === 0 ? (
             <p className="rounded-xl border border-dashed border-divider/60 px-4 py-12 text-center text-sm text-text/50">
-              This list is empty. Add products from your faves.
+              This list is empty. Add products from your favorites.
             </p>
           ) : (
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">

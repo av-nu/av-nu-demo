@@ -12,6 +12,7 @@ const DEMO_STORAGE_KEYS = [
   "avnu-favorites",
   "avnu-saved-posts",
   "avnu-saved-post-groups",
+  "avnu-post-drafts",
   "avnu-list-social",
   "avnu-saved-colors",
   "avnu-recent-colors",

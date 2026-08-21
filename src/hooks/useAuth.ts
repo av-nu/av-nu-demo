@@ -12,6 +12,10 @@ import { useLocalStorage } from "./useLocalStorage";
 
 const AUTH_KEY = "avnu-auth";
 
+export function isDevAuthBypassEnabled() {
+  return process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_DEV_AUTH_BYPASS === "true";
+}
+
 export type AuthUser = {
   name: string;
   email: string;
@@ -52,16 +56,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, [setUser]);
 
+  const devAuthBypass = isDevAuthBypassEnabled();
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
-      isAuthenticated: Boolean(user?.email),
+      isAuthenticated: devAuthBypass || Boolean(user?.email),
       isHydrated,
       signUp,
       signIn,
       signOut,
     }),
-    [user, isHydrated, signUp, signIn, signOut],
+    [user, isHydrated, signUp, signIn, signOut, devAuthBypass],
   );
 
   return createElement(AuthContext.Provider, { value }, children);

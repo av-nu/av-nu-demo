@@ -6,7 +6,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Play, Send, ShoppingBag, Star } from "lucide-react";
 
-import { cn, getVideoPoster } from "@/lib/utils";
+import { getVideoPoster } from "@/lib/utils";
 import type { Product } from "@/data/mockProducts";
 import { getBrandById } from "@/lib/data";
 import { FaveButton } from "@/components/faves/FaveButton";
@@ -50,17 +50,16 @@ export function ShoppableVideoCard({
       e.stopPropagation();
       const url = `${window.location.origin}${productHref}`;
       try {
-        if (navigator.share && navigator.canShare?.({ url })) {
+        if (navigator.share && (!navigator.canShare || navigator.canShare({ url }))) {
           await navigator.share({ title: product.name, url });
-        } else {
-          await navigator.clipboard.writeText(url);
-          onShare?.("Link copied to clipboard");
+          return;
         }
-      } catch (err) {
-        if ((err as Error).name !== "AbortError") {
-          await navigator.clipboard.writeText(url);
-          onShare?.("Link copied to clipboard");
-        }
+        if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
+        await navigator.clipboard.writeText(url);
+        onShare?.("Link copied to clipboard");
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") return;
+        onShare?.("Could not share this product");
       }
     },
     [productHref, product.name, onShare],

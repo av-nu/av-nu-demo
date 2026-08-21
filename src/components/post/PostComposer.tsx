@@ -1,16 +1,17 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowRight, ImagePlus, LayoutTemplate, Minus, Redo2, ShoppingBag, Undo2, X, ZoomIn } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowRight, FileText, ImagePlus, LayoutTemplate, Minus, Redo2, ShoppingBag, Undo2, X, ZoomIn } from "lucide-react";
 
 import { useCanvasDocument } from "@/components/canvas/useCanvasDocument";
 import { EditorialRenderer } from "@/components/looks/editorial/EditorialRenderer";
 import { PostPins } from "@/components/post/PostPins";
 import { PublishSheet } from "@/components/post/PublishSheet";
 import { PostPageRail } from "@/components/post/PostPageRail";
+import { ProductSideRail } from "@/components/post/ProductSideRail";
+import { DraftsPanel } from "@/components/post/DraftsPanel";
 import { PostToolbar, type PostTool } from "@/components/post/PostToolbar";
-import { AddProductTool } from "@/components/post/tools/AddProductTool";
 import { DrawTool } from "@/components/post/tools/DrawTool";
 import { CropOverlay } from "@/components/post/tools/CropOverlay";
 import { ImageTool } from "@/components/post/tools/ImageTool";
@@ -21,6 +22,8 @@ import { SelectionBar } from "@/components/post/tools/SelectionBar";
 import { StickersTool } from "@/components/post/tools/StickersTool";
 import { TextTool } from "@/components/post/tools/TextTool";
 import { useToast } from "@/components/ui/Toast";
+import { useRequireAuth } from "@/components/auth/AccountInvitationDialog";
+import { makePostDraftId, usePostDrafts, type PostDraft } from "@/hooks/usePostDrafts";
 import { applyCrop } from "@/lib/crop";
 import { DRAW_TOOL_PRESETS, pointsToPath, splitStrokeByEraser, strokeIntersectsEraser } from "@/lib/drawing";
 import { mediaStore } from "@/lib/media";
@@ -28,7 +31,6 @@ import { socialService } from "@/lib/social";
 import type { FaveVisibility } from "@/data/faves";
 import { cn } from "@/lib/utils";
 import {
-  EDITORIAL_FORMATS,
   appendDrawingPath,
   applyEditorialTemplate,
   createDrawingElement,
@@ -103,12 +105,31 @@ function emptyPost(format: EditorialFormat = "portrait"): Post {
  * Phase 2 delivers the shell, page management, and the shared editing core.
  * The tool panels themselves land in Phase 3.
  */
-export function PostComposer({ initialPost }: { initialPost?: Post }) {
+export function PostComposer({
+  initialPost,
+  initialDraft,
+  embedded = false,
+  onClose,
+  onPublished,
+}: {
+  initialPost?: Post;
+  initialDraft?: PostDraft;
+  embedded?: boolean;
+  onClose?: () => void;
+  onPublished?: (post: Post) => void;
+}) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { showToast, ToastContainer } = useToast();
-  const [post, setPost] = useState<Post>(() => initialPost ?? emptyPost());
-  const [started, setStarted] = useState(Boolean(initialPost));
-  const [activeIndex, setActiveIndex] = useState(0);
+  const { requireAuth, invitation } = useRequireAuth();
+  const { drafts, saveDraft, removeDraft } = usePostDrafts();
+  const [post, setPost] = useState<Post>(() => initialDraft?.post ?? initialPost ?? emptyPost());
+  const [draftId, setDraftId] = useState(initialDraft?.id);
+  const [draftTitle, setDraftTitle] = useState(initialDraft?.title ?? "");
+  const [draftsOpen, setDraftsOpen] = useState(false);
+  const [productRailOpen, setProductRailOpen] = useState(false);
+  const [started, setStarted] = useState(Boolean(initialPost || initialDraft));
+  const [activeIndex, setActiveIndex] = useState(initialDraft?.activePageIndex ?? 0);
   const [activeTool, setActiveTool] = useState<PostTool>();
   const [zoom, setZoom] = useState(1);
   const [pendingSlotId, setPendingSlotId] = useState<string>();
@@ -119,8 +140,32 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
   const [publishError, setPublishError] = useState<string>();
   const [drawSettings, setDrawSettings] = useState<DrawSettings>({ tool: "pen", color: "#030125", width: DRAW_TOOL_PRESETS.pen.width });
   const uploadRef = useRef<HTMLInputElement>(null);
+  const initialProductSeeded = useRef(false);
 
   const activePage = post.pages[Math.min(activeIndex, post.pages.length - 1)];
+  const initialProductId = searchParams.get("productId");
+
+  useEffect(() => {
+    if (!initialProductId || initialProductSeeded.current || initialPost || initialDraft) return;
+    initialProductSeeded.current = true;
+    setStarted(true);
+    setProductRailOpen(true);
+    setPost((current) => {
+      const page = current.pages[0];
+      if (!page) return current;
+      return updatePostPageDesign(current, page.id, { ...page.design, elements: [...page.design.elements, createProductElement(initialProductId)] });
+    });
+  }, [initialDraft, initialPost, initialProductId]);
+
+  useEffect(() => {
+    if (!started) return;
+    const timer = window.setTimeout(() => {
+      const id = draftId ?? makePostDraftId();
+      if (!draftId) setDraftId(id);
+      saveDraft({ id, post, title: draftTitle, createdAt: initialDraft?.createdAt ?? Date.now(), updatedAt: Date.now(), activePageIndex: activeIndex });
+    }, 700);
+    return () => window.clearTimeout(timer);
+  }, [activeIndex, draftId, draftTitle, initialDraft?.createdAt, post, saveDraft, started]);
 
   // The composer owns the Post; the shared hook owns the active page's design.
   const handleDesignChange = useCallback((design: EditorialPageDesign) => {
@@ -338,7 +383,7 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
     const emptied = clearSlot(canvas.design, selected.id);
     canvas.commit(emptied, selected.id);
     setPendingSlotId(selected.id);
-    setActiveTool("add");
+    setProductRailOpen(true);
   };
 
   /** Empties a slot back to its reserved frame rather than deleting it. */
@@ -354,7 +399,7 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
     const element = canvas.design.elements.find((item) => item.id === elementId);
     if (element?.type === "placeholder") {
       setPendingSlotId(elementId);
-      setActiveTool("add");
+      setProductRailOpen(true);
       return;
     }
     // Selecting something real should reveal its actions, so close the picker —
@@ -421,12 +466,20 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
     setPublishError(undefined);
     try {
       const isExisting = initialPost !== undefined && (await socialService.getPost(post.id)) !== undefined;
+      let publishedId = post.id;
       if (isExisting) {
         await socialService.updatePost(post.id, { pages: post.pages, format: post.format, caption, visibility, coverPageIndex: post.coverPageIndex });
       } else {
-        await socialService.addPost({ pages: post.pages, format: post.format, caption, visibility, coverPageIndex: post.coverPageIndex });
+        publishedId = await socialService.addPost({ pages: post.pages, format: post.format, caption, visibility, coverPageIndex: post.coverPageIndex });
       }
-      router.push("/");
+      const publishedPost = { ...post, id: publishedId, caption, visibility };
+      if (draftId) removeDraft(draftId);
+      if (embedded) {
+        onPublished?.(publishedPost);
+        onClose?.();
+      } else {
+        router.push("/");
+      }
     } catch (error) {
       // Storage failures are surfaced rather than swallowed: losing a post the
       // author just built is worse than an explicit error.
@@ -435,12 +488,30 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
     }
   };
 
-  const close = () => router.push("/");
+  const close = () => {
+    if (onClose) onClose();
+    else router.push("/");
+  };
+
+  const resumeDraft = (draft: PostDraft) => {
+    setPost(draft.post);
+    setDraftId(draft.id);
+    setDraftTitle(draft.title);
+    setActiveIndex(Math.min(draft.activePageIndex, draft.post.pages.length - 1));
+    setStarted(true);
+    setDraftsOpen(false);
+  };
+
+  const deleteCurrentDraft = (id: string) => {
+    removeDraft(id);
+    if (id === draftId) setDraftId(undefined);
+  };
 
   return (
     // Sized to the viewport rather than fixed-positioned: the composer route
     // opts out of the shopper shell, so it owns the whole screen.
-    <div className="flex h-[100dvh] w-full flex-col overflow-hidden bg-bg">
+    <div className={embedded ? "fixed inset-0 z-[180] flex items-center justify-center bg-black/55 p-2 backdrop-blur-sm sm:p-5" : ""}>
+      <div className={`relative flex w-full flex-col overflow-hidden bg-bg ${embedded ? "h-[min(94dvh,900px)] max-w-6xl rounded-3xl shadow-2xl" : "h-[100dvh]"}`}>
       {/* Top bar */}
       <header className="flex w-full min-w-0 shrink-0 items-center gap-2 border-b border-divider/60 px-3 py-2.5">
         <button
@@ -451,7 +522,16 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
         >
           <X className="h-5 w-5" />
         </button>
-        <p className="min-w-0 flex-1 truncate text-sm font-semibold text-midnight">New post</p>
+        <input value={draftTitle} onChange={(event) => setDraftTitle(event.target.value)} placeholder="New post" aria-label="Post title" className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-midnight placeholder:text-midnight/45 focus:outline-none" />
+        <button
+          type="button"
+          onClick={() => setDraftsOpen(true)}
+          aria-label="Open drafts"
+          className="relative flex h-9 w-9 items-center justify-center rounded-full text-midnight/60 transition-colors hover:bg-surface hover:text-midnight"
+        >
+          <FileText className="h-4 w-4" />
+          {drafts.length > 0 && <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-pink px-1 text-[9px] font-bold text-white">{drafts.length}</span>}
+        </button>
         <button
           type="button"
           onClick={canvas.undo}
@@ -473,7 +553,7 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
         <button
           type="button"
           disabled={!started}
-          onClick={() => { setPublishError(undefined); setPublishOpen(true); }}
+          onClick={() => { requireAuth("publish a post", () => { setPublishError(undefined); setPublishOpen(true); }); }}
           className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-navy px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-navy/90 disabled:opacity-40"
         >
           Next
@@ -483,7 +563,7 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
 
       {/* Canvas stage — the dotted grid reads as "workspace" rather than page. */}
       <div
-        className="relative min-h-0 w-full min-w-0 flex-1 overflow-auto"
+        className={`relative min-h-0 w-full min-w-0 flex-1 overflow-auto ${productRailOpen ? "md:pr-[360px]" : ""}`}
         style={{
           backgroundColor: "rgb(var(--surface-rgb))",
           backgroundImage: "radial-gradient(rgba(3,1,37,0.14) 1px, transparent 1px)",
@@ -545,9 +625,9 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
             </div>
           ) : (
             <StartChoice
-              onProducts={() => { setStarted(true); setActiveTool("add"); }}
-              onUpload={() => uploadRef.current?.click()}
-              onCollage={startCollage}
+              onProducts={() => { requireAuth("create a post", () => { setStarted(true); setProductRailOpen(true); }); }}
+              onUpload={() => { requireAuth("create a post", () => uploadRef.current?.click()); }}
+              onCollage={() => { requireAuth("create a post", startCollage); }}
             />
           )}
         </div>
@@ -580,6 +660,18 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
           </div>
         )}
       </div>
+
+      {started && (
+        <ProductSideRail
+          open={productRailOpen}
+          onOpen={() => { requireAuth("add a product to your post", () => setProductRailOpen(true)); }}
+          onDrafts={() => setDraftsOpen(true)}
+          onClose={() => { setPendingSlotId(undefined); setProductRailOpen(false); }}
+          onAdd={addProduct}
+          onAddMany={addProducts}
+          tagsOnly={isMediaPage(activePage)}
+        />
+      )}
 
       {started && activeTool === "pages" && (
         <PostPageRail
@@ -645,17 +737,13 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
         />
       )}
 
-      {started && activeTool === "add" && (
-        <AddProductTool onAdd={addProduct} onAddMany={addProducts} tagsOnly={isMediaPage(activePage)} onClose={() => { setPendingSlotId(undefined); setActiveTool(undefined); }} />
-      )}
-
       {started && activeTool && !HANDLED_TOOLS.has(activeTool) && (
         <div className="w-full min-w-0 shrink-0 border-t border-divider/60 bg-surface/40 px-4 py-4 text-center text-xs text-midnight/55">
           The {activeTool} tool arrives shortly.
         </div>
       )}
 
-      {started && canvas.selected && !activeTool && (
+      {started && canvas.selected && !activeTool && !productRailOpen && (
         <SelectionBar
           element={canvas.selected}
           onDuplicate={canvas.duplicateSelected}
@@ -670,11 +758,15 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
       )}
 
       <PostToolbar
-        active={activeTool}
+        active={productRailOpen ? "add" : activeTool}
         disabled={!started}
         onSelect={(tool) => {
           if (tool === "photos") {
             uploadRef.current?.click();
+            return;
+          }
+          if (tool === "add") {
+            requireAuth("add a product to your post", () => setProductRailOpen(true));
             return;
           }
           setActiveTool((current) => (current === tool ? undefined : tool));
@@ -697,7 +789,10 @@ export function PostComposer({ initialPost }: { initialPost?: Post }) {
           onClose={() => setPublishOpen(false)}
         />
       )}
+      {draftsOpen && <DraftsPanel drafts={drafts} onResume={resumeDraft} onDelete={deleteCurrentDraft} onClose={() => setDraftsOpen(false)} />}
       <ToastContainer />
+      {invitation}
+      </div>
     </div>
   );
 }
@@ -714,7 +809,7 @@ function StartChoice({ onProducts, onUpload, onCollage }: { onProducts: () => vo
           onClick={onProducts}
           icon={<ShoppingBag className="h-5 w-5" />}
           title="Add products"
-          description="From your faves, or search the catalog"
+          description="From Favorites or Explore"
         />
         <StartOption
           onClick={onUpload}

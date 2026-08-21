@@ -12,16 +12,18 @@ export function PostToolPanel({
   onClose,
   children,
   actions,
+  variant = "bottom",
 }: {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
   actions?: React.ReactNode;
+  variant?: "bottom" | "rail";
 }) {
   return (
     <section
       aria-label={title}
-      className="w-full min-w-0 shrink-0 border-t border-divider/60 bg-bg"
+      className={variant === "rail" ? "flex h-full min-h-0 w-full min-w-0 flex-col bg-bg" : "w-full min-w-0 shrink-0 border-t border-divider/60 bg-bg"}
     >
       <div className="flex items-center gap-2 px-3 py-2">
         <h2 className="min-w-0 flex-1 truncate text-xs font-semibold uppercase tracking-[0.14em] text-midnight/50">{title}</h2>
@@ -35,8 +37,7 @@ export function PostToolPanel({
           <X className="h-4 w-4" />
         </button>
       </div>
-      {/* Capped so the canvas stays visible while a tool is open on a phone. */}
-      <div className="max-h-[38dvh] overflow-y-auto px-3 pb-3">{children}</div>
+      <div className={variant === "rail" ? "min-h-0 flex-1 overflow-y-auto px-3 pb-4" : "max-h-[38dvh] overflow-y-auto px-3 pb-3"}>{children}</div>
     </section>
   );
 }

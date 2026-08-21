@@ -6,9 +6,10 @@ import { getBrandById } from "@/lib/data";
 export async function generateMetadata({
   params,
 }: {
-  params: { id: string };
+  params: { id: string } | Promise<{ id: string }>;
 }): Promise<Metadata> {
-  const brand = getBrandById(params.id);
+  const { id } = await params;
+  const brand = getBrandById(id);
 
   if (!brand) {
     return {

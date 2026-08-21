@@ -1,5 +1,3 @@
-"use client";
-
 import { useRef, type PointerEvent as ReactPointerEvent } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -89,12 +87,6 @@ export function PostPager({
 
         {multiPage && (
           <>
-            {safeIndex > 0 && (
-              <EdgeArrow side="left" onClick={() => go(safeIndex - 1)} />
-            )}
-            {safeIndex < pages.length - 1 && (
-              <EdgeArrow side="right" onClick={() => go(safeIndex + 1)} />
-            )}
             <span className="pointer-events-none absolute right-2 top-2 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-semibold text-white">
               {safeIndex + 1}/{pages.length}
             </span>
@@ -103,51 +95,26 @@ export function PostPager({
       </div>
 
       {multiPage && (
-        // Generous hit areas around each dot: the dots themselves are too small
-        // to be a reliable target on a touchscreen.
-        <div className="flex items-center justify-center gap-0.5 py-1">
-          {pages.map((page, dotIndex) => (
-            <button
-              key={page.id}
-              type="button"
-              onClick={() => go(dotIndex)}
-              aria-label={`Page ${dotIndex + 1} of ${pages.length}`}
-              aria-current={dotIndex === safeIndex}
-              className="flex h-7 w-6 items-center justify-center"
-            >
-              <span
-                className={cn(
-                  "h-2 rounded-full transition-all",
-                  dotIndex === safeIndex ? "w-5 bg-midnight" : "w-2 bg-midnight/25",
-                )}
-              />
+        <div className="flex items-center justify-center gap-1 py-1">
+          {safeIndex > 0 && (
+            <button type="button" onClick={(event) => { event.stopPropagation(); go(safeIndex - 1); }} aria-label="Previous page" className="flex h-7 w-7 items-center justify-center rounded-full text-midnight/45 transition-colors hover:bg-surface hover:text-midnight">
+              <ChevronLeft className="h-3.5 w-3.5" />
             </button>
-          ))}
+          )}
+          <div className="flex items-center gap-0.5">
+            {pages.map((page, dotIndex) => (
+              <button key={page.id} type="button" onClick={(event) => { event.stopPropagation(); go(dotIndex); }} aria-label={`Page ${dotIndex + 1} of ${pages.length}`} aria-current={dotIndex === safeIndex} className="flex h-7 w-6 items-center justify-center">
+                <span className={cn("h-1.5 rounded-full transition-all", dotIndex === safeIndex ? "w-5 bg-midnight" : "w-1.5 bg-midnight/25")} />
+              </button>
+            ))}
+          </div>
+          {safeIndex < pages.length - 1 && (
+            <button type="button" onClick={(event) => { event.stopPropagation(); go(safeIndex + 1); }} aria-label="Next page" className="flex h-7 w-7 items-center justify-center rounded-full text-midnight/45 transition-colors hover:bg-surface hover:text-midnight">
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       )}
     </div>
-  );
-}
-
-function EdgeArrow({ side, onClick }: { side: "left" | "right"; onClick: () => void }) {
-  const Icon = side === "left" ? ChevronLeft : ChevronRight;
-  return (
-    <button
-      type="button"
-      onClick={(event) => {
-        event.stopPropagation();
-        onClick();
-      }}
-      aria-label={side === "left" ? "Previous page" : "Next page"}
-      className={cn(
-        "absolute top-1/2 z-[160] flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/85 text-midnight shadow-md backdrop-blur transition-opacity",
-        // Visible rather than hover-revealed: an arrow nobody knows is there is
-        // no better than the dots it replaces.
-        "opacity-80 hover:opacity-100 md:opacity-70",
-        side === "left" ? "left-2" : "right-2",
-      )}
-    >
-      <Icon className="h-5 w-5" />
-    </button>
   );
 }

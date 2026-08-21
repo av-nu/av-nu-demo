@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Lock, Users, Globe2, ImageIcon, Trash2, Send } from "lucide-react";
+import { Lock, Users, Globe2, ImageIcon, Trash2 } from "lucide-react";
 
 import { EditorialRenderer } from "@/components/looks/editorial/EditorialRenderer";
 import { cn } from "@/lib/utils";
@@ -11,18 +11,16 @@ import { getProductById } from "@/lib/data";
 
 const VISIBILITY_META = {
   private: { icon: Lock, label: "Private" },
-  "inner-circle": { icon: Users, label: "Inner circle" },
+  "inner-circle": { icon: Users, label: "Friends" },
   public: { icon: Globe2, label: "Public" },
 } as const;
 
 export function FaveListCard({
   list,
   onDelete,
-  onPublish,
 }: {
   list: FaveList;
   onDelete?: (list: FaveList) => void;
-  onPublish?: (list: FaveList) => void;
 }) {
   // Public lists hold their products in carousel pages; others in productIds.
   const sourceIds =
@@ -100,23 +98,6 @@ export function FaveListCard({
             className="absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-bg/85 text-text/60 opacity-0 backdrop-blur-sm transition-opacity hover:text-pink group-hover:opacity-100"
           >
             <Trash2 className="h-3.5 w-3.5" />
-          </button>
-        )}
-
-        {/* Publish to profile */}
-        {onPublish && list.visibility !== "public" && itemCount > 0 && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onPublish(list);
-            }}
-            aria-label="Publish to profile"
-            className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-burgundy/90 px-2.5 py-1 text-[10px] font-medium text-white opacity-0 backdrop-blur-sm transition-opacity hover:bg-burgundy group-hover:opacity-100"
-          >
-            <Send className="h-3 w-3" />
-            Publish
           </button>
         )}
       </div>

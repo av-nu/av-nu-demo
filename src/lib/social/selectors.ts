@@ -1,10 +1,11 @@
-import { contacts, currentUser, getContactById } from "@/data/social";
+import { contacts, currentUser, getContactByHandle, getContactById } from "@/data/social";
+import type { Post } from "@/lib/post";
 import type { Connection, SocialState, SocialUser } from "./types";
 
 // Pure read helpers that turn the raw SocialState + contact directory into the
 // view models pages and components consume.
 
-export function toSocialUser(userId: string, state: SocialState): SocialUser {
+export function resolveSocialUser(userId: string, state: SocialState): SocialUser | undefined {
   if (userId === "me") {
     const p = state.profile;
     const name = p.name.trim() || "You";
@@ -19,15 +20,28 @@ export function toSocialUser(userId: string, state: SocialState): SocialUser {
       isCurrentUser: true,
     };
   }
-  const c = getContactById(userId);
+
+  const contact = getContactById(userId) ?? getContactByHandle(userId);
+  if (!contact) return undefined;
   return {
+    id: contact.id,
+    name: contact.name,
+    handle: contact.handle,
+    initials: contact.initials,
+    color: contact.color,
+    bio: contact.bio,
+    avatarUrl: contact.avatarUrl,
+  };
+}
+
+/** Resolve a known profile while keeping legacy callers from crashing on stale ids. */
+export function toSocialUser(userId: string, state: SocialState): SocialUser {
+  return resolveSocialUser(userId, state) ?? {
     id: userId,
-    name: c?.name ?? "Member",
-    handle: c?.handle ?? userId,
-    initials: c?.initials ?? "AV",
-    color: c?.color ?? "bg-accent",
-    bio: c?.bio,
-    avatarUrl: c?.avatarUrl,
+    name: "Member",
+    handle: userId,
+    initials: "AV",
+    color: "bg-accent",
   };
 }
 
@@ -89,6 +103,19 @@ export function getConnection(state: SocialState, userId: string): Connection {
       inner: "none",
     }
   );
+}
+
+export function canViewPost(post: Post, viewerId: string, state: SocialState): boolean {
+  if (post.authorId === viewerId) return true;
+  if (post.visibility === "public") return true;
+  if (post.visibility === "private") return false;
+  return viewerId === "me" && getConnection(state, post.authorId).inner === "connected";
+}
+
+export function canViewProfile(userId: string, viewerId: string, state: SocialState): boolean {
+  if (userId === viewerId) return true;
+  if (userId === "me") return state.profile.visibility === "public";
+  return Boolean(resolveSocialUser(userId, state));
 }
 
 export type ProfileCounts = {

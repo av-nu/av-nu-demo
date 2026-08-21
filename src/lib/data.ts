@@ -1,5 +1,6 @@
 import { mockBrands, type Brand } from "@/data/mockBrands";
 import { mockProducts, type Product } from "@/data/mockProducts";
+import type { BrandFilterMetadata } from "@/lib/brandFilters";
 
 export type ProductFilters = {
   brandId?: string;
@@ -110,6 +111,50 @@ const BRAND_ATTRIBUTES: Record<string, BrandAttribute[]> = {
 
 export function getBrandAttributes(brandId: string): BrandAttribute[] {
   return BRAND_ATTRIBUTES[brandId] ?? [];
+}
+
+const FILTER_DEFAULTS: BrandFilterMetadata = {
+  ownership: [],
+  made: [],
+  values: [],
+  categories: [],
+};
+
+const BRAND_FILTER_METADATA: Record<string, Partial<BrandFilterMetadata>> = {
+  "ashwood-atelier": { ownership: ["Women-Owned"], made: ["Handmade", "Small Batch"], values: ["Sustainable Practices", "Responsible Packaging"], categories: ["Accessories"] },
+  aurelith: { made: ["Made in USA", "Handmade"], values: ["Ethical Production"], categories: ["Accessories"] },
+  "juniper-and-tide": { made: ["Made in USA", "Recycled Materials"], values: ["Sustainable Practices", "Low-Waste"], categories: ["Wellness"] },
+  "parchment-provisions": { ownership: ["Women-Owned"], made: ["Small Batch", "Organic Materials"], values: ["Responsible Packaging"], categories: ["Food"] },
+  "velvet-fern": { ownership: ["Women-Owned", "Black-Owned"], values: ["Cruelty-Free", "Vegan", "Responsible Packaging"], categories: ["Beauty", "Wellness"] },
+  "loam-and-linen": { ownership: ["Women-Owned"], made: ["Handmade", "Organic Materials"], values: ["Sustainable Practices", "Low-Waste"], categories: ["Apparel"] },
+  embertrail: { ownership: ["Veteran-Owned"], made: ["Made in USA", "Recycled Materials"], values: ["Sustainable Practices"], categories: ["Accessories"] },
+  "little-sparrow-co": { ownership: ["Women-Owned"], made: ["Small Batch", "Organic Materials"], values: ["Responsible Packaging"], categories: ["Apparel"] },
+  "pinecone-pet-co": { made: ["Made in USA", "Recycled Materials"], values: ["Cruelty-Free", "Low-Waste"], categories: ["Accessories"] },
+  "moonstone-mercantile": { ownership: ["Indigenous-Owned"], made: ["Handmade", "Small Batch"], values: ["Ethical Production"], categories: ["Jewelry", "Accessories"] },
+  "citrus-and-clay": { ownership: ["Women-Owned", "Hispanic/Latino-Owned"], made: ["Small Batch", "Organic Materials"], values: ["Cruelty-Free", "Vegan"], categories: ["Beauty", "Wellness"] },
+  "wildflower-studio": { ownership: ["Women-Owned"], made: ["Handmade", "Small Batch"], values: ["Ethical Production"], categories: ["Apparel", "Accessories"] },
+  "northwood-pantry": { made: ["Made in USA", "Small Batch", "Organic Materials"], values: ["Responsible Packaging"], categories: ["Food"] },
+  "coastal-knitworks": { ownership: ["Women-Owned"], made: ["Handmade", "Small Batch", "Organic Materials"], values: ["Sustainable Practices"], categories: ["Apparel"] },
+  "sagewell-apothecary": { ownership: ["Women-Owned", "AAPI-Owned"], made: ["Small Batch", "Organic Materials"], values: ["Cruelty-Free", "Vegan", "Low-Waste"], categories: ["Beauty", "Wellness"] },
+  "terra-playroom": { ownership: ["Women-Owned"], made: ["Handmade", "Organic Materials"], values: ["Sustainable Practices", "Responsible Packaging"], categories: ["Accessories"] },
+  "summit-and-stream": { made: ["Made in USA", "Recycled Materials"], values: ["Sustainable Practices", "Ethical Production"], categories: ["Accessories", "Wellness"] },
+  "dusklight-leather": { made: ["Handmade", "Small Batch"], values: ["Ethical Production", "Low-Waste"], categories: ["Accessories"] },
+  "orchard-and-oat": { ownership: ["Women-Owned"], made: ["Made in USA", "Small Batch", "Organic Materials"], values: ["Responsible Packaging"], categories: ["Food", "Wellness"] },
+};
+
+export function getBrandFilterMetadata(brandId: string): BrandFilterMetadata {
+  const brand = getBrandById(brandId);
+  const metadata = BRAND_FILTER_METADATA[brandId] ?? {};
+  const categories = new Set(metadata.categories ?? []);
+  brand?.categories.forEach((category) => {
+    if (["Accessories", "Apparel", "Beauty", "Food", "Wellness", "Jewelry"].includes(category)) categories.add(category);
+    if (category === "Food & Drink") categories.add("Food");
+  });
+  return {
+    ...FILTER_DEFAULTS,
+    ...metadata,
+    categories: [...categories],
+  };
 }
 
 export type WindowProductPhoto = { id: string; image: string };

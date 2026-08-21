@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 
 import { ProductQuickView } from "@/components/home/ProductQuickView";
@@ -14,7 +14,7 @@ import { useListSocial } from "@/hooks/useListSocial";
 import { useSavedPostGroups } from "@/hooks/useSavedPostGroups";
 import { useSocialStore } from "@/hooks/useSocialStore";
 import { getProductById } from "@/lib/data";
-import { socialService, toSocialUser } from "@/lib/social";
+import { canViewPost, socialService, toSocialUser } from "@/lib/social";
 
 /**
  * A single post, reached by link or a direct visit.
@@ -22,7 +22,8 @@ import { socialService, toSocialUser } from "@/lib/social";
  * The `type` segment is kept for existing links but no longer means anything: a
  * post is a post, and the id resolves against the same stream the feed uses.
  */
-export default function PostPage({ params }: { params: { type: string; id: string } }) {
+export default function PostPage() {
+  const params = useParams<{ type: string; id: string }>();
   const router = useRouter();
   const { showToast, ToastContainer } = useToast();
   const feedPosts = useFeedPosts();
@@ -46,6 +47,10 @@ export default function PostPage({ params }: { params: { type: string; id: strin
         )}
       </div>
     );
+  }
+
+  if (!canViewPost(post, "me", state)) {
+    return <div className="py-20 text-center"><h1 className="font-headline text-3xl">This post is private</h1><Link href="/" className="mt-5 inline-flex text-sm font-semibold text-accent">Back to Discover</Link></div>;
   }
 
   const author = post.authorId === "me" ? toSocialUser("me", state) : toSocialUser(post.authorId, state);

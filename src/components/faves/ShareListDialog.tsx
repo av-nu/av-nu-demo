@@ -28,7 +28,7 @@ const OPTIONS: {
   description: string;
 }[] = [
   { value: "private", icon: Lock, label: "Private", description: "Only you can see this list." },
-  { value: "inner-all", icon: Users, label: "Inner circle", description: "Everyone in your inner circle can see it." },
+  { value: "inner-all", icon: Users, label: "Friends", description: "Everyone in your Friends group can see it." },
   { value: "specific", icon: UserCheck, label: "Specific people", description: "Only the people you choose can see it." },
   { value: "public", icon: Globe2, label: "Make public", description: "Anyone can discover it in the feed." },
 ];
@@ -70,7 +70,7 @@ export function ShareListDialog({ list, onClose, onToast }: ShareListDialogProps
         break;
       case "inner-all":
         setVisibility(list.id, "inner-circle", []);
-        onToast?.("Shared with your inner circle");
+        onToast?.("Shared with your Friends group");
         break;
       case "specific":
         if (selected.length === 0) return;
@@ -175,7 +175,7 @@ export function ShareListDialog({ list, onClose, onToast }: ShareListDialogProps
                     type="text"
                     value={peopleQuery}
                     onChange={(e) => setPeopleQuery(e.target.value)}
-                    placeholder="Search your inner circle…"
+                    placeholder="Search your Friends group…"
                     className="h-9 w-full rounded-lg border border-divider/60 bg-surface/50 pl-9 pr-3 text-sm text-text placeholder:text-text/40 focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20"
                   />
                 </div>

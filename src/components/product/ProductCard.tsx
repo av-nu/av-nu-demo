@@ -13,6 +13,7 @@ import { StarRating } from "@/components/ui/StarRating";
 import { FaveButton } from "@/components/faves/FaveButton";
 import { ShareProductDialog } from "@/components/product/ShareProductDialog";
 import { useCart } from "@/hooks/useCart";
+import { useRequireAuth } from "@/components/auth/AccountInvitationDialog";
 
 interface ProductCardProps {
   product: Product;
@@ -35,23 +36,26 @@ export const ProductCard = memo(function ProductCard({
 }: ProductCardProps) {
   const brand = getBrandById(product.brandId);
   const { addToCart } = useCart();
+  const { requireAuth, invitation } = useRequireAuth();
   const [shareOpen, setShareOpen] = useState(false);
 
   const handleShareClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setShareOpen(true);
-  }, []);
+    requireAuth("share this product", () => setShareOpen(true));
+  }, [requireAuth]);
 
 
   const handleQuickAdd = useCallback(
     (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      addToCart(product.id, product.brandId);
-      onShare?.("Added to cart");
+      requireAuth("quick-add this product", () => {
+        addToCart(product.id, product.brandId);
+        onShare?.("Added to cart");
+      });
     },
-    [product.id, product.brandId, addToCart, onShare],
+    [product.id, product.brandId, addToCart, onShare, requireAuth],
   );
 
   return (
@@ -142,6 +146,7 @@ export const ProductCard = memo(function ProductCard({
         </div>
       </div>
       {shareOpen && <ShareProductDialog product={product} onClose={() => setShareOpen(false)} onToast={onShare} />}
+      {invitation}
     </motion.article>
   );
 });

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -25,7 +25,8 @@ import { useToast } from "@/components/ui/Toast";
 
 const ITEMS_PER_PAGE = 12;
 
-export default function BrandPage({ params }: { params: { id: string } }) {
+export default function BrandPage() {
+  const params = useParams<{ id: string }>();
   const brand = getBrandById(params.id);
   if (!brand) notFound();
 

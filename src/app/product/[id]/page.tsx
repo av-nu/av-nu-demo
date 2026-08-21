@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 import { Send, ArrowLeft, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -16,9 +16,11 @@ import { useUserRatings } from "@/hooks/useUserRatings";
 import { useCart } from "@/hooks/useCart";
 import { BrandFaveButton } from "@/components/brand/BrandFaveButton";
 import { useToast } from "@/components/ui/Toast";
+import { useRequireAuth } from "@/components/auth/AccountInvitationDialog";
 import { cn } from "@/lib/utils";
 
-export default function ProductPage({ params }: { params: { id: string } }) {
+export default function ProductPage() {
+  const params = useParams<{ id: string }>();
   const product = getProductById(params.id);
   if (!product) notFound();
 
@@ -26,6 +28,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   const { getUserRating, setUserRating } = useUserRatings();
   const { addToCart, getItemQuantity } = useCart();
   const { showToast, ToastContainer } = useToast();
+  const { requireAuth, invitation } = useRequireAuth();
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [addedToCart, setAddedToCart] = useState(false);
@@ -39,28 +42,26 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   const userRating = getUserRating(product.id);
   const cartQuantity = getItemQuantity(product.id);
 
-  const handleShareClick = useCallback(async () => {
-    const url = `${window.location.origin}/product/${product.id}`;
-    const shareData = {
-      title: product.name,
-      text: `Check out ${product.name} on av | nu`,
-      url,
-    };
-
-    try {
-      if (navigator.share && navigator.canShare?.(shareData)) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(url);
-        showToast("Link copied to clipboard");
-      }
-    } catch (err) {
-      if ((err as Error).name !== "AbortError") {
-        await navigator.clipboard.writeText(url);
-        showToast("Link copied to clipboard");
-      }
-    }
-  }, [product.id, product.name, showToast]);
+  const handleShareClick = useCallback(() => {
+    requireAuth("share this product", () => {
+      void (async () => {
+        const url = `${window.location.origin}/product/${product.id}`;
+        const shareData = { title: product.name, text: `Check out ${product.name} on av | nu`, url };
+        try {
+          if (navigator.share && (!navigator.canShare || navigator.canShare(shareData))) {
+            await navigator.share(shareData);
+            return;
+          }
+          if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
+          await navigator.clipboard.writeText(url);
+          showToast("Link copied to clipboard");
+        } catch (error) {
+          if (error instanceof Error && error.name === "AbortError") return;
+          showToast("Could not share this product");
+        }
+      })();
+    });
+  }, [product.id, product.name, requireAuth, showToast]);
 
   const handleRate = useCallback(
     (rating: number) => {
@@ -257,6 +258,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
       </div>
 
       <ToastContainer />
+      {invitation}
     </div>
   );
 }

@@ -10,12 +10,13 @@ import { Heart, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/product/ProductCard";
 import { FaveListCard } from "@/components/faves/FaveListCard";
+import { SharedWithYouCard } from "@/components/faves/SharedWithYouCard";
 import { CreateListDialog } from "@/components/faves/CreateListDialog";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useFaveLists } from "@/hooks/useFaveLists";
 import { useToast } from "@/components/ui/Toast";
 import { getProductById } from "@/lib/data";
-import { type FaveList, communityLists, flattenPages } from "@/data/faves";
+import { type FaveList, communityLists, flattenPages, sharedWithMe } from "@/data/faves";
 import { buildSpotlightRows } from "@/data/spotlight";
 import { useSavedPostGroups } from "@/hooks/useSavedPostGroups";
 
@@ -44,7 +45,7 @@ function EmptyState() {
         </div>
       </div>
 
-      <h2 className="font-headline text-2xl tracking-tight text-text">Start your Faves</h2>
+      <h2 className="font-headline text-2xl tracking-tight text-text">Start saving favorites</h2>
       <p className="mx-auto mt-3 max-w-xs text-sm leading-relaxed text-text/50">
         Tap the heart on anything you love to save it here, then organize favorites into your own lists.
       </p>
@@ -65,7 +66,7 @@ function Header({ onCreate }: { onCreate: () => void }) {
   return (
     <div className="flex items-center justify-between gap-4">
       <div>
-        <h1 className="font-headline text-3xl tracking-tight text-text">My Faves</h1>
+        <h1 className="font-headline text-3xl tracking-tight text-text">Favorites</h1>
         <p className="mt-1 text-sm text-text/50">Your saved items and curated lists</p>
       </div>
       <div className="flex items-center gap-2">
@@ -138,7 +139,7 @@ export default function FavoritesPage() {
     ? filteredLists
     : filteredLists.slice(0, RECENT_LIMIT);
 
-  const hasAnything = lists.length > 0 || favorites.length > 0 || savedPostEntries.length > 0;
+  const hasAnything = lists.length > 0 || favorites.length > 0 || savedPostEntries.length > 0 || sharedWithMe.length > 0;
 
   if (isHydrated && !hasAnything) {
     return (
@@ -172,6 +173,22 @@ export default function FavoritesPage() {
         />
       </div>
 
+      {/* Shared with you */}
+      <section>
+        <div className="mb-4">
+          <h2 className="font-headline text-lg tracking-tight text-text">
+            Shared with you
+            <span className="ml-2 text-sm font-normal text-text/40">{sharedWithMe.length}</span>
+          </h2>
+          <p className="mt-1 text-sm text-text/50">Favorites your friends shared with you.</p>
+        </div>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {sharedWithMe.map((shared) => (
+            <SharedWithYouCard key={shared.id} shared={shared} onToast={showToast} />
+          ))}
+        </div>
+      </section>
+
       {/* Lists */}
       <section>
         <div className="mb-4 flex items-center justify-between">
@@ -193,7 +210,7 @@ export default function FavoritesPage() {
 
         {filteredLists.length === 0 ? (
           <p className="rounded-xl border border-dashed border-divider/60 px-4 py-8 text-center text-sm text-text/50">
-            {q ? "No lists match your search." : "No lists yet — create one to organize your faves."}
+            {q ? "No lists match your search." : "No lists yet — create one to organize your favorites."}
           </p>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
