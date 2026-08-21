@@ -141,15 +141,15 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
 
       </div>
 
-      <div className="grid grid-cols-2 items-start gap-3 md:grid-cols-3 lg:grid-cols-4">
+      <div className="columns-2 gap-3 md:columns-3 lg:columns-4">
         {mixed.slice(0, visibleCount).map((item) => {
-          if (item.kind === "prompt") return <FeedPromptCard key={item.id} index={item.index} onClick={() => setCreateOpen(true)} />;
-          if (item.kind === "product") return <div key={`product-${item.id}`} className="w-full cursor-pointer"><ProductCard product={item.data} onShare={onToast} onProductClick={(event) => { event.preventDefault(); setActiveProduct(item.data); }} imageAspect="square" /></div>;
+          if (item.kind === "prompt") return <div key={item.id} className="mb-3 w-full break-inside-avoid"><FeedPromptCard index={item.index} onClick={() => setCreateOpen(true)} /></div>;
+          if (item.kind === "product") return <div key={`product-${item.id}`} className="mb-3 w-full break-inside-avoid cursor-pointer"><ProductCard product={item.data} onShare={onToast} onProductClick={(event) => { event.preventDefault(); setActiveProduct(item.data); }} imageAspect="square" /></div>;
           const post = item.data;
           const author = post.authorId === "me" ? currentUser : toSocialUser(post.authorId, state);
           const postSaved = groups.some((group) => group.postIds.includes(post.id));
           return (
-            <div key={`post-${post.id}`} className="w-full">
+            <div key={`post-${post.id}`} className="mb-3 w-full break-inside-avoid">
               <PostCard
                 post={post}
                 author={author}
