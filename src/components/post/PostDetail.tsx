@@ -62,7 +62,7 @@ export function PostDetail({
 
   return (
     <>
-      <div className="flex w-full min-h-0 flex-col bg-white md:flex-row">
+      <div className="flex w-full flex-col bg-white md:min-h-0 md:flex-row">
         <div className="md:hidden shrink-0 border-b border-divider/50">{authorRow}</div>
 
         <div className="flex shrink-0 flex-col justify-center bg-white md:w-[58%] md:overflow-hidden">
@@ -72,7 +72,7 @@ export function PostDetail({
         <div className="flex min-h-0 min-w-0 flex-1 flex-col border-t border-divider/50 bg-white md:border-l md:border-t-0">
           <div className="hidden md:block">{authorRow}</div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+          <div className="px-4 pb-4 md:min-h-0 md:flex-1 md:overflow-y-auto">
             {products.length > 0 && (
               <section className="pt-1">
                 <button

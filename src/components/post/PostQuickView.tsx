@@ -65,7 +65,7 @@ export function PostQuickView({
             transition={{ type: "spring", stiffness: 360, damping: 32 }}
             onClick={(event) => event.stopPropagation()}
             // One scroll column on a phone; two panes where there is width for a rail.
-            className="relative flex max-h-[92dvh] w-full flex-col overflow-y-auto rounded-t-3xl bg-bg md:max-h-[86dvh] md:max-w-4xl md:flex-row md:overflow-hidden md:rounded-3xl"
+            className="relative flex max-h-[92dvh] min-h-0 w-full touch-pan-y flex-col overscroll-contain overflow-y-auto rounded-t-3xl bg-bg md:max-h-[86dvh] md:max-w-4xl md:flex-row md:overflow-hidden md:rounded-3xl"
           >
             <button
               type="button"

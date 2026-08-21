@@ -43,22 +43,25 @@ export function SocialPostActions({
 
   return (
     <>
-      <div className={cn("flex items-center gap-4 px-3 py-3", overlay && "bg-gradient-to-t from-black/75 via-black/30 to-transparent pt-8", className)}>
-        <button type="button" onClick={stop("like this post", onLike)} aria-label={liked ? "Unlike" : "Like"} className={cn("inline-flex items-center gap-1.5 transition-colors", liked ? "text-pink" : iconClass)}>
-          <Heart className={cn("h-6 w-6", liked && "fill-current")} />
-          <span className={cn("text-xs font-semibold tabular-nums", countClass)}>{likeCount.toLocaleString()}</span>
-        </button>
-        <button type="button" onClick={stop("comment on this post", onComment)} aria-label="Comment" className={cn("inline-flex items-center gap-1.5", iconClass)}>
-          <MessageCircle className="h-6 w-6" />
-          <span className={cn("text-xs font-semibold tabular-nums", countClass)}>{commentCount.toLocaleString()}</span>
-        </button>
-        <div className="flex-1" />
-        <button type="button" onClick={stop(saved ? "edit this saved post" : "save this post", onSave)} aria-label={saved ? "Saved" : "Save"} className={cn("transition-colors", saved ? "text-accent" : iconClass)}>
-          <Bookmark className={cn("h-6 w-6", saved && "fill-current")} />
-        </button>
-        <button type="button" onClick={stop("share this post", onShare)} aria-label="Share" className={iconClass}>
-          <Send className="h-6 w-6" />
-        </button>
+      <div className={cn("flex min-w-0 items-center justify-between gap-2 px-3 py-3", overlay && "bg-gradient-to-t from-black/75 via-black/30 to-transparent pt-8", className)}>
+        <div className="flex min-w-0 items-center gap-3">
+          <button type="button" onClick={stop("like this post", onLike)} aria-label={liked ? "Unlike" : "Like"} className={cn("inline-flex shrink-0 items-center gap-1.5 transition-colors", liked ? "text-pink" : iconClass)}>
+            <Heart className={cn("h-6 w-6", liked && "fill-current")} />
+            <span className={cn("text-xs font-semibold tabular-nums", countClass)}>{likeCount.toLocaleString()}</span>
+          </button>
+          <button type="button" onClick={stop("comment on this post", onComment)} aria-label="Comment" className={cn("inline-flex shrink-0 items-center gap-1.5", iconClass)}>
+            <MessageCircle className="h-6 w-6" />
+            <span className={cn("text-xs font-semibold tabular-nums", countClass)}>{commentCount.toLocaleString()}</span>
+          </button>
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
+          <button type="button" onClick={stop(saved ? "edit this saved post" : "save this post", onSave)} aria-label={saved ? "Saved" : "Save"} className={cn("shrink-0 transition-colors", saved ? "text-accent" : iconClass)}>
+            <Bookmark className={cn("h-6 w-6", saved && "fill-current")} />
+          </button>
+          <button type="button" onClick={stop("share this post", onShare)} aria-label="Share" className={cn("shrink-0", iconClass)}>
+            <Send className="h-6 w-6" />
+          </button>
+        </div>
       </div>
       {invitation}
     </>

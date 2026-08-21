@@ -22,7 +22,6 @@ import { SelectionBar } from "@/components/post/tools/SelectionBar";
 import { StickersTool } from "@/components/post/tools/StickersTool";
 import { TextTool } from "@/components/post/tools/TextTool";
 import { useToast } from "@/components/ui/Toast";
-import { useRequireAuth } from "@/components/auth/AccountInvitationDialog";
 import { makePostDraftId, usePostDrafts, type PostDraft } from "@/hooks/usePostDrafts";
 import { applyCrop } from "@/lib/crop";
 import { DRAW_TOOL_PRESETS, pointsToPath, splitStrokeByEraser, strokeIntersectsEraser } from "@/lib/drawing";
@@ -121,7 +120,6 @@ export function PostComposer({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { showToast, ToastContainer } = useToast();
-  const { requireAuth, invitation } = useRequireAuth();
   const { drafts, saveDraft, removeDraft } = usePostDrafts();
   const [post, setPost] = useState<Post>(() => initialDraft?.post ?? initialPost ?? emptyPost());
   const [draftId, setDraftId] = useState(initialDraft?.id);
@@ -553,7 +551,7 @@ export function PostComposer({
         <button
           type="button"
           disabled={!started}
-          onClick={() => { requireAuth("publish a post", () => { setPublishError(undefined); setPublishOpen(true); }); }}
+          onClick={() => { setPublishError(undefined); setPublishOpen(true); }}
           className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-navy px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-navy/90 disabled:opacity-40"
         >
           Next
@@ -625,9 +623,9 @@ export function PostComposer({
             </div>
           ) : (
             <StartChoice
-              onProducts={() => { requireAuth("create a post", () => { setStarted(true); setProductRailOpen(true); }); }}
-              onUpload={() => { requireAuth("create a post", () => uploadRef.current?.click()); }}
-              onCollage={() => { requireAuth("create a post", startCollage); }}
+              onProducts={() => { setStarted(true); setProductRailOpen(true); }}
+              onUpload={() => uploadRef.current?.click()}
+              onCollage={startCollage}
             />
           )}
         </div>
@@ -664,7 +662,7 @@ export function PostComposer({
       {started && (
         <ProductSideRail
           open={productRailOpen}
-          onOpen={() => { requireAuth("add a product to your post", () => setProductRailOpen(true)); }}
+          onOpen={() => setProductRailOpen(true)}
           onDrafts={() => setDraftsOpen(true)}
           onClose={() => { setPendingSlotId(undefined); setProductRailOpen(false); }}
           onAdd={addProduct}
@@ -766,7 +764,7 @@ export function PostComposer({
             return;
           }
           if (tool === "add") {
-            requireAuth("add a product to your post", () => setProductRailOpen(true));
+            setProductRailOpen(true);
             return;
           }
           setActiveTool((current) => (current === tool ? undefined : tool));
@@ -791,7 +789,6 @@ export function PostComposer({
       )}
       {draftsOpen && <DraftsPanel drafts={drafts} onResume={resumeDraft} onDelete={deleteCurrentDraft} onClose={() => setDraftsOpen(false)} />}
       <ToastContainer />
-      {invitation}
       </div>
     </div>
   );

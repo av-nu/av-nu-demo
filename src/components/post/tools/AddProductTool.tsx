@@ -11,7 +11,6 @@ import { useFaveLists } from "@/hooks/useFaveLists";
 import { useFavorites } from "@/hooks/useFavorites";
 import { getBrandById, getProductById } from "@/lib/data";
 import { cn } from "@/lib/utils";
-import { useRequireAuth } from "@/components/auth/AccountInvitationDialog";
 
 type Source = "explore" | "faves";
 
@@ -39,7 +38,6 @@ export function AddProductTool({
 }) {
   const { favorites } = useFavorites();
   const { lists } = useFaveLists();
-  const { requireAuth, invitation } = useRequireAuth();
   const [source, setSource] = useState<Source>("explore");
   const [query, setQuery] = useState("");
   const [chosen, setChosen] = useState<string[]>([]);
@@ -82,7 +80,7 @@ export function AddProductTool({
       actions={onAddMany && chosen.length > 0 ? (
         <button
           type="button"
-          onClick={() => { requireAuth("add products to your post", () => { onAddMany(chosen); setChosen([]); }); }}
+          onClick={() => { onAddMany(chosen); setChosen([]); }}
           className="inline-flex h-8 shrink-0 items-center rounded-full bg-navy px-3 text-[11px] font-semibold text-white transition-colors hover:bg-navy/90"
         >
           Add {chosen.length}
@@ -127,13 +125,11 @@ export function AddProductTool({
               <button
                 type="button"
                 onClick={() => {
-                  requireAuth("add a product to your post", () => {
-                    if (!onAddMany) {
-                      onAdd(product.id);
-                      return;
-                    }
-                    setChosen((current) => (current.includes(product.id) ? current.filter((id) => id !== product.id) : [...current, product.id]));
-                  });
+                  if (!onAddMany) {
+                    onAdd(product.id);
+                    return;
+                  }
+                  setChosen((current) => (current.includes(product.id) ? current.filter((id) => id !== product.id) : [...current, product.id]));
                 }}
                 aria-pressed={chosen.includes(product.id)}
                 className="group block w-full text-left"
@@ -157,7 +153,6 @@ export function AddProductTool({
         </ul>
       )}
       </PostToolPanel>
-      {invitation}
     </>
   );
 }

@@ -6,7 +6,6 @@ import { Users } from "lucide-react";
 import { FeedPromptCard } from "@/components/home/FeedPromptCard";
 import { PostCard } from "@/components/post/PostCard";
 import { PostComposer } from "@/components/post/PostComposer";
-import { useRequireAuth } from "@/components/auth/AccountInvitationDialog";
 import { PostQuickView } from "@/components/post/PostQuickView";
 import type { Post } from "@/lib/post";
 import { ProductQuickView } from "@/components/home/ProductQuickView";
@@ -60,7 +59,6 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
   const [savePost, setSavePost] = useState<Post>();
   const [sharePost, setSharePost] = useState<Post>();
   const { isLiked, toggleLike } = useListSocial();
-  const { requireAuth, invitation } = useRequireAuth();
   const { groups, saveToDefault } = useSavedPostGroups();
   const { followedBrands, following, followBrand, unfollowBrand } = useSocialGraph();
   const { state, isHydrated } = useSocialStore();
@@ -143,9 +141,9 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
 
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 items-start gap-3 md:grid-cols-3 lg:grid-cols-4">
         {mixed.slice(0, visibleCount).map((item) => {
-          if (item.kind === "prompt") return <FeedPromptCard key={item.id} index={item.index} onClick={() => { requireAuth("create a post", () => setCreateOpen(true)); }} />;
+          if (item.kind === "prompt") return <FeedPromptCard key={item.id} index={item.index} onClick={() => setCreateOpen(true)} />;
           if (item.kind === "product") return <div key={`product-${item.id}`} className="w-full cursor-pointer"><ProductCard product={item.data} onShare={onToast} onProductClick={(event) => { event.preventDefault(); setActiveProduct(item.data); }} imageAspect="square" /></div>;
           const post = item.data;
           const author = post.authorId === "me" ? currentUser : toSocialUser(post.authorId, state);
@@ -193,7 +191,6 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
       {savePost && <SavePostDialog postId={savePost.id} onClose={() => setSavePost(undefined)} onToast={onToast} />}
       {sharePost && <SharePostDialog postTitle={sharePost.caption || "Post"} onClose={() => setSharePost(undefined)} onToast={onToast} />}
       {createOpen && <PostComposer embedded onClose={() => setCreateOpen(false)} onPublished={() => setCreateOpen(false)} />}
-      {invitation}
     </div>
   );
 }
