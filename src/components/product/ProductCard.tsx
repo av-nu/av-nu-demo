@@ -116,7 +116,7 @@ export const ProductCard = memo(function ProductCard({
             {brand?.name ?? "Brand"}
           </div>
           <div className="flex items-center gap-2">
-            <StarRating rating={product.rating} showUserRating={false} size="sm" />
+            <StarRating rating={product.rating} showUserRating={false} size="md" />
           <motion.button
             type="button"
             aria-label="Share product"
@@ -124,7 +124,7 @@ export const ProductCard = memo(function ProductCard({
             whileTap={{ scale: 0.85 }}
             className="flex h-6 w-6 items-center justify-center rounded-full text-text/40 transition-colors hover:bg-surface hover:text-text/70"
           >
-            <Send className="h-3.5 w-3.5" />
+            <Send className="h-4 w-4" />
           </motion.button>
           </div>
         </div>

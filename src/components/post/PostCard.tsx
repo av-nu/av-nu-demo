@@ -71,16 +71,18 @@ export function PostCard({
         staticMedia
       />
 
-      <div className="space-y-1 px-3 pt-3">
-        {post.productIds.length > 0 && (
-          <button type="button" onClick={onOpen} className="inline-flex items-center gap-1.5 rounded-full bg-pink px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-pink/90">
+      {post.productIds.length > 0 && (
+        <div className="pt-3">
+          <button type="button" onClick={onOpen} className="flex w-full items-center justify-center gap-2 bg-[#561F59] px-3 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-[#561F59]/90">
             <ShoppingBag className="h-3.5 w-3.5" />
-            Shop {post.productIds.length} {post.productIds.length === 1 ? "product" : "products"}
+            <span>Shop the post</span>
+            <span className="rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold">{post.productIds.length}</span>
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       <SocialPostActions
+        compact
         liked={liked}
         saved={saved}
         likeCount={post.likes + (liked ? 1 : 0)}

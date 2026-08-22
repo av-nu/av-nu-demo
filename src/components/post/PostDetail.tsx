@@ -13,6 +13,63 @@ import { getProductById } from "@/lib/data";
 import type { Post } from "@/lib/post";
 import type { SocialUser } from "@/lib/social";
 
+type ShopProduct = NonNullable<ReturnType<typeof getProductById>>;
+
+function PostShopSection({
+  products,
+  productsOpen,
+  onToggle,
+  onProductClick,
+  className,
+}: {
+  products: ShopProduct[];
+  productsOpen: boolean;
+  onToggle: () => void;
+  onProductClick?: (productId: string) => void;
+  className: string;
+}) {
+  if (products.length === 0) return null;
+
+  return (
+    <section className={className}>
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={productsOpen}
+        className="flex w-full items-center gap-2.5 rounded-xl bg-[#561F59] px-3 py-2.5 text-left text-white transition-colors hover:bg-[#561F59]/90"
+      >
+        <ShoppingBag className="h-4 w-4 shrink-0" />
+        <span className="min-w-0 flex-1 text-sm font-semibold">Shop the post</span>
+        <span className="shrink-0 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold">{products.length}</span>
+        <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${productsOpen ? "rotate-180" : ""}`} />
+      </button>
+      <ul className={`mt-2 min-w-0 space-y-2 ${productsOpen ? "" : "hidden"}`}>
+        {products.map((product) => (
+          <li key={product.id} className="min-w-0">
+            <Link
+              href={`/product/${product.id}`}
+              onClick={(event) => {
+                if (!onProductClick) return;
+                event.preventDefault();
+                onProductClick(product.id);
+              }}
+              className="flex items-center gap-3 rounded-xl border border-divider/50 p-2 transition-colors hover:border-accent"
+            >
+              <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-surface">
+                <Image src={product.images[0]} alt={product.name} fill sizes="48px" className="object-cover" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-xs font-semibold text-midnight">{product.name}</span>
+                <span className="block text-xs text-midnight/55">${product.price}</span>
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 export function PostDetail({
   post,
   author,
@@ -67,51 +124,30 @@ export function PostDetail({
 
         <div className="flex shrink-0 flex-col justify-center bg-white md:w-[58%] md:overflow-hidden">
           <PostPager pages={post.pages} index={page} onIndex={setPage} showPins />
+          <div className="md:hidden">
+            <PostShopSection
+              products={products}
+              productsOpen={productsOpen}
+              onToggle={() => setProductsOpen((open) => !open)}
+              onProductClick={onProductClick}
+              className="pb-4 pt-3"
+            />
+          </div>
         </div>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col border-t border-divider/50 bg-white md:border-l md:border-t-0">
           <div className="hidden md:block">{authorRow}</div>
+          <div className="hidden md:block">
+            <PostShopSection
+              products={products}
+              productsOpen={productsOpen}
+              onToggle={() => setProductsOpen((open) => !open)}
+              onProductClick={onProductClick}
+              className="px-4 pb-4 pt-1"
+            />
+          </div>
 
           <div className="px-4 pb-4 md:min-h-0 md:flex-1 md:overflow-y-auto">
-            {products.length > 0 && (
-              <section className="pt-1">
-                <button
-                  type="button"
-                  onClick={() => setProductsOpen((open) => !open)}
-                  aria-expanded={productsOpen}
-                  className="flex w-full items-center gap-2.5 rounded-xl bg-pink px-3 py-2.5 text-left text-white transition-colors hover:bg-pink/90"
-                >
-                  <ShoppingBag className="h-4 w-4 shrink-0" />
-                  <span className="min-w-0 flex-1 text-sm font-semibold">Shop the post</span>
-                  <span className="shrink-0 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold">{products.length}</span>
-                  <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${productsOpen ? "rotate-180" : ""}`} />
-                </button>
-                <ul className={`mt-2 min-w-0 space-y-2 ${productsOpen ? "" : "hidden"}`}>
-                  {products.map((product) => (
-                    <li key={product.id} className="min-w-0">
-                      <Link
-                        href={`/product/${product.id}`}
-                        onClick={(event) => {
-                          if (!onProductClick) return;
-                          event.preventDefault();
-                          onProductClick(product.id);
-                        }}
-                        className="flex items-center gap-3 rounded-xl border border-divider/50 p-2 transition-colors hover:border-accent"
-                      >
-                        <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-surface">
-                          <Image src={product.images[0]} alt={product.name} fill sizes="48px" className="object-cover" />
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-xs font-semibold text-midnight">{product.name}</span>
-                          <span className="block text-xs text-midnight/55">${product.price}</span>
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-
             <SocialPostActions
               className="-mx-3"
               liked={liked}

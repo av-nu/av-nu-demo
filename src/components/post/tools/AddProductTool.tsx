@@ -124,6 +124,11 @@ export function AddProductTool({
             <li key={product.id}>
               <button
                 type="button"
+                draggable
+                onDragStart={(event) => {
+                  event.dataTransfer.setData("application/x-avnu-product", product.id);
+                  event.dataTransfer.effectAllowed = "copy";
+                }}
                 onClick={() => {
                   if (!onAddMany) {
                     onAdd(product.id);

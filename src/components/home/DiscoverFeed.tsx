@@ -27,6 +27,11 @@ import { shouldInsertFeedPrompt } from "@/lib/feedLayout";
 
 const DISCOVERY_CATEGORY_ORDER = ["Apparel", "Accessories", "Home & Living", "Beauty", "Wellness", "Outdoors", "Food & Drink", "Pet", "Kids"];
 
+function discoveryProductAspect(index: number): "tall" | "square" | "portrait" {
+  if (index === 0) return "tall";
+  return index % 2 === 1 ? "square" : "portrait";
+}
+
 function interleaveProducts(products: Product[]) {
   const buckets = new Map(DISCOVERY_CATEGORY_ORDER.map((category) => [category, products.filter((product) => product.category === category)]));
   const remainingCategories = products
@@ -123,9 +128,9 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
         </div>
       </header>
 
-      <div className={scope === "inner" ? "grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]" : ""}>
+      <div className={scope === "inner" ? "mb-8" : ""}>
         {scope === "inner" && (
-          <section className="overflow-hidden rounded-3xl border border-divider bg-white/75 px-4 py-5 sm:px-6">
+          <section className="w-full overflow-hidden rounded-3xl border border-divider bg-white/75 px-4 py-5 sm:px-6">
             <div className="mb-3 flex items-center justify-between gap-3">
               <div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-text/45">Recent from brands and people you follow</p><p className="mt-1 text-[11px] text-text/45">Follow people and brands worth knowing.</p></div>
               <Link href="/connections" className="shrink-0 text-xs font-semibold text-burgundy hover:underline">See all</Link>
@@ -144,7 +149,7 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
       <div className="columns-2 gap-3 md:columns-3 lg:columns-4">
         {mixed.slice(0, visibleCount).map((item) => {
           if (item.kind === "prompt") return <div key={item.id} className="mb-3 w-full break-inside-avoid"><FeedPromptCard index={item.index} onClick={() => setCreateOpen(true)} /></div>;
-          if (item.kind === "product") return <div key={`product-${item.id}`} className="mb-3 w-full break-inside-avoid cursor-pointer"><ProductCard product={item.data} onShare={onToast} imageAspect="square" /></div>;
+          if (item.kind === "product") return <div key={`product-${item.id}`} className="mb-3 w-full break-inside-avoid cursor-pointer"><ProductCard product={item.data} onShare={onToast} onProductClick={(event) => { event.preventDefault(); setActiveProduct(item.data); }} imageAspect={discoveryProductAspect(item.index)} /></div>;
           const post = item.data;
           const author = post.authorId === "me" ? currentUser : toSocialUser(post.authorId, state);
           const postSaved = groups.some((group) => group.postIds.includes(post.id));

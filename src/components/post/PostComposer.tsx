@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent as ReactDragEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowRight, FileText, ImagePlus, LayoutTemplate, Minus, Redo2, ShoppingBag, Undo2, X, ZoomIn } from "lucide-react";
+import { ArrowRight, FileText, ImagePlus, LayoutTemplate, Minus, Redo2, Undo2, X, ZoomIn } from "lucide-react";
 
 import { useCanvasDocument } from "@/components/canvas/useCanvasDocument";
 import { EditorialRenderer } from "@/components/looks/editorial/EditorialRenderer";
@@ -408,6 +408,25 @@ export function PostComposer({
     }
   };
 
+  const handleCanvasDragOver = (event: ReactDragEvent<HTMLDivElement>) => {
+    if (!event.dataTransfer.types.includes("application/x-avnu-product")) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+  };
+
+  const handleCanvasDrop = (event: ReactDragEvent<HTMLDivElement>) => {
+    const productId = event.dataTransfer.getData("application/x-avnu-product");
+    const point = canvas.toCanvasPoint(event.clientX, event.clientY);
+    if (!productId || !point) return;
+    event.preventDefault();
+
+    const placed = canvas.design.elements.filter((element) => element.type === "product").length;
+    const element = createProductElement(productId, placed);
+    const x = Math.max(0, Math.min(canvas.dimensions.width - element.width, point.x - element.width / 2));
+    const y = Math.max(0, Math.min(canvas.dimensions.height - element.height, point.y - element.height / 2));
+    canvas.addElement({ ...element, x, y });
+  };
+
   /** Appends a finished stroke, creating the page's drawing layer on first use. */
   const commitStroke = (path: string, points: Array<{ x: number; y: number }>) => {
     const stroke = makeEditorialDrawingPath(path, {
@@ -574,7 +593,7 @@ export function PostComposer({
               className="w-full touch-none"
               style={{ maxWidth: `min(100%, ${420 * zoom}px)` }}
             >
-              <div className="relative">
+              <div className="relative" onDragOver={handleCanvasDragOver} onDrop={handleCanvasDrop}>
                 <EditorialRenderer
                   design={canvas.design}
                   // Hide selection chrome while drawing so it does not sit under the strokes.
@@ -623,7 +642,6 @@ export function PostComposer({
             </div>
           ) : (
             <StartChoice
-              onProducts={() => { setStarted(true); setProductRailOpen(true); }}
               onUpload={() => uploadRef.current?.click()}
               onCollage={startCollage}
             />
@@ -794,20 +812,14 @@ export function PostComposer({
   );
 }
 
-function StartChoice({ onProducts, onUpload, onCollage }: { onProducts: () => void; onUpload: () => void; onCollage: () => void }) {
+function StartChoice({ onUpload, onCollage }: { onUpload: () => void; onCollage: () => void }) {
   return (
     <div className="w-full max-w-sm text-center">
       <h1 className="font-headline text-3xl tracking-tight text-midnight">Start your post</h1>
       <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-midnight/55">
-        Add products you love, a photo from your device, or build a collage.
+        Add a photo from your device or build a collage.
       </p>
       <div className="mt-6 grid gap-3">
-        <StartOption
-          onClick={onProducts}
-          icon={<ShoppingBag className="h-5 w-5" />}
-          title="Add products"
-          description="From Favorites or Explore"
-        />
         <StartOption
           onClick={onUpload}
           icon={<ImagePlus className="h-6 w-6" />}
