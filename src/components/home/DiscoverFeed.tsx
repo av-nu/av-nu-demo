@@ -146,7 +146,7 @@ export function DiscoverFeed({ onToast }: { onToast: (message: string) => void }
 
       </div>
 
-      <div className="columns-2 gap-3 md:columns-3 lg:columns-4">
+      <div className="columns-1 gap-3 md:columns-3 lg:columns-4">
         {mixed.slice(0, visibleCount).map((item) => {
           if (item.kind === "prompt") return <div key={item.id} className="mb-3 w-full break-inside-avoid"><FeedPromptCard index={item.index} onClick={() => setCreateOpen(true)} /></div>;
           if (item.kind === "product") return <div key={`product-${item.id}`} className="mb-3 w-full break-inside-avoid cursor-pointer"><ProductCard product={item.data} onShare={onToast} onProductClick={(event) => { event.preventDefault(); setActiveProduct(item.data); }} imageAspect={discoveryProductAspect(item.index)} /></div>;
