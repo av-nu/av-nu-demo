@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { ChevronDown, Star, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Star, X } from "lucide-react";
 
 import { useColorPalette } from "@/hooks/useColorPalette";
 
@@ -20,6 +20,8 @@ export function PostToolPanel({
   actions?: React.ReactNode;
   variant?: "bottom" | "rail";
 }) {
+  const [minimized, setMinimized] = useState(false);
+
   return (
     <section
       aria-label={title}
@@ -28,6 +30,17 @@ export function PostToolPanel({
       <div className="flex items-center gap-2 px-3 py-2">
         <h2 className="min-w-0 flex-1 truncate text-xs font-semibold uppercase tracking-[0.14em] text-midnight/50">{title}</h2>
         {actions}
+        {variant === "bottom" && (
+          <button
+            type="button"
+            onClick={() => setMinimized((value) => !value)}
+            aria-expanded={!minimized}
+            aria-label={minimized ? `Expand ${title}` : `Minimize ${title}`}
+            className="flex h-8 w-8 items-center justify-center rounded-full text-midnight/55 transition-colors hover:bg-surface hover:text-midnight"
+          >
+            {minimized ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+        )}
         <button
           type="button"
           onClick={onClose}
@@ -37,7 +50,7 @@ export function PostToolPanel({
           <X className="h-4 w-4" />
         </button>
       </div>
-      <div className={variant === "rail" ? "min-h-0 flex-1 overflow-y-auto px-3 pb-4" : "max-h-[38dvh] overflow-y-auto px-3 pb-3"}>{children}</div>
+      {!minimized && <div className={variant === "rail" ? "min-h-0 flex-1 overflow-y-auto px-3 pb-4" : "max-h-[38dvh] overflow-y-auto px-3 pb-3"}>{children}</div>}
     </section>
   );
 }

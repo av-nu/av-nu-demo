@@ -77,21 +77,22 @@ export function AddProductTool({
         title="Add products"
         variant={variant}
         onClose={onClose}
-      actions={onAddMany && chosen.length > 0 ? (
-        <button
-          type="button"
-          onClick={() => { onAddMany(chosen); setChosen([]); }}
-          className="inline-flex h-8 shrink-0 items-center rounded-full bg-navy px-3 text-[11px] font-semibold text-white transition-colors hover:bg-navy/90"
-        >
-          Add {chosen.length}
-        </button>
-      ) : undefined}
-    >
+      >
       <p className="mb-2 text-[11px] leading-relaxed text-midnight/50">
         {tagsOnly
           ? "Tags products onto the photo. Tagged products show in the post's shop row."
           : "Places the product's imagery on the canvas and tags it, so it shows in the post's shop row."}
       </p>
+      {onAddMany && (
+        <div className="mb-3 rounded-xl border border-accent/20 bg-accent/5 px-3 py-2.5">
+          <p className="text-xs font-semibold text-midnight/75">
+            {chosen.length > 0 ? `${chosen.length} selected` : "Select products to add"}
+          </p>
+          <p className="mt-0.5 text-[11px] leading-relaxed text-midnight/50">
+            {chosen.length > 0 ? "Use the button below when you are ready." : "Tap any product to select it."}
+          </p>
+        </div>
+      )}
       <div className="mb-3 flex gap-2">
         <SourceTab active={source === "explore"} onClick={() => setSource("explore")} icon={<Sparkles className="h-3.5 w-3.5" />}>
           Explore
@@ -156,6 +157,18 @@ export function AddProductTool({
             </li>
           ))}
         </ul>
+      )}
+      {onAddMany && (
+        <div className="sticky bottom-0 -mx-3 mt-3 border-t border-divider/60 bg-bg/95 px-3 py-3 backdrop-blur">
+          <button
+            type="button"
+            disabled={chosen.length === 0}
+            onClick={() => { onAddMany(chosen); setChosen([]); }}
+            className="w-full rounded-xl bg-navy px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy/90 disabled:cursor-not-allowed disabled:bg-surface disabled:text-midnight/40"
+          >
+            {chosen.length > 0 ? `Add ${chosen.length} selected ${chosen.length === 1 ? "product" : "products"}` : "Select products to add"}
+          </button>
+        </div>
       )}
       </PostToolPanel>
     </>

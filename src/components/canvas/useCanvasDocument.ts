@@ -273,8 +273,8 @@ export function useCanvasDocument({
     };
   }, [applyTransient, dimensions.height, dimensions.width, interaction]);
 
-  const startInteraction = useCallback((event: React.PointerEvent, elementId: string, action: CanvasInteractionAction) => {
-    event.preventDefault();
+  const startInteraction = useCallback((event: React.PointerEvent, elementId: string, action: CanvasInteractionAction, options: { preventDefault?: boolean } = {}) => {
+    if (options.preventDefault !== false) event.preventDefault();
     event.stopPropagation();
     const element = presentRef.current.elements.find((item) => item.id === elementId);
     const rect = canvasRef.current?.getBoundingClientRect();

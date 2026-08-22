@@ -17,7 +17,7 @@ export type PostTool = "draw" | "text" | "add" | "photos" | "stickers" | "layers
 export const POST_TOOLS: Array<{ id: PostTool; label: string; icon: typeof Brush }> = [
   { id: "draw", label: "Draw", icon: Brush },
   { id: "text", label: "Text", icon: Type },
-  { id: "add", label: "Add", icon: Plus },
+  { id: "add", label: "Products", icon: Plus },
   { id: "photos", label: "Photos", icon: ImageIcon },
   { id: "stickers", label: "Stickers", icon: Smile },
   { id: "layouts", label: "Layouts", icon: LayoutTemplate },

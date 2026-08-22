@@ -40,7 +40,7 @@ export const AppShell = memo(function AppShell({
   // The composer owns the whole screen, including its edit route, so it opts out
   // of the shopper chrome rather than layering over it.
   const isComposer = pathname === "/create" || Boolean(pathname?.startsWith("/create/"));
-  const hasMobileOverlayActions = pathname === "/" || Boolean(pathname?.startsWith("/brand/") || pathname?.startsWith("/brand-preview/") || pathname?.startsWith("/product/"));
+  const hasMobileOverlayActions = pathname === "/" || pathname === "/shop" || Boolean(pathname?.startsWith("/brand/") || pathname?.startsWith("/brand-preview/") || pathname?.startsWith("/product/"));
 
   const useIsomorphicLayoutEffect =
     typeof window !== "undefined" ? useLayoutEffect : useEffect;

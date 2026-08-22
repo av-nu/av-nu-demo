@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Copy, Crop, Eraser, Lock, LockOpen, Repeat2, Trash2, ZoomIn, ZoomOut } from "lucide-react";
+import { ArrowDown, ArrowUp, Copy, Crop, Eraser, Lock, LockOpen, Repeat2, Trash2, Type, ZoomIn, ZoomOut } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { isEditorialMediaElement, isSlotElement, type EditorialElement } from "@/lib/editorial";
@@ -19,6 +19,7 @@ export function SelectionBar({
   onClearSlot,
   onZoom,
   onAdjust,
+  onEditText,
 }: {
   element: EditorialElement;
   onDuplicate: () => void;
@@ -30,6 +31,7 @@ export function SelectionBar({
   onZoom?: (zoom: number) => void;
   /** Offered for a loose image, whose framing is the author's to change. */
   onAdjust?: () => void;
+  onEditText?: () => void;
 }) {
   // A filled layout slot gets swap and empty actions, so the layout survives its
   // contents being changed instead of leaving a hole.
@@ -60,6 +62,16 @@ export function SelectionBar({
       <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-midnight/60">
         {inSlot ? `Slot ${element.slot + 1}` : element.name}
       </span>
+      {element.type === "text" && onEditText && (
+        <button
+          type="button"
+          onClick={onEditText}
+          className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-full bg-navy px-3 text-[11px] font-semibold text-white transition-colors hover:bg-navy/90"
+        >
+          <Type className="h-4 w-4" />
+          Edit text
+        </button>
+      )}
       {inSlot && onReplaceSlot && (
         <button
           type="button"

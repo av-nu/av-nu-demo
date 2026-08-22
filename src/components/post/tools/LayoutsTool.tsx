@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { EditorialRenderer } from "@/components/looks/editorial/EditorialRenderer";
 import { PostToolPanel, ToolFieldLabel } from "@/components/post/tools/PostToolPanel";
 import { mockProducts } from "@/data/mockProducts";
@@ -31,6 +32,12 @@ export function LayoutsTool({
   onChangeFormat: (format: EditorialFormat) => void;
   onClose: () => void;
 }) {
+  const [selectedFormat, setSelectedFormat] = useState(activeFormat);
+
+  useEffect(() => {
+    setSelectedFormat(activeFormat);
+  }, [activeFormat]);
+
   // A new post has no products yet, and rendering the previews from an empty
   // list makes every template look identical and blank. Fall back to catalog
   // samples purely for the thumbnails — applying still uses the post's own
@@ -39,17 +46,17 @@ export function LayoutsTool({
 
   return (
     <PostToolPanel title="Layouts" onClose={onClose}>
-      <ToolFieldLabel>Shape</ToolFieldLabel>
+      <ToolFieldLabel>Orientation</ToolFieldLabel>
       <div className="mb-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {(Object.keys(EDITORIAL_FORMATS) as EditorialFormat[]).map((format) => (
           <button
             key={format}
             type="button"
-            onClick={() => onChangeFormat(format)}
-            aria-pressed={activeFormat === format}
+            onClick={() => { setSelectedFormat(format); onChangeFormat(format); }}
+            aria-pressed={selectedFormat === format}
             className={cn(
               "shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition-colors",
-              activeFormat === format ? "border-navy bg-navy text-white" : "border-divider/70 text-midnight/65 hover:border-midnight/30",
+              selectedFormat === format ? "border-navy bg-navy text-white" : "border-divider/70 text-midnight/65 hover:border-midnight/30",
             )}
           >
             {EDITORIAL_FORMATS[format].label}
@@ -59,7 +66,7 @@ export function LayoutsTool({
 
       <ToolFieldLabel>Start from a layout</ToolFieldLabel>
       <ul className="grid grid-cols-3 gap-3 sm:grid-cols-5">
-        {EDITORIAL_TEMPLATES.map((template) => {
+        {EDITORIAL_TEMPLATES.filter((template) => template.format === selectedFormat).map((template) => {
           // Size each preview to a common height so tiles and labels line up
           // regardless of the template's aspect ratio.
           const { width, height } = EDITORIAL_FORMATS[template.format];

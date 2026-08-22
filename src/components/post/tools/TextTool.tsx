@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { AlignCenter, AlignLeft, AlignRight, Bold, Highlighter, Italic, Palette, Plus, Type as TypeIcon } from "lucide-react";
 
@@ -26,13 +26,25 @@ export function TextTool({
   onAdd,
   onPatch,
   onClose,
+  directEditing = false,
 }: {
   selected?: EditorialTextElement;
   onAdd: () => void;
   onPatch: (patch: Partial<EditorialTextElement>) => void;
   onClose: () => void;
+  directEditing?: boolean;
 }) {
   const [section, setSection] = useState<Section | undefined>("font");
+  const wordsRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (!selected || directEditing) return;
+    const frame = window.requestAnimationFrame(() => {
+      wordsRef.current?.focus();
+      wordsRef.current?.select();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [directEditing, selected?.id]);
 
   if (!selected) {
     return (
@@ -68,6 +80,7 @@ export function TextTool({
       <label className="block">
         <ToolFieldLabel>Words</ToolFieldLabel>
         <textarea
+          ref={wordsRef}
           value={selected.content}
           onChange={(event) => onPatch({ content: event.target.value })}
           rows={2}

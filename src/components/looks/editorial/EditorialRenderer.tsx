@@ -10,7 +10,7 @@ import { isUnoptimizableSrc, useMediaSrc } from "@/lib/media/useMediaSrc";
 import { useVideoSound } from "@/hooks/useVideoSound";
 import { croppedMediaFrame } from "@/lib/crop";
 import { getVideoPoster } from "@/lib/utils";
-import { EDITORIAL_FORMATS, EDITORIAL_VECTOR_PATHS, editorialFontStack, isEditorialFramedElement, isEditorialMediaElement, isSlotElement, type EditorialElement, type EditorialMediaElement, type EditorialImageMask, type EditorialPageDesign, type EditorialSnapGuides } from "@/lib/editorial";
+import { EDITORIAL_FORMATS, EDITORIAL_VECTOR_PATHS, editorialFontStack, isEditorialFramedElement, isEditorialMediaElement, isSlotElement, type EditorialElement, type EditorialMediaElement, type EditorialImageMask, type EditorialPageDesign, type EditorialSnapGuides, type EditorialTextElement } from "@/lib/editorial";
 
 /** Applies an alpha to a hex colour, leaving other notations untouched. */
 function withOpacity(color: string, opacity?: number): string {
@@ -181,49 +181,108 @@ function MediaElementContent({ element, staticMedia }: { element: EditorialMedia
   );
 }
 
-function elementContent(element: EditorialElement, canvasWidth: number, staticMedia?: boolean) {
+function TextElementContent({
+  element,
+  canvasWidth,
+  editing,
+  onChange,
+  onEditEnd,
+}: {
+  element: EditorialTextElement;
+  canvasWidth: number;
+  editing: boolean;
+  onChange?: (content: string) => void;
+  onEditEnd?: () => void;
+}) {
+  const editorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!editing || !editorRef.current) return;
+    const node = editorRef.current;
+    node.focus();
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    range.collapse(false);
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  }, [editing]);
+
+  const highlight = element.highlightStyle && element.highlightStyle !== "none"
+    ? withOpacity(element.highlightColor, element.highlightOpacity)
+    : undefined;
+  const content = highlight
+    ? (
+      <span
+        className="box-decoration-clone"
+        style={
+          element.highlightStyle === "underline"
+            ? { backgroundImage: `linear-gradient(${highlight}, ${highlight})`, backgroundSize: "100% 0.3em", backgroundPosition: "0 88%", backgroundRepeat: "no-repeat" }
+            : element.highlightStyle === "marker"
+              ? { backgroundImage: `linear-gradient(${highlight}, ${highlight})`, backgroundSize: "100% 62%", backgroundPosition: "0 62%", backgroundRepeat: "no-repeat" }
+              : { backgroundColor: highlight, padding: "0.08em 0.22em" }
+        }
+      >
+        {element.content}
+      </span>
+    )
+    : element.content;
+
+  return (
+    <div
+      ref={editorRef}
+      contentEditable={editing}
+      suppressContentEditableWarning
+      role={editing ? "textbox" : undefined}
+      aria-multiline={editing ? true : undefined}
+      className={`h-full w-full whitespace-pre-wrap break-words ${editing ? "cursor-text select-text outline-none" : ""}`}
+      onPointerDown={editing ? (event) => event.stopPropagation() : undefined}
+      onInput={editing ? (event) => onChange?.(event.currentTarget.textContent ?? "") : undefined}
+      onBlur={editing ? onEditEnd : undefined}
+      onKeyDown={editing ? (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          event.currentTarget.blur();
+        }
+      } : undefined}
+      style={{
+        color: element.color,
+        backgroundColor: element.backgroundColor,
+        fontFamily: element.fontId ? editorialFontStack(element.fontId, element.fontFamily) : fontFor(element.fontFamily),
+        fontSize: `${(element.fontSize / canvasWidth) * 100}cqw`,
+        fontWeight: element.fontWeight,
+        fontStyle: element.italic ? "italic" : "normal",
+        lineHeight: element.lineHeight,
+        letterSpacing: `${(element.letterSpacing / canvasWidth) * 100}cqw`,
+        textAlign: element.align,
+        padding: `${(element.padding / canvasWidth) * 100}cqw`,
+      }}
+    >
+      {content}
+    </div>
+  );
+}
+
+type TextEditor = {
+  elementId: string;
+  onChange: (elementId: string, content: string) => void;
+  onEditEnd: () => void;
+};
+
+function elementContent(element: EditorialElement, canvasWidth: number, staticMedia?: boolean, textEditor?: TextEditor) {
   if (isEditorialMediaElement(element)) {
     return <MediaElementContent element={element} staticMedia={staticMedia} />;
   }
 
   if (element.type === "text") {
-    const highlight = element.highlightStyle && element.highlightStyle !== "none"
-      ? withOpacity(element.highlightColor, element.highlightOpacity)
-      : undefined;
-    const content = highlight
-      ? (
-        <span
-          className="box-decoration-clone"
-          style={
-            element.highlightStyle === "underline"
-              ? { backgroundImage: `linear-gradient(${highlight}, ${highlight})`, backgroundSize: "100% 0.3em", backgroundPosition: "0 88%", backgroundRepeat: "no-repeat" }
-              : element.highlightStyle === "marker"
-                ? { backgroundImage: `linear-gradient(${highlight}, ${highlight})`, backgroundSize: "100% 62%", backgroundPosition: "0 62%", backgroundRepeat: "no-repeat" }
-                : { backgroundColor: highlight, padding: "0.08em 0.22em" }
-          }
-        >
-          {element.content}
-        </span>
-      )
-      : element.content;
     return (
-      <div
-        className="h-full w-full whitespace-pre-wrap break-words"
-        style={{
-          color: element.color,
-          backgroundColor: element.backgroundColor,
-          fontFamily: element.fontId ? editorialFontStack(element.fontId, element.fontFamily) : fontFor(element.fontFamily),
-          fontSize: `${(element.fontSize / canvasWidth) * 100}cqw`,
-          fontWeight: element.fontWeight,
-          fontStyle: element.italic ? "italic" : "normal",
-          lineHeight: element.lineHeight,
-          letterSpacing: `${(element.letterSpacing / canvasWidth) * 100}cqw`,
-          textAlign: element.align,
-          padding: `${(element.padding / canvasWidth) * 100}cqw`,
-        }}
-      >
-        {content}
-      </div>
+      <TextElementContent
+        element={element}
+        canvasWidth={canvasWidth}
+        editing={textEditor?.elementId === element.id}
+        onChange={(content) => textEditor?.onChange(element.id, content)}
+        onEditEnd={textEditor?.onEditEnd}
+      />
     );
   }
 
@@ -305,9 +364,13 @@ type EditorialRendererProps = {
   onCanvasPointerDown?: (event: ReactPointerEvent<HTMLDivElement>) => void;
   /** Renders video as a still preview: no controls, and not hit-testable. */
   staticMedia?: boolean;
+  editingTextId?: string;
+  onTextEdit?: (elementId: string) => void;
+  onTextChange?: (elementId: string, content: string) => void;
+  onTextEditEnd?: () => void;
 };
 
-export function EditorialRenderer({ design, selectedId, interactive = false, productLinks = false, staticMedia = false, guides, canvasRef, onElementPointerDown, onElementSelect, onHandlePointerDown, onCanvasPointerDown }: EditorialRendererProps) {
+export function EditorialRenderer({ design, selectedId, interactive = false, productLinks = false, staticMedia = false, editingTextId, onTextEdit, onTextChange, onTextEditEnd, guides, canvasRef, onElementPointerDown, onElementSelect, onHandlePointerDown, onCanvasPointerDown }: EditorialRendererProps) {
   const dimensions = EDITORIAL_FORMATS[design.format];
   const rendererId = useId().replace(/:/g, "");
   const elements = [...design.elements].sort((a, b) => a.zIndex - b.zIndex);
@@ -332,6 +395,9 @@ export function EditorialRenderer({ design, selectedId, interactive = false, pro
         const imageStyle = media ? { ...maskStyle(media.mask, media.borderRadius, dimensions.width, maskId), boxShadow: shadowFor(media.shadow) } : undefined;
         const borderStyle = media && media.mask !== "circle" ? { border: `${(media.borderWidth / dimensions.width) * 100}cqw solid ${media.borderColor}` } : undefined;
         const maskPath = media ? EDITORIAL_VECTOR_PATHS[media.mask] : undefined;
+        const textEditor = editingTextId && onTextChange && onTextEditEnd
+          ? { elementId: editingTextId, onChange: onTextChange, onEditEnd: onTextEditEnd }
+          : undefined;
         return (
           <div
             key={element.id}
@@ -354,10 +420,16 @@ export function EditorialRenderer({ design, selectedId, interactive = false, pro
               ...borderStyle,
             }}
             onPointerDown={(event) => onElementPointerDown?.(event, element.id)}
+            onDoubleClick={(event) => {
+              if (element.type !== "text" || !onTextEdit) return;
+              event.preventDefault();
+              event.stopPropagation();
+              onTextEdit(element.id);
+            }}
             onFocus={() => onElementSelect?.(element.id)}
           >
             {maskPath && <svg aria-hidden="true" className="pointer-events-none absolute h-0 w-0"><defs><clipPath id={maskId} clipPathUnits="objectBoundingBox"><path d={maskPath} /></clipPath></defs></svg>}
-            <div className="relative h-full w-full overflow-hidden" style={imageStyle}>{elementContent(element, dimensions.width, staticMedia)}</div>
+            <div className="relative h-full w-full overflow-hidden" style={imageStyle}>{elementContent(element, dimensions.width, staticMedia, textEditor)}</div>
             {productLinks && element.type === "product" && <Link href={`/product/${element.productId}`} aria-label={`Shop ${element.name}`} className="absolute inset-0 z-[1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" />}
             {/* A slot's frame is owned by the layout, so it offers reframing
                 rather than resize and rotate handles. */}

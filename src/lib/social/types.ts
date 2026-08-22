@@ -76,8 +76,6 @@ export type MyProfile = {
   bio: string;
   /** Tailwind background class for the fallback avatar chip. */
   avatarColor: string;
-  /** Tailwind background class for the profile theme surface. */
-  themeColor: string;
   /** Uploaded avatar (object URL, ephemeral in the demo). */
   avatarUrl?: string;
   /** Who can see the profile page. */

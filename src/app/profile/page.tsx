@@ -51,7 +51,7 @@ export default function ProfilePage() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className={`space-y-8 rounded-3xl pb-8 ${profile.themeColor ?? "bg-pink/5"}`}
+      className="space-y-8 rounded-3xl bg-bg pb-8"
     >
       <ProfileHeader
         user={me}

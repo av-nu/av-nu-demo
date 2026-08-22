@@ -129,6 +129,7 @@ export function PostComposer({
   const [started, setStarted] = useState(Boolean(initialPost || initialDraft));
   const [activeIndex, setActiveIndex] = useState(initialDraft?.activePageIndex ?? 0);
   const [activeTool, setActiveTool] = useState<PostTool>();
+  const [editingTextId, setEditingTextId] = useState<string>();
   const [zoom, setZoom] = useState(1);
   const [pendingSlotId, setPendingSlotId] = useState<string>();
   const [imageSection, setImageSection] = useState<"shape" | "crop" | undefined>("shape");
@@ -189,7 +190,8 @@ export function PostComposer({
     setPost(emptyPost());
     setActiveIndex(0);
     setStarted(true);
-    setActiveTool("layouts");
+    setActiveTool(undefined);
+    setProductRailOpen(true);
   };
 
   const handleUpload = async (file?: File) => {
@@ -391,10 +393,30 @@ export function PostComposer({
     canvas.commit(clearSlot(canvas.design, selected.id), selected.id);
   };
 
+  const beginTextEditing = (elementId: string) => {
+    const element = canvas.design.elements.find((item) => item.id === elementId);
+    if (!element || element.type !== "text" || element.locked) return;
+    canvas.setSelectedId(elementId);
+    setEditingTextId(elementId);
+    setActiveTool("text");
+  };
+
+  const handleTextChange = (elementId: string, content: string) => {
+    const element = canvas.design.elements.find((item) => item.id === elementId);
+    if (!element || element.type !== "text") return;
+    canvas.commit(updateEditorialElement(canvas.design, elementId, { ...element, content }), elementId);
+  };
+
   /** Tapping a reserved slot opens the picker aimed at that slot. */
   const handleElementSelect = (elementId: string) => {
     canvas.setSelectedId(elementId);
     const element = canvas.design.elements.find((item) => item.id === elementId);
+    if (element?.type === "text") {
+      setEditingTextId(elementId);
+      setActiveTool("text");
+      return;
+    }
+    setEditingTextId(undefined);
     if (element?.type === "placeholder") {
       setPendingSlotId(elementId);
       setProductRailOpen(true);
@@ -599,6 +621,10 @@ export function PostComposer({
                   // Hide selection chrome while drawing so it does not sit under the strokes.
                   selectedId={isDrawing ? undefined : canvas.selectedId}
                   interactive
+                  editingTextId={editingTextId}
+                  onTextEdit={beginTextEditing}
+                  onTextChange={handleTextChange}
+                  onTextEditEnd={() => setEditingTextId(undefined)}
                   guides={canvas.snapGuides}
                   canvasRef={canvas.canvasRef}
                   onElementPointerDown={(event, elementId) => {
@@ -606,12 +632,12 @@ export function PostComposer({
                     // itself belongs to the template and stays put.
                     const target = canvas.design.elements.find((element) => element.id === elementId);
                     const reframes = target && (isSlotElement(target) || isFullBleedMedia(target, post.format));
-                    canvas.startInteraction(event, elementId, reframes ? "pan" : "drag");
+                    canvas.startInteraction(event, elementId, reframes ? "pan" : "drag", { preventDefault: target?.type !== "text" });
                     handleElementSelect(elementId);
                   }}
                   onElementSelect={handleElementSelect}
                   onHandlePointerDown={(event, elementId, handle) => canvas.startInteraction(event, elementId, handle)}
-                  onCanvasPointerDown={() => canvas.setSelectedId(undefined)}
+                  onCanvasPointerDown={() => { setEditingTextId(undefined); canvas.setSelectedId(undefined); }}
                 />
                 <PostPins
                   pins={activePage.pins}
@@ -716,6 +742,7 @@ export function PostComposer({
       {started && activeTool === "text" && (
         <TextTool
           selected={selectedText}
+          directEditing={Boolean(editingTextId)}
           onAdd={addText}
           onPatch={canvas.patchSelected}
           onClose={() => setActiveTool(undefined)}
@@ -770,6 +797,7 @@ export function PostComposer({
           onClearSlot={clearSelectedSlot}
           onZoom={(zoom) => canvas.patchSelected({ zoom })}
           onAdjust={adjustableMedia ? () => setActiveTool("image") : undefined}
+          onEditText={canvas.selected.type === "text" ? () => setActiveTool("text") : undefined}
         />
       )}
 
