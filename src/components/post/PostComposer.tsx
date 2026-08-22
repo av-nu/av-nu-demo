@@ -407,6 +407,16 @@ export function PostComposer({
     canvas.commit(updateEditorialElement(canvas.design, elementId, { ...element, content }), elementId);
   };
 
+  const removeCanvasElement = (elementId: string) => {
+    const element = canvas.design.elements.find((item) => item.id === elementId);
+    if (!element) return;
+    if (isSlotElement(element)) {
+      canvas.commit(clearSlot(canvas.design, elementId), elementId);
+      return;
+    }
+    canvas.removeSelected();
+  };
+
   /** Tapping a reserved slot opens the picker aimed at that slot. */
   const handleElementSelect = (elementId: string) => {
     canvas.setSelectedId(elementId);
@@ -550,7 +560,7 @@ export function PostComposer({
     // Sized to the viewport rather than fixed-positioned: the composer route
     // opts out of the shopper shell, so it owns the whole screen.
     <div className={embedded ? "fixed inset-0 z-[180] flex items-center justify-center bg-black/55 p-2 backdrop-blur-sm sm:p-5" : ""}>
-      <div className={`relative flex w-full flex-col overflow-hidden bg-bg ${embedded ? "h-[min(94dvh,900px)] max-w-6xl rounded-3xl shadow-2xl" : "h-[100dvh]"}`}>
+      <div className={`relative flex w-full flex-col overflow-hidden bg-bg ${embedded ? "h-[min(94dvh,900px)] max-w-6xl rounded-3xl shadow-2xl" : "viewport-height"}`}>
       {/* Top bar */}
       <header className="flex w-full min-w-0 shrink-0 items-center gap-2 border-b border-divider/60 px-3 py-2.5">
         <button
@@ -625,6 +635,7 @@ export function PostComposer({
                   onTextEdit={beginTextEditing}
                   onTextChange={handleTextChange}
                   onTextEditEnd={() => setEditingTextId(undefined)}
+                  onRemoveElement={removeCanvasElement}
                   guides={canvas.snapGuides}
                   canvasRef={canvas.canvasRef}
                   onElementPointerDown={(event, elementId) => {

@@ -36,10 +36,10 @@ function PostShopSection({
         type="button"
         onClick={onToggle}
         aria-expanded={productsOpen}
-        className="flex w-full items-center gap-2.5 rounded-xl bg-[#561F59] px-3 py-2.5 text-left text-white transition-colors hover:bg-[#561F59]/90"
+        className="flex w-full items-center gap-2 rounded-xl bg-[#561F59] px-2.5 py-2 text-left text-[11px] text-white transition-colors hover:bg-[#561F59]/90 md:gap-2.5 md:px-3 md:py-2.5 md:text-sm"
       >
         <ShoppingBag className="h-4 w-4 shrink-0" />
-        <span className="min-w-0 flex-1 text-sm font-semibold">Shop the post</span>
+        <span className="min-w-0 flex-1 whitespace-nowrap font-semibold">Shop the post</span>
         <span className="shrink-0 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold">{products.length}</span>
         <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${productsOpen ? "rotate-180" : ""}`} />
       </button>

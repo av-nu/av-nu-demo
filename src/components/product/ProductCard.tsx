@@ -96,7 +96,7 @@ export const ProductCard = memo(function ProductCard({
         <button
           type="button"
           onClick={handleQuickAdd}
-          className="absolute bottom-0 left-0 right-0 z-20 flex items-center justify-center gap-1.5 bg-text py-2.5 text-sm font-medium text-bg opacity-100 transition-all duration-200 hover:bg-text/90 md:pointer-events-none md:opacity-0 md:group-hover:pointer-events-auto md:group-hover:opacity-100"
+          className="absolute bottom-0 left-0 right-0 z-20 flex items-center justify-center gap-1.5 bg-text py-2 text-xs font-medium text-bg opacity-100 transition-all duration-200 hover:bg-text/90 md:py-2.5 md:text-sm md:pointer-events-none md:opacity-0 md:group-hover:pointer-events-auto md:group-hover:opacity-100"
         >
           <Plus className="h-4 w-4" />
           Quick Add
@@ -111,11 +111,11 @@ export const ProductCard = memo(function ProductCard({
       />
 
       <div className="mt-3 flex flex-col gap-1">
-        <div className="flex items-center justify-between">
-          <div className="text-[11px] uppercase tracking-wide text-text/50">
+        <div className="flex min-w-0 items-center justify-between gap-2">
+          <div className="min-w-0 flex-1 truncate text-[11px] uppercase tracking-wide text-text/50">
             {brand?.name ?? "Brand"}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <StarRating rating={product.rating} showUserRating={false} size="md" />
           <motion.button
             type="button"

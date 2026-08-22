@@ -74,7 +74,7 @@ export function ProductQuickView({
             exit={{ y: 28, opacity: 0 }}
             transition={{ type: "spring", stiffness: 360, damping: 32 }}
             onClick={(event) => event.stopPropagation()}
-            className="relative flex h-[100dvh] max-h-[100dvh] w-full flex-col overflow-y-auto rounded-none bg-bg shadow-2xl lg:h-[720px] lg:max-h-[94vh] lg:max-w-5xl lg:flex-row lg:overflow-hidden lg:rounded-3xl"
+            className="relative mobile-viewport-height mobile-viewport-max-height flex w-full flex-col overflow-y-auto rounded-none bg-bg shadow-2xl lg:h-[720px] lg:max-h-[94vh] lg:max-w-5xl lg:flex-row lg:overflow-hidden lg:rounded-3xl"
           >
             <button type="button" onClick={onClose} aria-label="Close product" className="sticky top-3 z-[80] ml-auto mr-3 -mb-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-divider/70 bg-bg/95 text-midnight/70 shadow-sm backdrop-blur hover:bg-surface hover:text-midnight"><X className="h-5 w-5" /></button>
             <div className="sticky top-0 z-10 flex items-center border-b border-divider/60 bg-bg/95 px-5 py-3 backdrop-blur-md lg:hidden">
@@ -82,8 +82,8 @@ export function ProductQuickView({
             </div>
 
             <div className="flex w-full shrink-0 flex-col gap-3 bg-surface p-4 sm:p-6 lg:w-[56%] lg:flex-row">
-              <div className="relative h-[42dvh] min-h-[240px] max-h-[420px] w-full overflow-hidden rounded-2xl bg-surface p-3 lg:aspect-square lg:h-auto lg:min-h-0 lg:flex-1 lg:p-5">
-                <Image src={images[activeImage]} alt={product.name} fill sizes="(max-width: 1024px) 90vw, 48vw" className="object-contain" priority />
+              <div className="relative h-[42dvh] min-h-[240px] max-h-[420px] w-full overflow-hidden rounded-2xl bg-surface lg:aspect-square lg:h-auto lg:min-h-0 lg:flex-1">
+                <Image src={images[activeImage]} alt={product.name} fill sizes="(max-width: 1024px) 90vw, 48vw" className="object-cover" priority />
                 {images.length > 1 && (
                   <>
                     <button type="button" onClick={() => setActiveImage((current) => (current - 1 + images.length) % images.length)} aria-label="Previous product image" className="absolute left-5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-bg/90 text-midnight shadow-sm backdrop-blur transition-colors hover:bg-bg"><ArrowLeft className="h-4 w-4" /></button>

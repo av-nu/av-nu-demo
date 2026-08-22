@@ -67,6 +67,43 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.viewport-height {
+  height: 100vh;
+  height: 100dvh;
+}
+
+@media (max-width: 1023px) {
+  .mobile-viewport-height {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .mobile-viewport-max-height {
+    max-height: 100vh;
+    max-height: 100dvh;
+  }
+}
+
+@media (max-width: 767px) {
+  .mobile-modal-max-height {
+    max-height: 92vh;
+    max-height: 92dvh;
+  }
+
+
+  .mobile-content-safe-top {
+    padding-top: max(4rem, calc(env(safe-area-inset-top) + 3rem));
+  }
+
+  .mobile-safe-action-top {
+    top: max(1rem, env(safe-area-inset-top));
+  }
+}
+
 h1,
 h2,
 h3 {

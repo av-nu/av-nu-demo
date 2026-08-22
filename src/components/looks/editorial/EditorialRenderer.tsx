@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ImageOff, Move, Plus, RotateCw } from "lucide-react";
+import { ImageOff, Move, Plus, RotateCw, X } from "lucide-react";
 import { useEffect, useId, useRef, type PointerEvent as ReactPointerEvent, type RefObject } from "react";
 
 import { mockProducts } from "@/data/mockProducts";
@@ -368,9 +368,10 @@ type EditorialRendererProps = {
   onTextEdit?: (elementId: string) => void;
   onTextChange?: (elementId: string, content: string) => void;
   onTextEditEnd?: () => void;
+  onRemoveElement?: (elementId: string) => void;
 };
 
-export function EditorialRenderer({ design, selectedId, interactive = false, productLinks = false, staticMedia = false, editingTextId, onTextEdit, onTextChange, onTextEditEnd, guides, canvasRef, onElementPointerDown, onElementSelect, onHandlePointerDown, onCanvasPointerDown }: EditorialRendererProps) {
+export function EditorialRenderer({ design, selectedId, interactive = false, productLinks = false, staticMedia = false, editingTextId, onTextEdit, onTextChange, onTextEditEnd, onRemoveElement, guides, canvasRef, onElementPointerDown, onElementSelect, onHandlePointerDown, onCanvasPointerDown }: EditorialRendererProps) {
   const dimensions = EDITORIAL_FORMATS[design.format];
   const rendererId = useId().replace(/:/g, "");
   const elements = [...design.elements].sort((a, b) => a.zIndex - b.zIndex);
@@ -431,6 +432,21 @@ export function EditorialRenderer({ design, selectedId, interactive = false, pro
             {maskPath && <svg aria-hidden="true" className="pointer-events-none absolute h-0 w-0"><defs><clipPath id={maskId} clipPathUnits="objectBoundingBox"><path d={maskPath} /></clipPath></defs></svg>}
             <div className="relative h-full w-full overflow-hidden" style={imageStyle}>{elementContent(element, dimensions.width, staticMedia, textEditor)}</div>
             {productLinks && element.type === "product" && <Link href={`/product/${element.productId}`} aria-label={`Shop ${element.name}`} className="absolute inset-0 z-[1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" />}
+            {selected && !element.locked && isEditorialMediaElement(element) && onRemoveElement && (
+              <button
+                type="button"
+                aria-label={`Remove ${element.name}`}
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onRemoveElement(element.id);
+                }}
+                className="absolute right-1 top-1 z-[110] flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-midnight text-white shadow-md [@media(pointer:coarse)]:h-10 [@media(pointer:coarse)]:w-10"
+              >
+                <X className="h-4 w-4 [@media(pointer:coarse)]:h-5 [@media(pointer:coarse)]:w-5" />
+              </button>
+            )}
             {/* A slot's frame is owned by the layout, so it offers reframing
                 rather than resize and rotate handles. */}
             {selected && !element.locked && isSlotElement(element) && (

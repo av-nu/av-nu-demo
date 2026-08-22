@@ -105,10 +105,10 @@ export const AppShell = memo(function AppShell({
 
           {isMounted && (
             <>
-              <Link href="/profile" aria-label="Profile" className="fixed left-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-surface/85 text-text/70 shadow-sm backdrop-blur transition-colors hover:bg-surface hover:text-text md:hidden">
+              <Link href="/profile" aria-label="Profile" className="mobile-safe-action-top fixed left-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-surface/85 text-text/70 shadow-sm backdrop-blur transition-colors hover:bg-surface hover:text-text md:hidden">
                 <Avatar user={profileUser} size="sm" className="h-10 w-10 text-xs" />
               </Link>
-              <div className="fixed right-4 top-4 z-50 flex items-center gap-3 md:right-8 md:top-6">
+              <div className="mobile-safe-action-top fixed right-4 top-4 z-50 flex items-center gap-3 md:right-8 md:top-6">
                 <Link href="/profile" aria-label="Profile" className="hidden h-10 w-10 items-center justify-center rounded-full bg-surface/85 text-text/70 shadow-sm backdrop-blur transition-colors hover:bg-surface hover:text-text md:flex">
                   <Avatar user={profileUser} size="sm" className="h-10 w-10 text-xs" />
                 </Link>
@@ -119,7 +119,7 @@ export const AppShell = memo(function AppShell({
           )}
 
           <div className={`transition-[margin] duration-200 ease-in-out ${sideNavCollapsed ? "md:ml-[72px]" : "md:ml-64"}`}>
-            <main className={`w-full px-4 pb-28 ${hasMobileOverlayActions ? "pt-16" : ""} md:px-6 md:pb-12 md:pt-[88px]`}>
+            <main className={`w-full px-4 pb-28 ${hasMobileOverlayActions ? "mobile-content-safe-top" : ""} md:px-6 md:pb-12 md:pt-[88px]`}>
               <TopHeader />
               <PageTransition>{children}</PageTransition>
             </main>
